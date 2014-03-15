@@ -8,6 +8,7 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
+/bin
 
 # Scala-IDE specific
 .scala_dependencies
@@ -15,3 +16,5 @@ project/plugins/project/
 # Eclipse
 .classpath
 .project
+/.target
+.cache
