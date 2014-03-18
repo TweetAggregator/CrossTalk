@@ -8,7 +8,7 @@ import akka.actor.Props
 import jobs.DummyActor
 
 @RunWith(classOf[JUnitRunner])
-class DummyTest extends Specification {
+class DummySpec extends Specification {
 
   "Dummy Actor" should {
     "Print Hello world" in new WithApplication {
