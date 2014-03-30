@@ -9,16 +9,24 @@ import jobs._
 import models.TweetQuery
 import models.GeoSquare
 import models.TweetListener
+import models.Tweet
+import play.api.libs.json.Json
 
 @RunWith(classOf[JUnitRunner])
 class TweetStreamerSpec extends Specification {
 
+  val listener = new TweetListener { 
+    def act(tweet: Tweet) = println(tweet.value \ "text") 
+    }
+
   "Tweet Searcher Actor" should {
-    "Return a list of tweets " in new WithApplication {
+    
+    "return a list of tweets " in new WithApplication {
       val actor = ActorSystem().actorOf(Props(new TweetSearcher()))
-      val listener = new TweetListener { def receive = println("received") }
-      actor ! (TweetQuery("Obama" :: Nil, GeoSquare(-129.4,50.6,-79,20), 1,1),listener, 0)
+      actor ! (TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listener, 3000)
       Thread.sleep(10000) /* Just print tweets for 100 secs */
+      actor ! "terminate"
+      
     }
   }
 }

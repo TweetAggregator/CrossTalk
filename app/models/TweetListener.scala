@@ -1,5 +1,5 @@
 package models
 
 abstract class TweetListener {
-  def receive
+  def act(tweet: Tweet)
 }
