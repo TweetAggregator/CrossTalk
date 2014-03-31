@@ -65,3 +65,36 @@ var boundGeometry = {
     while (++i < n) boundPoints(bounds, coordinates[i][0]);
   }
 };
+
+function update() {
+  var topR = map.pointLocation(JSON.parse('{"x":0, "y": 0}'));
+  //console.log(topR);
+  var bottomL = map.pointLocation(map.size());
+  //console.log(bottomL);
+  var myString = "<br/>lat 0: ".concat(topR.lat.toString()) +
+    "<br/>lo: ".concat(topR.lon) +
+    "<br/>la".concat(bottomL.lat) +
+    "<br/>l".concat(bottomL.lon);
+  console.log(myString);
+  document.getElementById('myDiv').innerHTML = myString ;
+ 
+  /*
+  console.log(map.center());
+
+  var gps = map.centerRange(); //center
+  console.log(gps);
+  console.log(gps[0].lat);
+  console.log(map.locationCoordinate(map.center()).column);
+
+  //var el = document.getElementById('insertHere'); el.html = '<div>Print this after the script tag</div>';
+  //document.getElementById('inner').innerHTML = "Hello World!";
+  //$("body").html(html);
+
+  */
+
+}
+
+//map.on("resize", update);
+map.on("move", update);
+//map.on("update", update);
+// => ou utiliser un boutton 
