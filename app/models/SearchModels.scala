@@ -16,7 +16,7 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
     val (dLat, dLong) = ((lat2 - lat1) * Math.PI / 180, (long2 - long1) * Math.PI / 180)
     val v1 = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLong/2) * Math.sin(dLong/2)
     val v2 = 2 * Math.atan2(Math.sqrt(v1), Math.sqrt(1-v1))
-    earthRadius * v2
+    earthRadius * v2 * 2 / 3
   }
 }
 

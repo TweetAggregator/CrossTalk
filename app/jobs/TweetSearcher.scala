@@ -17,6 +17,7 @@ import play.api.libs.json.JsValue
 import play.api.Play
 import play.api.libs.json.JsString
 import akka.actor.ActorRef
+import scalaz.syntax.std.ToListOps
 
 /**
  * Launch a research on Tweets and send them to the good listener once a result is received.
@@ -39,6 +40,14 @@ class TweetSearcher extends Actor {
   val client = new DefaultHttpClient()
 
   var continue = true /* Set to true if the tweetSearch is allowed to do call backs */
+  
+  /**
+   * Loop and periodically ping the API. Will send the new tweets to the Actor listener.
+   * @param query			The query to search (should already have rows = cols = 1
+   * @param listener		The Actor to which the Tweets will be sent
+   * @param period			The period between each ping
+   * @param callbackParams	The potential call back parameters of the request.
+   */
   def exec(query: TweetQuery, listener: TweetListener, period: Int, callbackParams: Option[String]):Unit = if (continue) {
 
     /* Construct the HTTP request */
