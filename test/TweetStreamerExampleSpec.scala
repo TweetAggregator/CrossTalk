@@ -12,7 +12,7 @@ class TweetStreamerExampleSpec extends Specification {
 
   "Tweet Streamer Example Actor" should {
     "Launch a list of tweets" in new WithApplication {
-      val actor = ActorSystem().actorOf(Props(new TweetStreamExampleActor()))
+      val actor = ActorSystem().actorOf(Props(new TweetStreamExampleActorClement()))
       actor ! Array("Crimea", "Putin")
 
       Thread.sleep(100000) /* Just print tweets for 100 secs */
