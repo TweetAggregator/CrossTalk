@@ -16,11 +16,11 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsPath
 import play.api.libs.json.JsArray
 import play.api.mvc.Action
-import dispatch._, Defaults._
+/* import dispatch._, Defaults._*/
 
 @RunWith(classOf[JUnitRunner])
 class Translator extends Specification {
-
+  /*
   "Translator" should {
     "translate" in new WithApplication {
      
@@ -41,7 +41,7 @@ class Translator extends Specification {
 
     // would be nice to have something like below
     // val list:JsValue = (json \ "tuc").value.foreach(x => (x \ "phrase" \ "text")).toList()
-
+	
     }
-  }
+  }*/
 }

@@ -17,7 +17,6 @@ import play.api.libs.json.JsValue
 import play.api.Play
 import play.api.libs.json.JsString
 import akka.actor.ActorRef
-import scalaz.syntax.std.ToListOps
 
 /**
  * Launch a research on Tweets and send them to the good listener once a result is received.
