@@ -13,13 +13,13 @@ class TweetQuerySpec extends Specification {
     
     "have proper geographic subsquares" in new WithApplication {
       val subqueries = query.subqueries
-      assert(subqueries.size == 4*3)
-      assert(subqueries.tail.head.area.lat1 == -1)
+      subqueries.size should equalTo (4*3)
+      subqueries.tail.head.area.lat1 should equalTo (-1)
     }
     
     "return valid radius and center" in new WithApplication {
-      assert (query.area.center == (0,0))
-      assert(query.area.radius == 802.6233674690701)
+      query.area.center should equalTo ((0.0,0.0))
+      query.area.radius should equalTo (401.31168373453505)
     }
   }
 }

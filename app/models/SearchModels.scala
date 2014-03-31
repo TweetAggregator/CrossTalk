@@ -9,14 +9,14 @@ import java.util.Date
  * the calculus in the inner fields.
  */
 case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
-  val center: (Double, Double) = ((long2 + long1)/2, (lat2 + lat1)/2)
-  /* From stackOverflow */ 
+  val center: (Double, Double) = ((long2 + long1) / 2, (lat2 + lat1) / 2)
+  /* From stackOverflow */
   val radius: Double = {
     val earthRadius = 6378.137 /* in KM */
     val (dLat, dLong) = ((lat2 - lat1) * Math.PI / 180, (long2 - long1) * Math.PI / 180)
-    val v1 = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLong/2) * Math.sin(dLong/2)
-    val v2 = 2 * Math.atan2(Math.sqrt(v1), Math.sqrt(1-v1))
-    earthRadius * v2 * 2 / 3
+    val v1 = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLong / 2) * Math.sin(dLong / 2)
+    val v2 = 2 * Math.atan2(Math.sqrt(v1), Math.sqrt(1 - v1))
+    earthRadius * v2 / 2
   }
 }
 
@@ -27,17 +27,17 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
   def subqueries: List[TweetQuery] = (rows, cols) match {
     case (1, 1) => this :: Nil /* Since we cannot split it anymore */
     case _ if rows > 1 && cols > 1 =>
-      val (dx,dy) = ((area.long2 - area.long1)/rows, (area.lat2 - area.lat1)/cols)
+      val (dx, dy) = ((area.long2 - area.long1) / rows, (area.lat2 - area.lat1) / cols)
       def listOuter(x: Double = area.long1): List[TweetQuery] = x match {
         case _ if x >= area.long2 => Nil
-        case _ => listInner(x) ++ listOuter(x+dx)
-      } 
+        case _ => listInner(x) ++ listOuter(x + dx)
+      }
       def listInner(x: Double, y: Double = area.lat1): List[TweetQuery] = y match {
         case _ if y >= area.lat2 => Nil
-        case _ => this.copy(area = GeoSquare(x,y,x+dx,y+dy), rows = 1, cols = 1) :: listInner(x,y+dy)
+        case _ => this.copy(area = GeoSquare(x, y, x + dx, y + dy), rows = 1, cols = 1) :: listInner(x, y + dy)
       }
       /* Actual execution */
-      listOuter()      
+      listOuter()
     case _ => sys.error("Not a valid pair of rows / cols for subqueries.")
   }
 }
