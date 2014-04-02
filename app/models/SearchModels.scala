@@ -45,5 +45,14 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
 /**
  * Model a returned matching tweet from a query, along with its geographic position. Since tweets
  * are JSON Value, we return a JsValue, i.e. the parsed JSON code ready to be used.
+ * Note that the tweet is also returned with the original list of query from which it is issued.
  */
-case class Tweet(value: JsValue, area: GeoSquare)
+case class Tweet(value: JsValue, query : TweetQuery)
+
+/** 
+ * List of messages accepted by the TweetManager 
+ */
+case class StartAll(queries: List[TweetQuery])
+case object StopAll
+case class Start(query: TweetQuery)
+case class Stop(query: TweetQuery)

@@ -27,11 +27,17 @@ class TweetStreamerSpec extends Specification {
   "Tweet Searcher Actor" should {
 
     "return a list of tweets " in new WithApplication {
-      val actor = ActorSystem().actorOf(Props(new TweetSearcher))
-      val listenerAct = ActorSystem().actorOf(Props(new listener))
-      actor ! (TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listenerAct)
+      val listenerAct = ActorSystem()actorOf(Props(new listener))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listenerAct)))
+      actor ! "start"
       Thread.sleep(10000) /* Just print tweets for 100 secs */
       nbReceived should equalTo(100)
+    }
+  }
+  
+  "Tweet Manager" should {
+    "Start one query, and stop it" in new WithApplication {
+      /* TODO */
     }
   }
 }
