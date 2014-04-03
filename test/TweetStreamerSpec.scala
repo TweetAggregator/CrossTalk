@@ -11,6 +11,9 @@ import models.GeoSquare
 import models.Tweet
 import play.api.libs.json.Json
 import akka.actor.Actor
+import models.StartAll
+import models.StopAll
+import models.Replace
 
 @RunWith(classOf[JUnitRunner])
 class TweetStreamerSpec extends Specification {
@@ -19,25 +22,69 @@ class TweetStreamerSpec extends Specification {
   class listener extends Actor {
     def receive = {
       case Tweet(value, geo) =>
-        println(value \ "text")
         nbReceived += 1
+        print("-")
     }
   }
 
+  /* NB: Those test might fail depending of the network congestion */
   "Tweet Searcher Actor" should {
 
-    "return a list of tweets " in new WithApplication {
-      val listenerAct = ActorSystem()actorOf(Props(new listener))
-      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listenerAct)))
+    "return a list of tweets" in new WithApplication {
+      val listener = ActorSystem() actorOf (Props(new listener))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listener)))
       actor ! "start"
-      Thread.sleep(10000) /* Just print tweets for 100 secs */
+      Thread.sleep(20000) /* Just print tweets for 10 secs */
+      println("> " + nbReceived)
       nbReceived should equalTo(100)
     }
-  }
-  
-  "Tweet Manager" should {
-    "Start one query, and stop it" in new WithApplication {
-      /* TODO */
+
+    "return a list of tweets and do a callback" in new WithApplication {
+      nbReceived = 0
+      val listener = ActorSystem() actorOf (Props(new listener))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listener)))
+      actor ! "start"
+      actor ! "callback"
+      Thread.sleep(20000) /* Just print tweets for 20 secs */
+      println("> " + nbReceived)
+      nbReceived should be greaterThan(99)
     }
+  }
+
+  /* NB: Those test might fail depending of the network congestion */
+  "Tweet Manager" should {
+    "start queries, and stop them" in new WithApplication {
+      nbReceived = 0
+      val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
+      val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
+      val qurs3 = TweetQuery("Bloomberg" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
+      
+      val manager = ActorSystem().actorOf(Props(new TweetManager))
+      val listener = ActorSystem()actorOf(Props(new listener))
+      
+      manager ! StartAll((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: Nil)
+      Thread.sleep(30000)  /* Just print tweets for 30 secs */
+      manager ! StopAll
+      println("> " + nbReceived)
+      nbReceived should be greaterThan (299)
+    }
+    
+    "start a query, replace it by another, then stop it" in new WithApplication {
+      nbReceived = 0
+      val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
+      val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
+      
+      val manager = ActorSystem().actorOf(Props(new TweetManager))
+      val listener = ActorSystem()actorOf(Props(new listener))
+      
+      manager ! StartAll((qurs1, listener) :: Nil)
+      Thread.sleep(20000) /* Wait 20 seconds for the first tweet to be received */
+      manager ! Replace(qurs1, (qurs2, listener) :: Nil)
+      Thread.sleep(20000) /* Wait 20 seconds for the next tweets to be received */
+      manager ! StopAll
+      println("> " + nbReceived)
+      nbReceived should be greaterThan (199)
+    }
+    
   }
 }

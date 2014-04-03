@@ -2,6 +2,7 @@ package models
 
 import play.api.libs.json.JsValue
 import java.util.Date
+import akka.actor.ActorRef
 
 /**
  * Model of a geographic position. The parameters passed are ready to be used by the Streaming API.
@@ -26,7 +27,7 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
 case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: Int) {
   def subqueries: List[TweetQuery] = (rows, cols) match {
     case (1, 1) => this :: Nil /* Since we cannot split it anymore */
-    case _ if rows > 1 && cols > 1 =>
+    case _ if rows >= 1 && cols >= 1 =>
       val (dx, dy) = ((area.long2 - area.long1) / rows, (area.lat2 - area.lat1) / cols)
       def listOuter(x: Double = area.long1): List[TweetQuery] = x match {
         case _ if x >= area.long2 => Nil
@@ -43,16 +44,17 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
 }
 
 /**
- * Model a returned matching tweet from a query, along with its geographic position. Since tweets
- * are JSON Value, we return a JsValue, i.e. the parsed JSON code ready to be used.
- * Note that the tweet is also returned with the original list of query from which it is issued.
+ * Model a returned matching tweet from a query.
+ * are JSON Values, we return a JsValue, i.e. the parsed JSON code ready to be used.
+ * Note that the tweet is also returned with the original query from which it is issued.
  */
 case class Tweet(value: JsValue, query : TweetQuery)
 
-/** 
- * List of messages accepted by the TweetManager 
- */
-case class StartAll(queries: List[TweetQuery])
+/* List of messages accepted by the TweetManager */
+
+/** Start all the queries specificed, with their specific listeners */
+case class StartAll(queries: List[(TweetQuery, ActorRef)])
+/** Stop all the queries currently running */
 case object StopAll
-case class Start(query: TweetQuery)
-case class Stop(query: TweetQuery)
+/** Replace one query by other in order to rafinate the research */
+case class Replace(origin: TweetQuery, subqueries: List[(TweetQuery, ActorRef)])

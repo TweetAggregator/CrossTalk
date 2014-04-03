@@ -20,6 +20,7 @@ import akka.actor.ActorRef
 import TweetManager._
 import java.io.InputStream
 import models.GeoSquare
+import play.api.libs.json.JsResultException
 /**
  * Launch a research on Tweets and send them to the good listener once a result is received.
  * https://dev.twitter.com/docs/api/1.1/get/search/tweets
@@ -32,37 +33,41 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
   val client = new DefaultHttpClient()
 
   var callback: Option[String] = None /* Store the params used to check for updates */
-  var olderResults: Option[String] = None /* Store the params used to check for older results */
 
   def receive = {
     case "start" => /* First execution */
       val geoParams = query.area.center._2 + "," + query.area.center._1 + "," + query.area.radius + "km"
       val keywordsParams = query.keywords.mkString(",")
-      val stream = askFor("https://api.twitter.com/1.1/search/tweets.json?geocode=" + geoParams + "&q=" + keywordsParams + "&result_type=recent&count=100")
-      val ret = readAll(stream)
-      stream.close
-      val parsed = parseAndUpdateCalls(ret)
-      parsed foreach (listener ! Tweet(_, query))
+      execRequest("https://api.twitter.com/1.1/search/tweets.json?geocode=" + geoParams + "&q=" + keywordsParams + "&result_type=recent&count=100")
 
     case "callback" => /* Callback execution (query update) */
-      if (callback.isEmpty) sys.error("Query on an TweetSearcher not yet started.")
-      val stream = askFor("https://api.twitter.com/1.1/search/tweets.json" + callback.get)
-      val ret = readAll(stream)
-      stream.close
-      val parsed = parseAndUpdateCalls(ret)
-      parsed foreach (listener ! Tweet(_, query))
-
-    case "getOlder" => /* return the older result than the one previously returned */
-      if (olderResults.isEmpty) sys.error("Query on an TweetSearcher not yet started.")
-      val stream = askFor("https://api.twitter.com/1.1/search/tweets.json" + olderResults.get)
-      val ret = readAll(stream)
-      stream.close
-      val parsed = parseAndUpdateCalls(ret)
-      parsed foreach (listener ! Tweet(_, query))
+      callback match {
+        case Some(properties) =>
+          execRequest("https://api.twitter.com/1.1/search/tweets.json" + properties)
+        case None =>
+          /* A parsing error occurred or our searcher has been kicked by the API, restarting... */
+          receive("start")
+      }
 
     case _ => sys.error("Not a valid input for the Tweer Searcher!")
   }
 
+  /**
+   * Execute the request in parameter, parse it and send the tweets to the listener.
+   */
+  def execRequest(request: String) = {
+    val stream = askFor(request)
+    val ret = readAll(stream)
+    stream.close
+    try {
+      val (values, clb) = parseJson(ret)
+      callback = Some(clb)
+      values foreach (listener ! Tweet(_, query))
+    } catch {
+      case _: JsResultException => /* Error while parsing (Rate limit exceeded) */
+        callback = None /* Will restart the searcher next time it receive a callback */
+    }
+  }
   /** Ask for the request passed in parameter, signed by the oauthConsumer. */
   def askFor(request: String) = {
     val HttpRequest = new HttpGet(request)
@@ -84,11 +89,8 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
   }
 
   /** Parse a string into a list of JsValue and a callback String from the Twitter Json */
-  def parseAndUpdateCalls(str: String): Array[JsValue] = {
-    /* Parse result + callback url */
+  def parseJson(str: String): (Array[JsValue], String) = {
     val glb = Json.parse(str.toString)
-    callback = Some((glb \ "search_metadata" \ "refresh_url").as[JsString].value)
-    olderResults = Some((glb \ "search_metadata" \ "next_results").as[JsString].value)
-    ((glb \ "statuses").as[Array[JsValue]])
+    (((glb \ "statuses").as[Array[JsValue]]), (glb \ "search_metadata" \ "refresh_url").as[JsString].value)
   }
 }
