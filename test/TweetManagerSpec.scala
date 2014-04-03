@@ -16,7 +16,7 @@ import models.StopAll
 import models.Replace
 
 @RunWith(classOf[JUnitRunner])
-class TweetStreamerSpec extends Specification {
+class TweetManagerSpec extends Specification {
   var nbReceived = 0
 
   class listener extends Actor {

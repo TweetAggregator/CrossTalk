@@ -45,13 +45,13 @@ class TweetStreamer extends Actor {
       stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", keywordsParam, locationParam)
       val ret = readAll(stream)
       val parsed = parse(ret)
-      parsed._1 foreach (listener.get ! Tweet(_, area.get))
+      parsed._1 foreach (listener.get ! Tweet(_, null)) /* TODO */
       callback = Some(parsed._2)
 
     case "callback" => /* Callback execution (query update) */
       val ret = readAll(stream)
       val parsed = parse(ret)
-      parsed._1 foreach (listener.get ! Tweet(_, area.get))
+      parsed._1 foreach (listener.get ! Tweet(_, null)) /* TODO */
       callback = Some(parsed._2)
 
     case _ => sys.error("Not a valid input for the Tweer Searcher!")
