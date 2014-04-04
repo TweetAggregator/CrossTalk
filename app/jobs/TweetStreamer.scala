@@ -26,7 +26,7 @@ import play.api.libs.json.JsResultException
  * https://dev.twitter.com/docs/api/1.1/get/search/tweets
  * Max #request/15minutes: 450, Max #keywords=10
  */
-class TweetStreamer2(query: TweetQuery, listener: TweetListener) extends Actor {
+class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
 
   /* We set up the HTTP client and the oauth module */
   val oauthConsumer = TweetManager.getConsumer
