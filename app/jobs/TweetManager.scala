@@ -65,7 +65,10 @@ class TweetManager extends Actor {
    */
   def scheduleSearcher(query: TweetQuery, listener: TweetListener, searchRate: Int) {
     val searcherRef = ActorSystem().actorOf(Props(new TweetSearcher(query, listener)))
+    val streamerRef = ActorSystem().actorOf(Props(new TweetStreamer(query, listener)))
     searcherRef ! "start"
+    streamerRef ! "start" 
+
     runningSearches += (query -> (ActorSystem().scheduler.schedule(
       Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
       Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),

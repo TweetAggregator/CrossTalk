@@ -20,44 +20,55 @@ import akka.actor.ActorRef
 import TweetManager._
 import java.io.InputStream
 import models.GeoSquare
+import play.api.libs.json.JsResultException
 /**
  * Launch a research on Tweets and send them to the good listener once a result is received.
  * https://dev.twitter.com/docs/api/1.1/get/search/tweets
  * Max #request/15minutes: 450, Max #keywords=10
  */
-class TweetStreamer extends Actor {
+class TweetStreamer2(query: TweetQuery, listener: TweetListener) extends Actor {
 
   /* We set up the HTTP client and the oauth module */
   val oauthConsumer = TweetManager.getConsumer
   val client = new DefaultHttpClient()
 
   var callback: Option[String] = None /* Store the params used to check for updates */
-  var listener: Option[TweetListener] = None /* Store the listener associated with the searcher */
-  var area: Option[GeoSquare] = None /* Store the geolocalization of the tweet streamer */
 
   var stream: InputStream = null
+
   def receive = {
-    case (query:TweetQuery, list: TweetListener) => /* First execution */
-      listener = Some(list)
-      area = Some(query.area)
+    case "start" => /* First execution */
       val locationParam = query.area.long1 + "," + query.area.lat1 + "," + query.area.long2 + "," + query.area.lat2
       val keywordsParam = query.keywords.mkString(",")
       stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", keywordsParam, locationParam)
-      val ret = readAll(stream)
-      val parsed = parse(ret)
-      parsed._1 foreach (listener.get ! Tweet(_, null)) /* TODO */
-      callback = Some(parsed._2)
+      sendToListener()
 
     case "callback" => /* Callback execution (query update) */
-      val ret = readAll(stream)
-      val parsed = parse(ret)
-      parsed._1 foreach (listener.get ! Tweet(_, null)) /* TODO */
-      callback = Some(parsed._2)
+      callback match {
+        case Some(properties) => sendToListener()
+        case None =>
+          /* A parsing error occurred or our searcher has been kicked by the API, restarting... */
+          receive("start")
+      }
 
     case _ => sys.error("Not a valid input for the Tweer Searcher!")
   }
 
-  /** Ask for the request passed in parameter, signed by the oauthConsumer. */
+  /**
+   * Execute the request in parameter, parse it and send the tweets to the listener.
+   */
+  def sendToListener() = {
+    val ret = readAll(stream)
+    try {
+      val (values, clb) = parseJson(ret)
+      callback = Some(clb)
+      values foreach (listener ! Tweet(_, query))
+    } catch {
+      case _: JsResultException => /* Error while parsing (Rate limit exceeded) */
+        callback = None /* Will restart the searcher next time it receive a callback */
+    }
+  }
+
   def askFor(request: String, keywords: String, location: String) = {
     val postRequest = new HttpPost(request)
 
@@ -84,8 +95,7 @@ class TweetStreamer extends Actor {
   }
 
   /** Parse a string into a list of JsValue and a callback String from the Twitter Json */
-  def parse(str: String): (Array[JsValue], String) = {
-    /* Parse result + callback url */
+  def parseJson(str: String): (Array[JsValue], String) = {
     val glb = Json.parse(str.toString)
     (((glb \ "statuses").as[Array[JsValue]]), (glb \ "search_metadata" \ "refresh_url").as[JsString].value)
   }
