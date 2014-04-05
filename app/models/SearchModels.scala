@@ -25,6 +25,13 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
  * Model of a research launcher, based on some keywords filters.
  */
 case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: Int) {
+  /** Format the keywords for logical ORs */
+  val kwsInSearchFormat: String = {
+    if (keywords.isEmpty) ""
+    else keywords.tail.foldLeft("\"" + keywords.head + "\"")((a, b) => a + " OR \"" + b + "\"")
+      .replaceAll(" ", "%20")
+      .replaceAll("\"", "%22")
+  }
   def subqueries: List[TweetQuery] = (rows, cols) match {
     case (1, 1) => this :: Nil /* Since we cannot split it anymore */
     case _ if rows >= 1 && cols >= 1 =>
@@ -48,7 +55,7 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
  * are JSON Values, we return a JsValue, i.e. the parsed JSON code ready to be used.
  * Note that the tweet is also returned with the original query from which it is issued.
  */
-case class Tweet(value: JsValue, query : TweetQuery)
+case class Tweet(value: JsValue, query: TweetQuery)
 
 /* List of messages accepted by the TweetManager */
 
