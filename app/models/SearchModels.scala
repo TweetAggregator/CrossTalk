@@ -27,10 +27,9 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
 case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: Int) {
   /** Format the keywords for logical ORs */
   val kwsInSearchFormat: String = {
-    if (keywords.isEmpty) ""
+    if (keywords.isEmpty) sys.error("Cannot start a query with empty keywords")
     else keywords.tail.foldLeft("\"" + keywords.head + "\"")((a, b) => a + " OR \"" + b + "\"")
-      .replaceAll(" ", "%20")
-      .replaceAll("\"", "%22")
+      .replaceAll(" ", "%20").replaceAll("\"", "%22").replaceAll("#", "%23")
   }
   def subqueries: List[TweetQuery] = (rows, cols) match {
     case (1, 1) => this :: Nil /* Since we cannot split it anymore */
