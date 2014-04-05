@@ -37,8 +37,7 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
   def receive = {
     case "start" => /* First execution */
       val geoParams = query.area.center._2 + "," + query.area.center._1 + "," + query.area.radius + "km"
-      val keywordsParams = query.keywords.mkString(",")
-      execRequest("https://api.twitter.com/1.1/search/tweets.json?geocode=" + geoParams + "&q=" + keywordsParams + "&result_type=recent&count=100")
+      execRequest("https://api.twitter.com/1.1/search/tweets.json?geocode=" + geoParams + "&q=" + query.kwsInSearchFormat + "&result_type=recent&count=100")
 
     case "callback" => /* Callback execution (query update) */
       callback match {
