@@ -22,8 +22,8 @@ import java.io.InputStream
 import models.GeoSquare
 import play.api.libs.json.JsResultException
 /**
- * Launch a research on Tweets and send them to the good listener once a result is received.
- * https://dev.twitter.com/docs/api/1.1/get/search/tweets
+ * Gets a stream of tweets
+ * https://dev.twitter.com/docs/api/1.1/post/statuses/filter
  * Max #request/15minutes: 450, Max #keywords=10
  */
 class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
@@ -39,8 +39,8 @@ class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
   def receive = {
     case "start" => /* First execution */
       val locationParam = query.area.long1 + "," + query.area.lat1 + "," + query.area.long2 + "," + query.area.lat2
-      val keywordsParam = query.keywords.mkString(",")
-      stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", keywordsParam, locationParam)
+      //val keywordsParam = query.keywords.mkString(",")
+      stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", locationParam)
       sendToListener()
 
     case "callback" => /* Callback execution (query update) */
@@ -69,12 +69,12 @@ class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
     }
   }
 
-  def askFor(request: String, keywords: String, location: String) = {
+  def askFor(request: String, location: String) = {
     val postRequest = new HttpPost(request)
 
     //We set the parameters in a weird way that fits with SCALA/Apache HTTP compatibilities
     val params = new java.util.ArrayList[BasicNameValuePair](2)
-    params.add(new BasicNameValuePair("track",keywords))
+    //params.add(new BasicNameValuePair("track",keywords))
     params.add(new BasicNameValuePair("location",location))
     postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
     postRequest.setEntity(new UrlEncodedFormEntity(params))
@@ -90,7 +90,14 @@ class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
     val inr = new BufferedReader(new InputStreamReader(in))
     val bf = new StringBuilder
     var rd = inr.readLine
-    while (rd != null) { bf.append(rd); rd = inr.readLine }
+    while (rd != null) { 
+      val currentJSon = inr.readLine
+      val text = currentJSon.split("\"text\":\"").apply(1).split("\",\n\"source\"").apply(0)
+      println(text)
+      println("HOHOHOHOHO")
+      query.keywords
+      bf.append(rd); rd = inr.readLine 
+    }
     bf.toString
   }
 
