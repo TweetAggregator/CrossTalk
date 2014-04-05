@@ -64,20 +64,20 @@ class TweetManager extends Actor {
    * rate. The list of running searches is updated.
    */
   def scheduleSearcher(query: TweetQuery, listener: TweetListener, searchRate: Int) {
-    //val searcherRef = ActorSystem().actorOf(Props(new TweetSearcher(query, listener)))
-    //val streamerRef = ActorSystem().actorOf(Props(new TweetStreamer(query, listener)))
+    val searcherRef = ActorSystem().actorOf(Props(new TweetSearcher(query, listener)))
+    val streamerRef = ActorSystem().actorOf(Props(new TweetStreamer(query, listener)))
 
-    //searcherRef ! "start"
-    //streamerRef ! "start" 
+    searcherRef ! "start"
+    streamerRef ! "start" 
 
-    /*runningSearches += (query -> (ActorSystem().scheduler.schedule(
+    runningSearches += (query -> (ActorSystem().scheduler.schedule(
       Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
       Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
-      searcherRef, "callback"), searchRate))*/
-     /*runningSearches += (query -> (ActorSystem().scheduler.schedule(
+      searcherRef, "callback"), searchRate))
+     runningSearches += (query -> (ActorSystem().scheduler.schedule(
       Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
       Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
-      streamerRef, "callback"), searchRate))*/
+      streamerRef, "callback"), searchRate))
   }
 }
 object TweetManager {
