@@ -16,32 +16,68 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsPath
 import play.api.libs.json.JsArray
 import play.api.mvc.Action
-/* import dispatch._, Defaults._*/
+import org.apache.http._
+import org.apache.http.entity.StringEntity
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.message.BasicNameValuePair
+import org.apache.http.impl.client.DefaultHttpClient
+import org.apache.http.client.methods.HttpGet
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.BufferedOutputStream
+import java.io.InputStream
+import play.api.libs.json.JsString
+import play.api.libs.json.JsUndefined
 
 @RunWith(classOf[JUnitRunner])
 class Translator extends Specification {
-  /*
+  
   "Translator" should {
     "translate" in new WithApplication {
-     
-  val svc = url("http://glosbe.com/gapi/translate?from=deu&dest=fra&format=json&phrase=Bier&pretty=true&tm=false")
-    val response  = Http(svc OK as.String)
-    for (c <- response){ 
-
-        val json: JsValue = Json.parse(c)
-
-        val ret = (json \ "tuc") match {
-          // case JsArray(e) => e.map(x => println( (x \ "phrase" \ "text") ) ) // print the result
-          case JsArray(e) => (e.map(x => (x \ "phrase" \ "text") ) )
-          case _ =>  println("TROP NUL") 
-        }
-
-        println(ret)
+      
+      val from = "deu"
+      val dest = "fra"
+      val dest2 = "eng"
+      val keyword = "Bier"
+      println("Result: " + translate(from, List(dest,dest2), keyword))
     }
+  }
+  
+  def askFor(request: String) = {
+    val httpRequest = new HttpGet(request)
+    httpRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
+    val client = new DefaultHttpClient()
+    // println(httpRequest)
+    val twitterResponse = client.execute(httpRequest) /* Send the request and get the response */
+    twitterResponse.getEntity().getContent()
+  }
 
-    // would be nice to have something like below
-    // val list:JsValue = (json \ "tuc").value.foreach(x => (x \ "phrase" \ "text")).toList()
-	
-    }
-  }*/
+  /** Read all the data present in the InputStream in and return it as a String */
+  def readAll(in: InputStream): String = {
+    val inr = new BufferedReader(new InputStreamReader(in))
+    val bf = new StringBuilder
+    var rd = inr.readLine
+    while (rd != null) { bf.append(rd); rd = inr.readLine }
+    bf.toString
+  }
+
+  /** Parse a string into a list of JsValue  containing translation */
+  def parseJson(str: String): List[JsValue] = {
+    val json = Json.parse(str.toString)
+    (json \ "tuc").as[JsArray].value.map(x => (x \ "phrase" \ "text") ).filter(json => !json.isInstanceOf[JsUndefined]).toList
+  }
+
+  def translate(from: String, dest: String, keyword: String): List[JsValue] = {
+      val serverAddr = "http://glosbe.com/gapi/translate?from=" + from + "&dest=" + dest + "&format=json&phrase=" + keyword + "&pretty=true&tm=false"
+      
+      val stream = askFor(serverAddr)
+      val ret = readAll(stream)
+      stream.close
+      parseJson(ret)
+  }
+
+  def translate(from: String, destL: List[String], keyword: String): List[List[JsValue]] = {
+    destL.map(e => translate(from, e, keyword))
+  }
 }
