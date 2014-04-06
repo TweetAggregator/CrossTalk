@@ -64,3 +64,5 @@ case class StartAll(queries: List[(TweetQuery, ActorRef)])
 case object StopAll
 /** Replace one query by other in order to rafinate the research */
 case class Replace(origin: TweetQuery, subqueries: List[(TweetQuery, ActorRef)])
+
+case class GeoSend(results: List[(GeoSquare, Int)])
