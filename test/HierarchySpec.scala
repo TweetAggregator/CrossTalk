@@ -10,7 +10,7 @@ import models.TweetQuery
 import models.GeoSquare
 import models.Tweet
 import play.api.libs.json.Json
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef}
 import models._
 
 @RunWith(classOf[JUnitRunner])
@@ -19,17 +19,20 @@ class HierarchySpec extends Specification {
  class notify extends Actor {
         def receive = {
       case x: Int => 
-        print("-")
         track += x
     }
- } 
+ }
+
+  implicit def toRef(a: Props): ActorRef = {
+    ActorSystem().actorOf(a)
+  }
   "Hierarchy Test" should {
     
-    "Shit" in new WithApplication {
+    "Multiple Queries" in new WithApplication {
       /*GeoPartitionner test*/
-      val geoPart = ActorSystem().actorOf(Props(new GeoPartitionner))
+      val geoPart: ActorRef = Props(new GeoPartitionner)
      /*Retrieves the count*/ 
-      val retriever = ActorSystem().actorOf(Props(new notify))
+      val retriever: ActorRef = Props(new notify)
       /*Listens to the query's result*/
       val listeners = (1 to 4).map(x => ActorSystem().actorOf(Props(new Counter(retriever))))
       /*The query*/
@@ -45,6 +48,6 @@ class HierarchySpec extends Specification {
       Thread.sleep(20000)
       println("\nWe received "+track)
   
-    }
+     }
   }
 }

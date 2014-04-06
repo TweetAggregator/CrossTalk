@@ -18,7 +18,6 @@ class Counter(listener: ActorRef) extends Actor {
   def receive = {
     case ts: Seq[_] => increase(ts.size)
     case _ => 
-      println("received")
       increase(1)
   }
 }
