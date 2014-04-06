@@ -22,11 +22,11 @@ import java.io.InputStream
 import models.GeoSquare
 import play.api.libs.json.JsResultException
 /**
- * Launch a research on Tweets and send them to the good listener once a result is received.
- * https://dev.twitter.com/docs/api/1.1/get/search/tweets
+ * Gets a stream of tweets
+ * https://dev.twitter.com/docs/api/1.1/post/statuses/filter
  * Max #request/15minutes: 450, Max #keywords=10
  */
-class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
+class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
 
   /* We set up the HTTP client and the oauth module */
   val oauthConsumer = TweetManager.getConsumer
@@ -34,15 +34,18 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
 
   var callback: Option[String] = None /* Store the params used to check for updates */
 
+  var stream: InputStream = null
+
   def receive = {
     case "start" => /* First execution */
-      val geoParams = query.area.center._2 + "," + query.area.center._1 + "," + query.area.radius + "km"
-      execRequest("https://api.twitter.com/1.1/search/tweets.json?geocode=" + geoParams + "&q=" + query.kwsInSearchFormat + "&result_type=recent&count=100")
+      val locationParam = query.area.long1 + "," + query.area.lat1 + "," + query.area.long2 + "," + query.area.lat2
+      //val keywordsParam = query.keywords.mkString(",")
+      stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", locationParam)
+      sendToListener()
 
     case "callback" => /* Callback execution (query update) */
       callback match {
-        case Some(properties) =>
-          execRequest("https://api.twitter.com/1.1/search/tweets.json" + properties)
+        case Some(properties) => sendToListener()
         case None =>
           /* A parsing error occurred or our searcher has been kicked by the API, restarting... */
           receive("start")
@@ -54,10 +57,8 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
   /**
    * Execute the request in parameter, parse it and send the tweets to the listener.
    */
-  def execRequest(request: String) = {
-    val stream = askFor(request)
+  def sendToListener() = {
     val ret = readAll(stream)
-    stream.close
     try {
       val (values, clb) = parseJson(ret)
       callback = Some(clb)
@@ -67,14 +68,20 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
         callback = None /* Will restart the searcher next time it receive a callback */
     }
   }
-  /** Ask for the request passed in parameter, signed by the oauthConsumer. */
-  def askFor(request: String) = {
-    val HttpRequest = new HttpGet(request)
-    HttpRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
 
-    oauthConsumer.sign(HttpRequest)
+  def askFor(request: String, location: String) = {
+    val postRequest = new HttpPost(request)
 
-    val twitterResponse = client.execute(HttpRequest) /* Send the request and get the response */
+    //We set the parameters in a weird way that fits with SCALA/Apache HTTP compatibilities
+    val params = new java.util.ArrayList[BasicNameValuePair](2)
+    //params.add(new BasicNameValuePair("track",keywords))
+    params.add(new BasicNameValuePair("location",location))
+    postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
+    postRequest.setEntity(new UrlEncodedFormEntity(params))
+
+    oauthConsumer.sign(postRequest)
+
+    val twitterResponse = client.execute(postRequest) /* Send the request and get the response */
     twitterResponse.getEntity().getContent()
   }
 
@@ -83,7 +90,14 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
     val inr = new BufferedReader(new InputStreamReader(in))
     val bf = new StringBuilder
     var rd = inr.readLine
-    while (rd != null) { bf.append(rd); rd = inr.readLine }
+    while (rd != null) { 
+      val currentJSon = inr.readLine
+      val text = currentJSon.split("\"text\":\"").apply(1).split("\",\n\"source\"").apply(0)
+      println(text)
+      println("HOHOHOHOHO")
+      query.keywords
+      bf.append(rd); rd = inr.readLine 
+    }
     bf.toString
   }
 
