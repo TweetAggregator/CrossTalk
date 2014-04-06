@@ -8,8 +8,10 @@ import akka.actor.ActorRef
  * Model of a geographic position. The parameters passed are ready to be used by the Streaming API.
  * For the Search API, the parameters need to be converted into a central position + radius, hence
  * the calculus in the inner fields.
+ * NB : requirements are long1 < long2, lat1 < lat2
  */
 case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
+  assert(long1 < long2 && lat1 < lat2, "Requirements for GeoSquare are long1 < long2, lat1 < lat2, not respected here")
   val center: (Double, Double) = ((long2 + long1) / 2, (lat2 + lat1) / 2)
   /* From stackOverflow */
   val radius: Double = {
@@ -35,13 +37,13 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
     case (1, 1) => this :: Nil /* Since we cannot split it anymore */
     case _ if rows >= 1 && cols >= 1 =>
       val (dx, dy) = ((area.long2 - area.long1) / rows, (area.lat2 - area.lat1) / cols)
-      def listOuter(x: Double = area.long1): List[TweetQuery] = x match {
-        case _ if x >= area.long2 => Nil
-        case _ => listInner(x) ++ listOuter(x + dx)
+      def listOuter(r: Int = 0, x: Double = area.long1): List[TweetQuery] = r match {
+        case _ if r < rows => listInner(x) ++ listOuter(r+1,x + dx)
+        case _ => Nil
       }
-      def listInner(x: Double, y: Double = area.lat1): List[TweetQuery] = y match {
-        case _ if y >= area.lat2 => Nil
-        case _ => this.copy(area = GeoSquare(x, y, x + dx, y + dy), rows = 1, cols = 1) :: listInner(x, y + dy)
+      def listInner(x: Double, c:Int = 0, y: Double = area.lat1): List[TweetQuery] = c match {
+        case _ if c < cols => this.copy(area = GeoSquare(x, y, x + dx, y + dy), rows = 1, cols = 1) :: listInner(x,c+1, y + dy)
+        case _ => Nil
       }
       /* Actual execution */
       listOuter()

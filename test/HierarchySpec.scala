@@ -14,7 +14,7 @@ import akka.actor.Actor
 import models._
 
 @RunWith(classOf[JUnitRunner])
-class HierarchyTest extends Specification {
+class HierarchySpec extends Specification {
  var track: Int = 0
  class notify extends Actor {
         def receive = {
@@ -33,7 +33,7 @@ class HierarchyTest extends Specification {
       /*Listens to the query's result*/
       val listeners = (1 to 4).map(x => ActorSystem().actorOf(Props(new Counter(retriever))))
       /*The query*/
-      val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 2, 2)
+      val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20.0, -79, 50.6), 2, 2)
       
       val acts = query.subqueries.zip(listeners).map{x => 
         ActorSystem().actorOf(Props(new TweetSearcher(x._1, x._2)))
