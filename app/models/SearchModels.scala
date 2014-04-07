@@ -60,11 +60,13 @@ case class Tweet(value: JsValue, query: TweetQuery)
 
 /* List of messages accepted by the TweetManager */
 
-/** Start all the queries specificed, with their specific listeners */
+/** Start all the queries specified, with their specific listeners */
 case class StartAll(queries: List[(TweetQuery, ActorRef)])
 /** Stop all the queries currently running */
 case object StopAll
-/** Replace one query by other in order to rafinate the research */
-case class Replace(origin: TweetQuery, subqueries: List[(TweetQuery, ActorRef)])
+/** Stop a specific query, one sent to the manager */
+case class Stop(query: TweetQuery)
+/** Start a specific query with the specific listener */
+case class Start(query: TweetQuery, listener: ActorRef)
 
 case class Report(id: (Int, Int), count: Long)

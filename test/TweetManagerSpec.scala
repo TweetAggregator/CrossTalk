@@ -13,7 +13,8 @@ import play.api.libs.json.Json
 import akka.actor.Actor
 import models.StartAll
 import models.StopAll
-import models.Replace
+import models.Stop
+import models.Start
 
 @RunWith(classOf[JUnitRunner])
 class TweetManagerSpec extends Specification {
@@ -90,7 +91,8 @@ class TweetManagerSpec extends Specification {
 
       manager ! StartAll((qurs1, listener) :: Nil)
       Thread.sleep(20000) /* Wait 20 seconds for the first tweet to be received */
-      manager ! Replace(qurs1, (qurs2, listener) :: Nil)
+      manager ! Stop(qurs1)
+      manager ! Start(qurs2, listener)
       Thread.sleep(20000) /* Wait 20 seconds for the next tweets to be received */
       manager ! StopAll
       println("> " + nbReceived)

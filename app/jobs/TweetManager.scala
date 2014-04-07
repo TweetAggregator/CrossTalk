@@ -31,52 +31,55 @@ class TweetManager extends Actor {
   val searchQueryLimit = 180 * 4 /* per hours, see https://dev.twitter.com/docs/rate-limiting/1.1/limits */
   private def toSeconds(perHour: Int) = (60 * 60) / perHour
 
-  /** A list of running and cancellable Searcher, along with their update rates */
-  var runningSearches: Map[TweetQuery, (Cancellable, Int)] = Map()
+  /** A list of running and cancellable Searcher, along with their reference actors */
+  var runningSearches: Map[TweetQuery, (Cancellable, ActorRef)] = Map()
 
   def receive = {
 
     case StartAll(queries) =>
-      assert(queries.size > 0, "Cannot start no queries at all.")
-      val searchRate = searchQueryLimit / queries.size
-      queries foreach { qur => scheduleSearcher(qur._1, qur._2, searchRate) }
+      val searchRate = if (queries.size > 0) searchQueryLimit / queries.size else 0
+      queries foreach { qur =>
+        val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2)))
+        searcherRef ! "start"
+        scheduleSearcher(qur._1, qur._2, searchRate)
+      }
 
     case StopAll =>
       runningSearches.values foreach (_._1.cancel)
       runningSearches = Map()
 
-    case Replace(origin, queries) =>
-      assert(queries.size > 0, "Cannot replace a query by none.")
-      runningSearches get (origin) match {
+    case Stop(query) =>
+      runningSearches get (query) match {
         case Some(qur) =>
-          qur._1.cancel
-          runningSearches -= origin
-          val newSearchRate = qur._2 / queries.size
-          queries foreach (qur => scheduleSearcher(qur._1, qur._2, newSearchRate))
-
+          runningSearches.values foreach (_._1.cancel)
+          runningSearches -= query
+          val refs = runningSearches map (qur => (qur._1, qur._2._2))
+          runningSearches = Map()
+          val searchRate = if (refs.size > 0) searchQueryLimit / refs.size else 0
+          refs foreach (qur => scheduleSearcher(qur._1, qur._2, searchRate))
         case None => sys.error("Want to stop a query never launched.")
       }
+
+    case Start(query, listener) =>
+      runningSearches.values foreach (_._1.cancel)
+      val refs = runningSearches map (qur => (qur._1, qur._2._2))
+      runningSearches = Map()
+      val searchRate = searchQueryLimit / (refs.size + 1)
+      refs foreach (qur => scheduleSearcher(qur._1, qur._2, searchRate))
+      val searcherRef = toRef(Props(new TweetSearcher(query, listener)))
+      searcherRef ! "start"
+      scheduleSearcher(query, searcherRef, searchRate)
 
     case _ => sys.error("Wrong message sent to the TweetManager")
   }
 
   /**
-   * start the query in parameters, with the corresponding TweetListener, at the specified search
-   * rate. The list of running searches is updated.
+   * Reschedule a searcher 'searcherRef' based on the query 'query' with the specified search rate.
    */
-  def scheduleSearcher(query: TweetQuery, listener: TweetListener, searchRate: Int) {
-    val searcherRef = ActorSystem().actorOf(Props(new TweetSearcher(query, listener)))
-    /*val streamerRef = ActorSystem().actorOf(Props(new TweetStreamer(query, listener)))*/
-
-    searcherRef ! "start"
-    /*streamerRef ! "start"*/
-
-    runningSearches += (query -> (searcherRef.schedule(toSeconds(searchRate), toSeconds(searchRate), TimeUnit.SECONDS, "callback"), searchRate))
-
-    /*runningSearches += (query -> (ActorSystem().scheduler.schedule(
-      Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
-      Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
-      streamerRef, "callback"), searchRate))*/
+  def scheduleSearcher(query: TweetQuery, searcherRef: ActorRef, searchRate: Int) {
+    runningSearches += (query -> (
+      searcherRef.schedule(toSeconds(searchRate), toSeconds(searchRate), TimeUnit.SECONDS, "callback"),
+      searcherRef))
   }
 }
 object TweetManager {
