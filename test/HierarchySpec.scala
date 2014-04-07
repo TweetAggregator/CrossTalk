@@ -34,9 +34,9 @@ class HierarchySpec extends Specification {
       /*GeoPartitionner test*/
       val geoPart: ActorRef = Props(new GeoPartitionner)
      /*Retrieves the count*/ 
-      val retriever: ActorRef = Props(new notify)
+     // val retriever: ActorRef = Props(new )
       /*Listens to the query's result*/
-      val listeners = (1 to (defaultRow * defaultCol)).map(x => ActorSystem().actorOf(Props(new Counter((x % defaultRow, x % defaultCol),retriever))))
+      val listeners = (1 to (defaultRow * defaultCol)).map(x => ActorSystem().actorOf(Props(new Counter((x % defaultRow, x % defaultCol), geoPart))))
       /*The query*/
       val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20.0, -79, 50.6), defaultRow, defaultCol)
       
@@ -44,13 +44,13 @@ class HierarchySpec extends Specification {
         ActorSystem().actorOf(Props(new TweetSearcher(x._1._1, x._2)))
       }
         
-        
-      //val actor = ActorSystem().actorOf(Props(new TweetSearcher(query), listener)))
       acts.foreach(_ ! "start")
       Thread.sleep(20000)
       listeners.foreach(_ ! "report")
-      Thread.sleep(20000)
-      println("\nWe received "+track)
+      Thread.sleep(1000)
+      geoPart ! "Total"
+      geoPart ! "Winner"
+      geoPart ! "Size"
   
      }
   }
