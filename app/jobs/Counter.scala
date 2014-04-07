@@ -5,12 +5,12 @@ import akka.actor.ActorRef
 
 import models._
 
-class Counter(listener: ActorRef) extends Actor {
+class Counter(id: (Int, Int), listener: ActorRef) extends Actor {
   var count = 0L
 
   def increase(n: Int) = {
     count += n
-    listener ! n
+    listener ! (id, n)
   }
 
   def get() = count

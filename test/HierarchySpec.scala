@@ -16,6 +16,8 @@ import models._
 @RunWith(classOf[JUnitRunner])
 class HierarchySpec extends Specification {
  var track: Int = 0
+ val defaultRow = 4
+ val defaultCol = 5
  class notify extends Actor {
         def receive = {
       case x: Int => 
@@ -34,12 +36,12 @@ class HierarchySpec extends Specification {
      /*Retrieves the count*/ 
       val retriever: ActorRef = Props(new notify)
       /*Listens to the query's result*/
-      val listeners = (1 to 4).map(x => ActorSystem().actorOf(Props(new Counter(retriever))))
+      val listeners = (1 to (defaultRow * defaultCol)).map(x => ActorSystem().actorOf(Props(new Counter((x % defaultRow, x % defaultCol),retriever))))
       /*The query*/
-      val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20.0, -79, 50.6), 2, 2)
+      val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20.0, -79, 50.6), defaultRow, defaultCol)
       
-      val acts = query.subqueries.zip(listeners).map{x => 
-        ActorSystem().actorOf(Props(new TweetSearcher(x._1, x._2)))
+      val acts = query.subqueries.zipWithIndex.zip(listeners).map{x => 
+        ActorSystem().actorOf(Props(new TweetSearcher(x._1._1, x._2)))
       }
         
         
