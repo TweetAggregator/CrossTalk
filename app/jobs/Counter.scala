@@ -5,7 +5,7 @@ import akka.actor.ActorRef
 
 import models._
 
-class Counter(id: (Int, Int), listener: ActorRef) extends Actor {
+class Counter(pos: GeoSquare, listener: ActorRef) extends Actor {
   var count = 0L
 
   def increase(n: Int) = {
@@ -18,7 +18,7 @@ class Counter(id: (Int, Int), listener: ActorRef) extends Actor {
   def receive = {
     case ts: Seq[_] => increase(ts.size)
     case ReportCount =>
-      listener ! Report(id, count)
+      listener ! Report(pos, count)
     case _ => 
       increase(1)
   }

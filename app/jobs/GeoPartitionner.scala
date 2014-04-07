@@ -9,7 +9,7 @@ class GeoPartitionner extends Actor {
   /*Total Number of tweets*/
   var total = 0L
   /*Map holding the results*/
-  var results: Map[(Int, Int), Long] = Map()
+  var results: Map[GeoSquare, Long] = Map()
   
   def receive = {
    case Winner => 

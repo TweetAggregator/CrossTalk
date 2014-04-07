@@ -6,7 +6,7 @@ import akka.actor.ActorRef
 
 // Messages for communication between actors
 
-case class Report(id: (Int, Int), count: Long)
+case class Report(id: GeoSquare, count: Long)
 
 case object TotalTweets
 
