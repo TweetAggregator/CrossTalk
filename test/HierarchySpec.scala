@@ -5,6 +5,7 @@ import play.api.test._
 import play.api.test.Helpers._
 import akka.actor.ActorSystem
 import akka.actor.Props
+import akka.pattern.ask
 import jobs._
 import models.TweetQuery
 import models.GeoSquare
@@ -46,11 +47,11 @@ class HierarchySpec extends Specification {
         
       acts.foreach(_ ! "start")
       Thread.sleep(20000)
-      listeners.foreach(_ ! "report")
+      listeners.foreach(_ ! ReportCount)
       Thread.sleep(1000)
-      geoPart ! "Total"
-      geoPart ! "Winner"
-      geoPart ! "Size"
+      val totalFuture = geoPart ? TotalTweets
+      println(s"Total from future: ${totalFuture.value.get}")
+      geoPart ! Winner
   
      }
   }

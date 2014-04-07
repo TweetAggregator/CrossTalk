@@ -17,7 +17,7 @@ class Counter(id: (Int, Int), listener: ActorRef) extends Actor {
   /*TODO change this so that report is a default Object*/
   def receive = {
     case ts: Seq[_] => increase(ts.size)
-    case "report" =>
+    case ReportCount =>
       listener ! Report(id, count)
     case _ => 
       increase(1)

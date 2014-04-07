@@ -12,16 +12,12 @@ class GeoPartitionner extends Actor {
   var results: Map[(Int, Int), Long] = Map()
   
   def receive = {
-   case "Winner" => 
+   case Winner => 
     println("winner is: "+results.maxBy(_._2))
    case Report(id, count) =>
     total += count
     results += (id -> count)
-   case "Total" => 
-    println("Total received: "+total)
-   case "Size" => 
-    println ("Map size: "+results.keys.size)
-   case _ =>
-    println("Boom Boom Boom Boom ")
-   }
+   case TotalTweets => 
+    sender ! total
+  }
 }
