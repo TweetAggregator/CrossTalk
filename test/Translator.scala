@@ -40,7 +40,10 @@ class Translator extends Specification {
       val dest = "fra"
       val dest2 = "eng"
       val keyword = "Bier"
-      println("Result: " + translate(from, List(dest,dest2), keyword))
+
+      val ret = translateAndSynonyms(from, List(dest, dest2), keyword)
+      println("Result TRANSLATION: " + ret._1)
+      println("Result SYNONYMS   : " + ret._2)
     }
   }
   
@@ -80,4 +83,20 @@ class Translator extends Specification {
   def translate(from: String, destL: List[String], keyword: String): List[List[JsValue]] = {
     destL.map(e => translate(from, e, keyword))
   }
+
+  /* "tries" to get synonyms of the keyword in the user language */
+  def synonyms(lang: String, keyword: String): List[JsValue] = {
+      val serverAddr = "http://glosbe.com/gapi/translate?from=" + lang + "&dest=" + lang + "&format=json&phrase=" + keyword + "&pretty=true&tm=false"
+      
+      val stream = askFor(serverAddr)
+      val ret = readAll(stream)
+      stream.close
+      parseJson(ret)
+  }
+
+  def translateAndSynonyms(from: String, destL: List[String], keyword: String): (List[List[JsValue]], List[JsValue]) = {
+    (translate(from, destL, keyword), synonyms(from, keyword))
+  }
+
+
 }
