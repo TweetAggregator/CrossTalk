@@ -64,9 +64,5 @@ case class Tweet(value: JsValue, query: TweetQuery)
 case class StartAll(queries: List[(TweetQuery, ActorRef)])
 /** Stop all the queries currently running */
 case object StopAll
-/** Stop a specific query, one sent to the manager */
-case class Stop(query: TweetQuery)
-/** Start a specific query with the specific listener */
-case class Start(query: TweetQuery, listener: ActorRef)
 
 case class Report(id: (Int, Int), count: Long)

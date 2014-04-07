@@ -13,8 +13,7 @@ import play.api.libs.json.Json
 import akka.actor.Actor
 import models.StartAll
 import models.StopAll
-import models.Stop
-import models.Start
+import jobs.TweetManager._
 
 @RunWith(classOf[JUnitRunner])
 class TweetManagerSpec extends Specification {
@@ -37,7 +36,7 @@ class TweetManagerSpec extends Specification {
       actor ! "start"
       Thread.sleep(20000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
-      nbReceived should be greaterThan(0)
+      nbReceived should be greaterThan (0)
     }
 
     "return a list of tweets and do a callback" in new WithApplication {
@@ -71,33 +70,13 @@ class TweetManagerSpec extends Specification {
       val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs3 = TweetQuery("Bloomberg" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
-      val manager = ActorSystem().actorOf(Props(new TweetManager))
       val listener = ActorSystem() actorOf (Props(new listener))
 
-      manager ! StartAll((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: Nil)
-      Thread.sleep(30000) /* Just print tweets for 30 secs */
-      manager ! StopAll
+      TweetManagerRef ! StartAll((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: Nil)
+      Thread.sleep(20000) /* Just print tweets for 30 secs */
+      TweetManagerRef ! StopAll
       println("> " + nbReceived)
       nbReceived should be greaterThan (200)
     }
-
-    "start a query, replace it by another, then stop it" in new WithApplication {
-      nbReceived = 0
-      val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-      val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-
-      val manager = ActorSystem().actorOf(Props(new TweetManager))
-      val listener = ActorSystem() actorOf (Props(new listener))
-
-      manager ! StartAll((qurs1, listener) :: Nil)
-      Thread.sleep(20000) /* Wait 20 seconds for the first tweet to be received */
-      manager ! Stop(qurs1)
-      manager ! Start(qurs2, listener)
-      Thread.sleep(20000) /* Wait 20 seconds for the next tweets to be received */
-      manager ! StopAll
-      println("> " + nbReceived)
-      nbReceived should be greaterThan (100)
-    }
-
   }
 }
