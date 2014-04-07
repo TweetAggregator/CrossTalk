@@ -15,14 +15,14 @@ import models._
 
 @RunWith(classOf[JUnitRunner])
 class HierarchySpec extends Specification {
- var track: Int = 0
+ var track = 0L
  val defaultRow = 4
  val defaultCol = 5
  class notify extends Actor {
-        def receive = {
-      case x: Int => 
-        track += x
-    }
+  def receive = {
+    case Report(id, count) =>
+      track += count
+  }
  }
 
   implicit def toRef(a: Props): ActorRef = {
@@ -47,6 +47,8 @@ class HierarchySpec extends Specification {
         
       //val actor = ActorSystem().actorOf(Props(new TweetSearcher(query), listener)))
       acts.foreach(_ ! "start")
+      Thread.sleep(20000)
+      listeners.foreach(_ ! "report")
       Thread.sleep(20000)
       println("\nWe received "+track)
   
