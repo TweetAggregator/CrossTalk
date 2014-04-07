@@ -19,9 +19,9 @@ import jobs.TweetManager._
 class TweetManagerSpec extends Specification {
   var nbReceived = 0
 
-  class listener extends Actor {
+  class Listener extends Actor {
     def receive = {
-      case Tweet(value, geo) =>
+      case Tweet(value, query) =>
         nbReceived += 1
         print("-")
     }
@@ -31,7 +31,7 @@ class TweetManagerSpec extends Specification {
   "Tweet Searcher Actor" should {
 
     "return a list of tweets" in new WithApplication {
-      val listener = ActorSystem() actorOf (Props(new listener))
+      val listener = ActorSystem() actorOf (Props(new Listener))
       val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
       Thread.sleep(20000) /* Just print tweets for 10 secs */
@@ -41,7 +41,7 @@ class TweetManagerSpec extends Specification {
 
     "return a list of tweets and do a callback" in new WithApplication {
       nbReceived = 0
-      val listener = ActorSystem() actorOf (Props(new listener))
+      val listener = ActorSystem() actorOf (Props(new Listener))
       val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
       actor ! "callback"
@@ -52,7 +52,7 @@ class TweetManagerSpec extends Specification {
 
     "launch a query with multiple keywords" in new WithApplication {
       nbReceived = 0
-      val listener = ActorSystem() actorOf (Props(new listener))
+      val listener = ActorSystem() actorOf (Props(new Listener))
       val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
       actor ! "callback"
@@ -70,7 +70,7 @@ class TweetManagerSpec extends Specification {
       val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs3 = TweetQuery("Bloomberg" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
-      val listener = ActorSystem() actorOf (Props(new listener))
+      val listener = ActorSystem() actorOf (Props(new Listener))
 
       TweetManagerRef ! StartAll((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: Nil)
       Thread.sleep(20000) /* Just print tweets for 30 secs */

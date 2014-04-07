@@ -43,6 +43,7 @@ class TweetSearcher(query: TweetQuery, listener: ActorRef) extends Actor {
           execRequest("https://api.twitter.com/1.1/search/tweets.json" + properties)
         case None =>
           /* A parsing error occurred or our searcher has been kicked by the API, restarting... */
+          println(" A parsing error occurred or our searcher has been kicked by the API, restarting...")
           receive("start")
       }
 
