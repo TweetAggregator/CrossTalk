@@ -13,6 +13,8 @@ import models.Tweet
 import play.api.libs.json.Json
 import akka.actor.{Actor, ActorRef}
 import models._
+import scala.concurrent.duration.Duration
+import scala.concurrent.Await
 
 @RunWith(classOf[JUnitRunner])
 class HierarchySpec extends Specification {
@@ -52,7 +54,8 @@ class HierarchySpec extends Specification {
       listeners.foreach(_ ! ReportCount)
       Thread.sleep(1000)
       val totalFuture = geoPart ? TotalTweets
-      println(s"Total from future: ${totalFuture.value.get}")
+      val res = Await.result(totalFuture, Duration(5, "seconds"))
+      println(s"Total from future: $res")
       geoPart ! Winner
   
      }
