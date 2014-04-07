@@ -32,7 +32,7 @@ class TweetManagerSpec extends Specification {
 
     "return a list of tweets" in new WithApplication {
       val listener = ActorSystem() actorOf (Props(new listener))
-      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listener)))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
       Thread.sleep(20000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
@@ -42,7 +42,7 @@ class TweetManagerSpec extends Specification {
     "return a list of tweets and do a callback" in new WithApplication {
       nbReceived = 0
       val listener = ActorSystem() actorOf (Props(new listener))
-      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listener)))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
       actor ! "callback"
       Thread.sleep(20000) /* Just print tweets for 20 secs */
@@ -53,7 +53,7 @@ class TweetManagerSpec extends Specification {
     "launch a query with multiple keywords" in new WithApplication {
       nbReceived = 0
       val listener = ActorSystem() actorOf (Props(new listener))
-      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1), listener)))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
       actor ! "callback"
       Thread.sleep(20000) /* Just print tweets for 20 secs */
@@ -66,9 +66,9 @@ class TweetManagerSpec extends Specification {
   "Tweet Manager" should {
     "start queries, and stop them" in new WithApplication {
       nbReceived = 0
-      val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
-      val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
-      val qurs3 = TweetQuery("Bloomberg" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
+      val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs3 = TweetQuery("Bloomberg" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val manager = ActorSystem().actorOf(Props(new TweetManager))
       val listener = ActorSystem() actorOf (Props(new listener))
@@ -82,8 +82,8 @@ class TweetManagerSpec extends Specification {
 
     "start a query, replace it by another, then stop it" in new WithApplication {
       nbReceived = 0
-      val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
-      val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 50.6, -79, 20), 1, 1)
+      val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs2 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val manager = ActorSystem().actorOf(Props(new TweetManager))
       val listener = ActorSystem() actorOf (Props(new listener))

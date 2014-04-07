@@ -14,6 +14,7 @@ import TweetManager._
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import play.api.libs.concurrent.Execution.Implicits._
+import utils.AkkaImplicits._
 
 /* TODO: cover cases for the Streaming API */
 /**
@@ -68,13 +69,11 @@ class TweetManager extends Actor {
     /*val streamerRef = ActorSystem().actorOf(Props(new TweetStreamer(query, listener)))*/
 
     searcherRef ! "start"
-    /*streamerRef ! "start"*/ 
+    /*streamerRef ! "start"*/
 
-    runningSearches += (query -> (ActorSystem().scheduler.schedule(
-      Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
-      Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
-      searcherRef, "callback"), searchRate))
-     /*runningSearches += (query -> (ActorSystem().scheduler.schedule(
+    runningSearches += (query -> (searcherRef.schedule(toSeconds(searchRate), toSeconds(searchRate), TimeUnit.SECONDS, "callback"), searchRate))
+
+    /*runningSearches += (query -> (ActorSystem().scheduler.schedule(
       Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
       Duration.create(toSeconds(searchRate), TimeUnit.SECONDS),
       streamerRef, "callback"), searchRate))*/
