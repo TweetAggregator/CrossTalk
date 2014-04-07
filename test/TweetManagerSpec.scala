@@ -34,7 +34,7 @@ class TweetManagerSpec extends Specification {
       val listener = ActorSystem() actorOf (Props(new Listener))
       val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
-      Thread.sleep(20000) /* Just print tweets for 10 secs */
+      Thread.sleep(30000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
@@ -44,8 +44,8 @@ class TweetManagerSpec extends Specification {
       val listener = ActorSystem() actorOf (Props(new Listener))
       val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
-      actor ! "callback"
-      Thread.sleep(20000) /* Just print tweets for 20 secs */
+      actor ! "ping"
+      Thread.sleep(30000) /* Just print tweets for 20 secs */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
@@ -55,7 +55,7 @@ class TweetManagerSpec extends Specification {
       val listener = ActorSystem() actorOf (Props(new Listener))
       val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
       actor ! "start"
-      actor ! "callback"
+      actor ! "ping"
       Thread.sleep(20000) /* Just print tweets for 20 secs */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
@@ -73,7 +73,7 @@ class TweetManagerSpec extends Specification {
       val listener = ActorSystem() actorOf (Props(new Listener))
 
       TweetManagerRef ! StartAll((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: Nil)
-      Thread.sleep(20000) /* Just print tweets for 30 secs */
+      Thread.sleep(40000) /* Just print tweets for 40 secs */
       TweetManagerRef ! StopAll
       println("> " + nbReceived)
       nbReceived should be greaterThan (200)

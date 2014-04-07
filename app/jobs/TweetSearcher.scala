@@ -37,13 +37,12 @@ class TweetSearcher(query: TweetQuery, listener: ActorRef) extends Actor {
       val geoParams = query.area.center._2 + "," + query.area.center._1 + "," + query.area.radius + "km"
       execRequest("https://api.twitter.com/1.1/search/tweets.json?geocode=" + geoParams + "&q=" + query.kwsInSearchFormat + "&result_type=recent&count=100")
 
-    case "callback" => /* Callback execution (query update) */
+    case "ping" => /* Callback execution (query update) */
       callback match {
         case Some(properties) =>
           execRequest("https://api.twitter.com/1.1/search/tweets.json" + properties)
         case None =>
           /* A parsing error occurred or our searcher has been kicked by the API, restarting... */
-          println(" A parsing error occurred or our searcher has been kicked by the API, restarting...")
           receive("start")
       }
 

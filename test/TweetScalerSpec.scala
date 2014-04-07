@@ -29,7 +29,7 @@ class TweetScalerSpec extends Specification {
 
     def receive = {
       case kw: String =>
-        println("General count: " + generalCount)
+        println("General count: " + generalCount + ", duplicates: " + duplicateCount)
         println("Count for " + kw + ":" + kwsCount(kw))
 
       case (id: Long, kw: String) =>

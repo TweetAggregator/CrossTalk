@@ -30,8 +30,7 @@ object TweetManager {
   /* Nested class to enforce singleton */
   class TweetManager extends Actor {
 
-    val searchQueryLimit = 180 * 4 /* per hours, see https://dev.twitter.com/docs/rate-limiting/1.1/limits */
-    private def toSeconds(perHour: Int) = (60 * 60) / perHour
+    val threshold = 60 * 60 / 180 / 4 /* seconds, see https://dev.twitter.com/docs/rate-limiting/1.1/limits */
 
     /** A list of running and cancellable Searcher, along with their reference actors */
     var searches: List[Cancellable] = Nil
@@ -40,11 +39,13 @@ object TweetManager {
 
       case StartAll(queries) =>
         assert(searches.isEmpty, "Cannot start queries again without cancelling the ones running.")
-        val searchRate = if (queries.size > 0) searchQueryLimit / queries.size else 0
+        val searchRate = threshold * queries.size
+        var startTime = 0
         searches = queries map { qur =>
           val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2)))
-          searcherRef ! "start"
-          searcherRef.schedule(toSeconds(searchRate), toSeconds(searchRate), TimeUnit.SECONDS, "callback")
+          val cancellable = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, "ping")
+          startTime += threshold
+          cancellable
         }
 
       case StopAll =>
