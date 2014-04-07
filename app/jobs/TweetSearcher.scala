@@ -21,16 +21,14 @@ import TweetManager._
 import java.io.InputStream
 import models.GeoSquare
 import play.api.libs.json.JsResultException
+import utils.Http._
+
 /**
  * Launch a research on Tweets and send them to the good listener once a result is received.
  * https://dev.twitter.com/docs/api/1.1/get/search/tweets
  * Max #request/15minutes: 450, Max #keywords=10
  */
-class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
-
-  /* We set up the HTTP client and the oauth module */
-  val oauthConsumer = TweetManager.getConsumer
-  val client = new DefaultHttpClient()
+class TweetSearcher(query: TweetQuery, listener: ActorRef) extends Actor {
 
   var callback: Option[String] = None /* Store the params used to check for updates */
 
@@ -55,7 +53,7 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
    * Execute the request in parameter, parse it and send the tweets to the listener.
    */
   def execRequest(request: String) = {
-    val stream = askFor(request)
+    val stream = askForGet(request, Some(consumer))
     val ret = readAll(stream)
     stream.close
     try {
@@ -66,25 +64,6 @@ class TweetSearcher(query: TweetQuery, listener: TweetListener) extends Actor {
       case _: JsResultException => /* Error while parsing (Rate limit exceeded) */
         callback = None /* Will restart the searcher next time it receive a callback */
     }
-  }
-  /** Ask for the request passed in parameter, signed by the oauthConsumer. */
-  def askFor(request: String) = {
-    val HttpRequest = new HttpGet(request)
-    HttpRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
-
-    oauthConsumer.sign(HttpRequest)
-
-    val twitterResponse = client.execute(HttpRequest) /* Send the request and get the response */
-    twitterResponse.getEntity().getContent()
-  }
-
-  /** Read all the data present in the InputStream in and return it as a String */
-  def readAll(in: InputStream): String = {
-    val inr = new BufferedReader(new InputStreamReader(in))
-    val bf = new StringBuilder
-    var rd = inr.readLine
-    while (rd != null) { bf.append(rd); rd = inr.readLine }
-    bf.toString
   }
 
   /** Parse a string into a list of JsValue and a callback String from the Twitter Json */

@@ -4,12 +4,20 @@ import akka.actor.Actor
 import models.GeoSquare
 import models._
 
+/*TODO maybe add the geolocation too*/
 class GeoPartitionner extends Actor {
-
+  /*Total Number of tweets*/
+  var total = 0L
+  /*Map holding the results*/
+  var results: Map[GeoSquare, Long] = Map()
+  
   def receive = {
-   case _ => println("So happy you could die")
-   /* case GeoSend(res) => 
-      println("res "+res.map(_._2).reduce((a, b) => a + b))
-      println("Winner is "+ res.maxBy(_._2))
-  */}
+   case Winner => 
+    println("winner is: "+results.maxBy(_._2))
+   case Report(id, count) =>
+    total += count
+    results += (id -> count)
+   case TotalTweets => 
+    sender ! total
+  }
 }

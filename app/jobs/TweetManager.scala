@@ -57,12 +57,10 @@ object TweetManager {
 
   val TweetManagerRef = toRef(Props(new TweetManager()))
 
-  type TweetListener = ActorRef /* The listener is another actor */
-
   /**
    * Return an OAuth consumer with the keys ready for the Twitter API.
    */
-  def getConsumer = {
+  val consumer = {
     /* Access token, saved as Play Configuration Parameters */
     val consumerKey = Play.current.configuration.getString("twitter.consumerKey").getOrElse(sys.error("No consumer key found in conf."))
     val consumerSecret = Play.current.configuration.getString("twitter.consumerSecret").getOrElse(sys.error("No consumer secret found in conf."))
