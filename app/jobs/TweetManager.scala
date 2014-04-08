@@ -30,7 +30,7 @@ object TweetManager {
   /* Nested class to enforce singleton */
   class TweetManager extends Actor {
 
-    val threshold = 60 * 60 / 180 / 4 /* seconds, see https://dev.twitter.com/docs/rate-limiting/1.1/limits */
+    val threshold = 60 * 60 / 450 / 4 /* seconds, see https://dev.twitter.com/docs/rate-limiting/1.1/limits */
 
     /** A list of running and cancellable Searcher, along with their reference actors */
     var searches: List[Cancellable] = Nil

@@ -31,7 +31,7 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
   val kwsInSearchFormat: String = {
     if (keywords.isEmpty) sys.error("Cannot start a query with empty keywords")
     else keywords.tail.foldLeft("\"" + keywords.head + "\"")((a, b) => a + " OR \"" + b + "\"")
-      .replaceAll(" ", "%20").replaceAll("\"", "%22").replaceAll("#", "%23")
+      .replaceAll(" ", "%20").replaceAll("\"", "%22").replaceAll("#", "%23").take(1000)
   }
   def subqueries: List[TweetQuery] = (rows, cols) match {
     case (1, 1) => this :: Nil /* Since we cannot split it anymore */

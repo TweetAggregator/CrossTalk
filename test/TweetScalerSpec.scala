@@ -56,9 +56,9 @@ class TweetScalerSpec extends Specification {
     "start a lot of queries, check for duplicates, and never stop" in new WithApplication  {
       /* Requests are all over the US */
       val queries = List(
-          TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 10, 10),
-          TweetQuery("#NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 10, 10),
-          TweetQuery("MH370" :: "mh370" :: "mh 370" :: "MH 370" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 10, 10))
+          TweetQuery("Switzerland" :: "Swiss" :: "swiss" :: "switzerland" :: "SWITZERLAND" :: "Suisse" :: "Schweiz" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12),
+          TweetQuery("Bank" :: "Money" :: "BANK" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12),
+          TweetQuery("swiss bank" :: "Swiss Bank" :: "Switzerland bank" :: "UBS" :: "Credit Suisse" :: "SWISS BANK" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12))
       val reporter = toRef(Props(new Reporter(queries map (_.kwsInSearchFormat))))
       
       val subqueries = queries flatMap (_.subqueries) map (qu => (qu, toRef(Props(new Listener(reporter)))))
