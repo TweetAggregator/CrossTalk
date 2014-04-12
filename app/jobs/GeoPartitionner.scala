@@ -18,6 +18,22 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
     ActorSystem().actorOf(Props(new TweetSearcher(x._1, x._2)))
   }
 
+  def squareCoords(square: GeoSquare): (Int, Int) = ???
+  val totalArea = row * col
+  def totalTweetDensity = ???
+  def clusterDistance(cluster1: Cluster, cluster2: Cluster) = ???
+  def clusterThreshold(visibleSquare: GeoSquare) = ???
+
+  /* 
+   * clusterOnce searches for the pair of clusters within dist of each other
+   * and creates a larger cluster from these two.
+   * To calculate the clusters at some granularity, it should be iterated on the
+   * clusters of the previous granularity until a fixed point is found.
+   */
+  def clusterOnce(startClusters: List[List[Cluster]], dist: Int) = ???
+
+  def clusters(visibleSquare: GeoSquare): List[List[Cluster]] = ???
+
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]) = {
     val maxTweets = tweetCounts.values.max
     tweetCounts.mapValues(0.5*_/maxTweets)
