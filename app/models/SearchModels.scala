@@ -57,10 +57,3 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
  * Note that the tweet is also returned with the original query from which it is issued.
  */
 case class Tweet(value: JsValue, query: TweetQuery)
-
-/* List of messages accepted by the TweetManager */
-
-/** Start all the queries specified, with their specific listeners */
-case class StartAll(queries: List[(TweetQuery, ActorRef)])
-/** Stop all the queries currently running */
-case object StopAll
