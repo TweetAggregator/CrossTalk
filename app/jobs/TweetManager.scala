@@ -34,21 +34,29 @@ object TweetManager {
 
     /** A list of running and cancellable Searcher, along with their reference actors */
     var searches: List[Cancellable] = Nil
+    
+    /** A list of queries to start. Only used prior to the start of the Manager. */
+    var queriesToStart: List[(TweetQuery, ActorRef)] = Nil
 
     def receive = {
 
-      case StartAll(queries) =>
-        assert(searches.isEmpty, "Cannot start queries again without cancelling the ones running.")
-        val searchRate = threshold * queries.size
+      case AddQueries(queries) =>
+        assert(searches.isEmpty, "Cannot add more queries without cancelling the ones running.")
+        queriesToStart ++= queries
+        
+      case Start =>
+        assert(searches.isEmpty, "Cannot restart queries again without cancelling the ones running.")
+        val searchRate = threshold * queriesToStart.size
         var startTime = 0
-        searches = queries map { qur =>
+        searches = queriesToStart map { qur =>
           val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2)))
-          val cancellable = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, "ping")
+          val cancellable = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
           startTime += threshold
           cancellable
         }
+        queriesToStart = Nil /* Reset the queries to start; all are started! */
 
-      case StopAll =>
+      case Stop =>
         searches foreach (_.cancel)
         searches = Nil
 

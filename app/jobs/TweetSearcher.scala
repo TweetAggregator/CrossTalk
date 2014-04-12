@@ -22,36 +22,35 @@ import java.io.InputStream
 import models.GeoSquare
 import play.api.libs.json.JsResultException
 import utils.Http._
+import models._
 
 /**
  * Launch a research on Tweets and send them to the good listener once a result is received.
  * https://dev.twitter.com/docs/api/1.1/get/search/tweets
- * Max #request/15minutes: 450, Max #keywords=10
+ * Max #request/15minutes: 450
  */
 class TweetSearcher(query: TweetQuery, listener: ActorRef) extends Actor {
 
   var callback: Option[String] = None /* Store the params used to check for updates */
 
   def receive = {
-    case "start" => /* First execution */
+    case Start => /* First execution */
       val geoParams = query.area.center._2 + "," + query.area.center._1 + "," + query.area.radius + "km"
       execRequest("https://api.twitter.com/1.1/search/tweets.json?geocode=" + geoParams + "&q=" + query.kwsInSearchFormat + "&result_type=recent&count=100")
 
-    case "ping" => /* Callback execution (query update) */
+    case Ping => /* Callback execution (query update) */
       callback match {
         case Some(properties) =>
           execRequest("https://api.twitter.com/1.1/search/tweets.json" + properties)
         case None =>
-          /* A parsing error occurred or our searcher has been kicked by the API, restarting... */
-          receive("start")
+          /* Required to start or restart the TweetSearcher */
+          receive(Start)
       }
 
     case _ => sys.error("Not a valid input for the Tweer Searcher!")
   }
 
-  /**
-   * Execute the request in parameter, parse it and send the tweets to the listener.
-   */
+  /** Execute the request in parameter, parse it and send the tweets to the listener. */
   def execRequest(request: String) = {
     val stream = askForGet(request, Some(consumer))
     val ret = readAll(stream)
