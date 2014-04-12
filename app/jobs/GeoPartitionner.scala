@@ -17,17 +17,25 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
   val acts: List[ActorRef] = queries.zip(listeners).map{ x =>
     ActorSystem().actorOf(Props(new TweetSearcher(x._1, x._2)))
   }
+
+  def computeOpacity(tweetCounts: Map[GeoSquare, Long]) = {
+    val maxTweets = tweetCounts.values.max
+    tweetCounts.mapValues(0.5*_/maxTweets)
+  }
+
   def receive = {  
-   case StartGeo =>
-    acts.foreach(_ ! "start") 
-   case Winner => 
-    println("winner is: "+results.maxBy(_._2))  
-   case Collect => 
-    listeners.foreach(_ ! ReportCount)
-   case Report(id, count) =>
-    total += count
-    results += (id -> count)
-   case TotalTweets => 
-    sender ! total
+    case StartGeo =>
+      acts.foreach(_ ! "start") 
+    case Winner => 
+      println("winner is: "+results.maxBy(_._2))  
+    case Collect => 
+      listeners.foreach(_ ! ReportCount)
+    case Report(id, count) =>
+      total += count
+      results += (id -> count)
+    case TotalTweets => 
+      sender ! total
+    case Opacities =>
+      sender ! computeOpacity(results)
   }
 }

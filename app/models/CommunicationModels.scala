@@ -25,3 +25,5 @@ case object Ping
 case class AddQueries(queries: List[(TweetQuery, ActorRef)])
 
 case object Stop
+
+case object Opacities
