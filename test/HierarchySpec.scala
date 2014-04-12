@@ -5,46 +5,59 @@ import play.api.test._
 import play.api.test.Helpers._
 import akka.actor.ActorSystem
 import akka.actor.Props
+import akka.pattern.ask
 import jobs._
 import models.TweetQuery
 import models.GeoSquare
 import models.Tweet
 import play.api.libs.json.Json
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef}
 import models._
+import scala.concurrent.duration.Duration
+import scala.concurrent.Await
 
 @RunWith(classOf[JUnitRunner])
 class HierarchySpec extends Specification {
- var track: Int = 0
+ var track = 0L
+ val defaultRow = 4
+ val defaultCol = 5
  class notify extends Actor {
-        def receive = {
-      case x: Int => 
-        print("-")
-        track += x
-    }
- } 
+  def receive = {
+    case Report(id, count) =>
+      track += count
+  }
+ }
+
+  implicit def toRef(a: Props): ActorRef = {
+    ActorSystem().actorOf(a)
+  }
   "Hierarchy Test" should {
     
-    "Shit" in new WithApplication {
+    "Multiple Queries" in new WithApplication {
       /*GeoPartitionner test*/
-      val geoPart = ActorSystem().actorOf(Props(new GeoPartitionner))
+      val geoPart: ActorRef = Props(new GeoPartitionner)
      /*Retrieves the count*/ 
-      val retriever = ActorSystem().actorOf(Props(new notify))
+     // val retriever: ActorRef = Props(new )
       /*Listens to the query's result*/
-      val listeners = (1 to 4).map(x => ActorSystem().actorOf(Props(new Counter(retriever))))
+     // val listeners = (1 to (defaultRow * defaultCol)).map(x => ActorSystem().actorOf(Props(new Counter((x % defaultRow, x % defaultCol), geoPart))))
       /*The query*/
-      val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20.0, -79, 50.6), 2, 2)
+      val queries = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20.0, -79, 50.6), defaultRow, defaultCol).subqueries
+      val listeners: List[ActorRef] = queries.map(x => 
+      ActorSystem().actorOf(Props(new Counter(x.area, geoPart)))) 
       
-      val acts = query.subqueries.zip(listeners).map{x => 
-        ActorSystem().actorOf(Props(new TweetSearcher(x._1, x._2)))
+      val acts = queries.zip(listeners).map{x =>
+        ActorSystem().actorOf(Props(new TweetSearcher(x._1,x._2 )))
       }
         
-        
-      //val actor = ActorSystem().actorOf(Props(new TweetSearcher(query), listener)))
       acts.foreach(_ ! "start")
       Thread.sleep(20000)
-      println("\nWe received "+track)
+      listeners.foreach(_ ! ReportCount)
+      Thread.sleep(1000)
+      val totalFuture = geoPart ? TotalTweets
+      val res = Await.result(totalFuture, Duration(5, "seconds"))
+      println(s"Total from future: $res")
+      geoPart ! Winner
   
-    }
+     }
   }
 }

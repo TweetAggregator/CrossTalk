@@ -22,14 +22,13 @@ import java.io.InputStream
 import models.GeoSquare
 import play.api.libs.json.JsResultException
 /**
- * Gets a stream of tweets
+ * Gets a stream of tweets from the Streaming API
  * https://dev.twitter.com/docs/api/1.1/post/statuses/filter
  * Max #request/15minutes: 450, Max #keywords=10
  */
-class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
+class TweetStreamer(query: TweetQuery, listener: ActorRef) extends Actor {
 
   /* We set up the HTTP client and the oauth module */
-  val oauthConsumer = TweetManager.getConsumer
   val client = new DefaultHttpClient()
 
   var callback: Option[String] = None /* Store the params used to check for updates */
@@ -79,7 +78,7 @@ class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
     postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
     postRequest.setEntity(new UrlEncodedFormEntity(params))
 
-    oauthConsumer.sign(postRequest)
+    consumer.sign(postRequest)
 
     val twitterResponse = client.execute(postRequest) /* Send the request and get the response */
     twitterResponse.getEntity().getContent()
@@ -95,7 +94,6 @@ class TweetStreamer(query: TweetQuery, listener: TweetListener) extends Actor {
       val text = currentJSon.split("\"text\":\"").apply(1).split("\",\n\"source\"").apply(0)
       println(text)
       println("HOHOHOHOHO")
-      query.keywords
       bf.append(rd); rd = inr.readLine 
     }
     bf.toString
