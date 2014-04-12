@@ -31,7 +31,7 @@ import play.api.libs.json.JsString
 import play.api.libs.json.JsUndefined
 
 @RunWith(classOf[JUnitRunner])
-class Translator extends Specification {
+class TranslatorSpec extends Specification {
   
   "Translator" should {
     "translate" in new WithApplication {

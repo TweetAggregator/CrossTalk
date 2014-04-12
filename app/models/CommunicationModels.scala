@@ -11,3 +11,11 @@ case object Winner
 case object ReportCount
 case object StartGeo
 case object Collect
+
+case object Start
+
+case object Ping
+
+case class AddQueries(queries: List[(TweetQuery, ActorRef)])
+
+case object Stop

@@ -11,8 +11,7 @@ import models.GeoSquare
 import models.Tweet
 import play.api.libs.json.Json
 import akka.actor.Actor
-import models.StartAll
-import models.StopAll
+import models._
 import jobs.TweetManager._
 import akka.actor.ActorRef
 import play.api.libs.json.JsNumber
@@ -62,7 +61,8 @@ class TweetScalerSpec extends Specification {
       val reporter = toRef(Props(new Reporter(queries map (_.kwsInSearchFormat))))
       
       val subqueries = queries flatMap (_.subqueries) map (qu => (qu, toRef(Props(new Listener(reporter)))))
-      TweetManagerRef ! StartAll(subqueries)
+      TweetManagerRef ! AddQueries(subqueries)
+      TweetManagerRef ! Start
       
       while(true) Thread.sleep(40000000)
 
