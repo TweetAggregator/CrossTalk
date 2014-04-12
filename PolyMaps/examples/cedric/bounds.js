@@ -35,11 +35,11 @@ function pxToGeo(json) {
 function update() {
   var topR = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
   var bottomL = pxToGeo(map.size());
-  var myString = "<br/>lat 0: ".concat(topR.lat.toString()) +
+  /*var myString = "<br/>lat 0: ".concat(topR.lat.toString()) +
     "<br/>lon: ".concat(topR.lon) +
     "<br/>lat".concat(bottomL.lat) +
     "<br/>lon".concat(bottomL.lon);
-  document.getElementById('myDiv').innerHTML = myString ;
+  document.getElementById('myDiv').innerHTML = myString ;*/
 }
 
 function load(e) {
@@ -122,6 +122,7 @@ div.addEventListener("mouseup", function(){
  * inserts a new region on the map, given starting and ending longitude and latitude
  * -> could also be used to show saved regions
  */
+var vennDiv = document.getElementById("venns");
 function addNewRegion(topLeft, bottomRight) {
   var region = po.geoJson()
     .features([{geometry: {coordinates:
@@ -129,18 +130,64 @@ function addNewRegion(topLeft, bottomRight) {
       [topLeft.lon, bottomRight.lat],
       [bottomRight.lon, bottomRight.lat],
       [bottomRight.lon, topLeft.lat],
-      [0, 0]]], type: "Polygon"}}]);
-  console.log(region);
-  console.log(region.cache);
-  console.log(region.cache.id);
-  //region.className += " region"+count;
+      [0, 0]]], type: "Polygon"}}])
+  var container = region.container()
+  container.setAttribute("class", container.getAttribute("class")+" region id"+count);
+  container.setAttribute("onClick", "removeThis(e)"); //does not work so far
+  
+  var div = document.createElement('div');
+  div.id = "id"+count;
+  div.innerHTML = topLeft+" "+bottomRight;
+  console.log(vennDiv);
+  console.log(div);
+  var venns = document.getElementsByClassName("venns");
+  console.log(venns);
+  console.log(venns[0]);
+  console.log(venns);
+  //venns[0].appendChild(div);
   count++;
   map.add(region).on("load", load);
+}
+
+//zoom level -> cluster
+function showCircles(listOfList) {
 
 }
 
+function showCircle(geoCenter, radius) {
+
+}
+
+function removeThis(e) {
+  consol.log("heelo");
+  e = e.target || e.srcElement;
+  e.parentNode.removeChild(e)
+}
+
+/*
+ * I think the map layer intercept all clicks...
+ */
 function reset() {
-  
+  var regions = document.getElementsByClassName('layer region');
+  while (regions[0]) {
+     regions[0].parentNode.removeChild(regions[0]);
+  }
 }
+
+function debug() {
+  var x = pxToGeo(JSON.parse('{"x":'+100+', "y": '+100+'}'));
+  var y = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+500+'}'));
+  addNewRegion(x, y);
+  x = pxToGeo(JSON.parse('{"x":'+200+', "y": '+50+'}'));
+  y = pxToGeo(JSON.parse('{"x":'+800+', "y": '+400+'}'));
+  addNewRegion(x, y);
+  x = pxToGeo(JSON.parse('{"x":'+900+', "y": '+20+'}'));
+  y = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+40+'}'));
+  addNewRegion(x, y);
+  x = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+40+'}'));
+  y = pxToGeo(JSON.parse('{"x":'+1100+', "y": '+60+'}'));
+  addNewRegion(x, y);
+}
+debug();
 
 //map.on("update", update);
