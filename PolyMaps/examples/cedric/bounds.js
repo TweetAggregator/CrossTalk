@@ -4,168 +4,117 @@ var map = po.map()
 var div = document.getElementById("map"),
     svg = div.appendChild(po.svg("svg"));
 map.container(svg);
-map.add(po.interact()); //enable move and zoom
 
+var interact = po.interact(); //create separate object for the focus so we can remove it when drawing a rectangle
+map.add(interact); //enable move and zoom events
+map.on("resize", update);
+map.on("move", update);
+
+//map tiles initialization
 map.add(po.image()
     .url(po.url("http://{S}tile.cloudmade.com"
     + "/1a1b06b230af4efdbb989ea99e9841af" // http://cloudmade.com/register
     + "/998/256/{Z}/{X}/{Y}.png")
     .hosts(["a.", "b.", "c.", ""])));
 
-map.add(po.geoJson()
-    .url("district.json")
-    .id("district") );
-    //.on("load", load));
-
+// +/- buttons on map
 map.add(po.compass()
     .pan("none"));
 
-
-//getElementsByClassName
-//getElementsByTagName
-var g = document.getElementById("map").getElementsByTagName("svg")[0].appendChild(po.svg("g")); //there should only be one
-//map.container(g);
-var rect = g.appendChild(po.svg("rect"));
-rect.setAttribute("width", "50%");
-rect.setAttribute("height", "50%");
-var div = document.getElementById("map");
-var x = div.clientWidth / 2,
-    y = div.clientHeight / 2;
-g.setAttribute("transform", "translate(" + (x / 2) + "," + (y / 2) + ")");
-
-console.log("here is g: "+g+svg);
-
-function neverCalled(e) {
-  //Cedric
-  var cluster = e.tile.cluster || (e.tile.cluster = kmeans()
-      .iterations(16)
-      .size(64));
-
-  for (var i = 0; i < e.features.length; i++) {
-    cluster.add(e.features[i].data.geometry.coordinates);
+// "svg" can hold children "g" which hold graphics to be shown on top of the map
+var g;
+var rect; //temporary element for drawing before we can 
+var count = 0;
+var flag = 0;
+var newRegionFlag = 0;
+var startX = 0;
+var startY = 0;
+div.addEventListener("mousedown", function(){
+  if (flag == 1) {
+    g = document.getElementById("map").getElementsByTagName("svg")[0].appendChild(po.svg("g"));
+    rect = g.appendChild(po.svg("rect"))
+    rect.setAttribute("width", 5);
+    rect.setAttribute("height", 5);
+    startX = window.event.clientX;
+    startY = window.event.clientY;
+    g.setAttribute("transform", "translate(" + startX + "," + startY + ")");
+    newRegionFlag = 1;
   }
+}, false);
+div.addEventListener("mousemove", function(){
+    if (flag == 1 && newRegionFlag == 1) {
+      var newX = window.event.clientX - startX;
+      if (newX < 0)
+        newX = 5;
+      var newY = window.event.clientY - startY;
+      if (newY < 0)
+        newY = 5;
+      rect.setAttribute("width", newX);
+      rect.setAttribute("height", newY);
+    }
+}, false);
+div.addEventListener("mouseup", function(){
+    if (flag == 1) {
+      newRegionFlag = 0;
+      flag = 0;
+      g.removeChild(rect);
+      var endX = startX+parseInt(rect.getAttribute("width"));
+      var endY = startY+parseInt(rect.getAttribute("height"));
+      var topLeft = pxToGeo(JSON.parse('{"x":'+startX+', "y": '+startY+'}'))
+      var bottomRight = pxToGeo(JSON.parse('{"x":'+endX+', "y": '+endY+'}'))
 
-  var tile = e.tile, g = tile.element;
-  while (g.lastChild) g.removeChild(g.lastChild);
-
-  var means = cluster.means();
-  means.sort(function(a, b) { return b.size - a.size; });
-  for (var i = 0; i < means.length; i++) {
-    var mean = means[i], point = g.appendChild(po.svg("circle"));
-    point.setAttribute("cx", mean.x);
-    point.setAttribute("cy", mean.y);
-    point.setAttribute("r", Math.pow(2, tile.zoom - 11) * Math.sqrt(mean.size));
+      map
+        .add(interact)
+        
+        .add(po.geoJson()
+          .features([{geometry: {coordinates: [[[topLeft.lon, topLeft.lat], [topLeft.lon, bottomRight.lat], [bottomRight.lon, bottomRight.lat], [bottomRight.lon, topLeft.lat], [0, 0]]], type: "Polygon"}}])
+          .on("load", load));    
   }
+}, false);
 
-  //other example
+
+function load(e) {
   var r = 20 * Math.pow(2, e.tile.zoom - 12);
   for (var i = 0; i < e.features.length; i++) {
     var c = n$(e.features[i].element),
         g = c.parent().add("svg:g", c);
-
-    g.attr("transform", "translate(" + c.attr("cx") + "," + c.attr("cy") + ")");
-
-    g.add("svg:circle")
-        .attr("r", r)
-        .attr("transform", "translate(" + r + ",0)skewX(-45)")
-        .attr("opacity", .5)
-        .attr("filter", "url(#shadow)");
-
     g.add(c
-        .attr("fill", "url(#r1)")
-        .attr("r", r)
-        .attr("cx", null)
-        .attr("cy", null));
-
-    g.add("svg:circle")
-        .attr("transform", "scale(.95,1)")
-        .attr("fill", "url(#r2)")
-        .attr("r", r);
+        //.attr("fill", "url(#r1)")
+        .attr("cx", r)
+        .attr("cy", r)
+        );
   }
 }
 
-function bounds(features) {
-  var i = -1,
-      n = features.length,
-      geometry,
-      bounds = [{lon: Infinity, lat: Infinity}, {lon: -Infinity, lat: -Infinity}];
-  while (++i < n) {
-    geometry = features[i].data.geometry;
-    boundGeometry[geometry.type](bounds, geometry.coordinates);
-  }
-  return bounds;
+/* 
+  converts {"x":coordX, "y": coordY}
+  to {"lat": geoLatitude, "lon": geoLongitude}
+*/
+function pxToGeo(json) {
+  return map.pointLocation(json);
 }
 
-function boundPoint(bounds, coordinate) {
-  var x = coordinate[0], y = coordinate[1];
-  if (x < bounds[0].lon) bounds[0].lon = x;
-  if (x > bounds[1].lon) bounds[1].lon = x;
-  if (y < bounds[0].lat) bounds[0].lat = y;
-  if (y > bounds[1].lat) bounds[1].lat = y;
-}
-
-function boundPoints(bounds, coordinates) {
-  var i = -1, n = coordinates.length;
-  while (++i < n) boundPoint(bounds, coordinates[i]);
-}
-
-function boundMultiPoints(bounds, coordinates) {
-  var i = -1, n = coordinates.length;
-  while (++i < n) boundPoints(bounds, coordinates[i]);
-}
-
-var boundGeometry = {
-  Point: boundPoint,
-  MultiPoint: boundPoints,
-  LineString: boundPoints,
-  MultiLineString: boundMultiPoints,
-  Polygon: function(bounds, coordinates) {
-    boundPoints(bounds, coordinates[0]); // exterior ring
-  },
-  MultiPolygon: function(bounds, coordinates) {
-    var i = -1, n = coordinates.length;
-    while (++i < n) boundPoints(bounds, coordinates[i][0]);
-  }
-};
-
+/*
+  updates the geographical data of the current view
+*/
 function update() {
-  var topR = map.pointLocation(JSON.parse('{"x":0, "y": 0}'));
-  //console.log(topR);
-  var bottomL = map.pointLocation(map.size());
-  //console.log(bottomL);
+  var topR = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
+  var bottomL = pxToGeo(map.size());
   var myString = "<br/>lat 0: ".concat(topR.lat.toString()) +
-    "<br/>lo: ".concat(topR.lon) +
-    "<br/>la".concat(bottomL.lat) +
-    "<br/>l".concat(bottomL.lon);
-  //console.log(myString);
+    "<br/>lon: ".concat(topR.lon) +
+    "<br/>lat".concat(bottomL.lat) +
+    "<br/>lon".concat(bottomL.lon);
   document.getElementById('myDiv').innerHTML = myString ;
- 
-  /*
-  console.log(map.center());
-
-  var gps = map.centerRange(); //center
-  console.log(gps);
-  console.log(gps[0].lat);
-  console.log(map.locationCoordinate(map.center()).column);
-
-  //var el = document.getElementById('insertHere'); el.html = '<div>Print this after the script tag</div>';
-  //document.getElementById('inner').innerHTML = "Hello World!";
-  //$("body").html(html);
-
-  */
-
 }
 
-function addGeom() {}
-
-function region() {
-var mean = means[i], point = g.appendChild(po.svg("circle"));
-  point.setAttribute("cx", mean.x);
-  point.setAttribute("cy", mean.y);
-  point.setAttribute("r", Math.pow(2, tile.zoom - 11) * Math.sqrt(mean.size));
+function newRegion() {
+  map.remove(interact);
+  //document.getElementById("map").unbind("mousemove", false);
+  flag = 1;
 }
 
-map.on("resize", update);
-map.on("move", update);
+function reset() {
+  
+}
+
 //map.on("update", update);
-// => ou utiliser un boutton 
