@@ -13,3 +13,7 @@ case object TotalTweets
 case object Winner
 
 case object ReportCount
+
+case object StartGeo
+
+case object Collect
