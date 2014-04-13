@@ -22,8 +22,15 @@ case object Stop
 
 case object Opacities
 
-case class Cluster(topLeft: (Int, Int), bottomRight: (Int, Int), subClusters: List[Cluster]) {
+/*case class Cluster(topLeft: (Int, Int), bottomRight: (Int, Int), subClusters: List[Cluster]) {
   val numTweets: Int = subClusters.map(_.numTweets).sum
-}
+ }*/
 
-//case class LeafCluster(topLeft: (Int, Int), bottomRight: (Int, Int), override val numTweets: Int) extends Cluster(topLeft, bottomRight, Nil)
+case class Cluster(topLeft: (Int, Int), bottomRight: (Int, Int), val numTweets: Int) {
+   def isOnTop(that: Cluster): Boolean = (this.topLeft._1 <= that.topLeft._1 && this.topLeft._2 <= that.topLeft._2)
+   
+   def contains(that: Cluster): Boolean = {
+    this.topLeft._1 <= that.topLeft._1 && this.topLeft._2 <= that.topLeft._2 && this.bottomRight._1 >= that.bottomRight._1 && this.bottomRight._2 >= that.bottomRight._2
+   }
+
+}

@@ -23,13 +23,14 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
   val totalArea = row * col
   def totalTweetDensity = total / totalArea
 
-  /*Supposed to return the area joining the two cluster + # of tweets*/
-  def clusterDistance(cluster1: Cluster, cluster2: Cluster): Int = {
+  def clusterAggregate(cluster1: Cluster, cluster2: Cluster): (Cluster, Int) = {
     val clusters = cluster1::cluster2::Nil
     val (topx, topy) =(clusters.map(_.topLeft._1).toList.min, clusters.map(_.topLeft._2).toList.min)
     val (botx, boty) = (clusters.map(_.bottomRight._1).toList.max, clusters.map(_.bottomRight._2).toList.max) 
-    (botx -topx) * (boty -topy) 
+    (Cluster((topx, topy), (botx, boty), (clusters.map(_.numTweets).sum)),(botx -topx) * (boty -topy)) 
   }
+  
+  /*TODO what do you intend to do with this ?*/
   def clusterThreshold(visibleSquare: GeoSquare) = ???
 
   /* 
@@ -38,8 +39,18 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
    * To calculate the clusters at some granularity, it should be iterated on the
    * clusters of the previous granularity until a fixed point is found.
    */
+   //TODO I don't see what List[List is supposed to represent ? below is how I thought we could do
   def clusterOnce(startClusters: List[List[Cluster]], dist: Int) = ???
 
+
+  def clusterOnce(oldClust: List[Cluster], dist: Int) = {
+    val pairs = (for(s <- oldClust; e <- oldClust if(s.isOnTop(e) && s!=e)) yield (s, e))
+    val aggregate = pairs.map(p => clusterAggregate(p._1, p._2)).filter(_._2 <= dist)
+    //TODO New clusters should satisfy the law for clustering
+    //TODO and then use the contains method along with exists to add to this list the 
+    // elements that we're not clustered in the oldClust
+
+  }
   def clusters(visibleSquare: GeoSquare): List[List[Cluster]] = ???
 
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]) = {
