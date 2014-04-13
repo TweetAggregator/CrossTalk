@@ -26,4 +26,5 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
    case TotalTweets => 
     sender ! total
   }
+  
 }
