@@ -40,18 +40,29 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
    * clusters of the previous granularity until a fixed point is found.
    */
    //TODO I don't see what List[List is supposed to represent ? below is how I thought we could do
-  def clusterOnce(startClusters: List[List[Cluster]], dist: Int) = ???
+  //def clusterOnce(startClusters: List[List[Cluster]], dist: Int) = ???
 
-
-  def clusterOnce(oldClust: List[Cluster], dist: Int) = {
+  def clusterOnce(oldClust: List[Cluster], dist: Int): List[Cluster] = {
     val pairs = (for(s <- oldClust; e <- oldClust if(s.isOnTop(e) && s!=e)) yield (s, e))
     val aggregate = pairs.map(p => clusterAggregate(p._1, p._2)).filter(_._2 <= dist)
-    //TODO New clusters should satisfy the law for clustering
-    //TODO and then use the contains method along with exists to add to this list the 
-    // elements that we're not clustered in the oldClust
-
+    //TODO need to filter according to the rule of tweets per square meters
+    aggregate.map(_._1) ::: oldClust.filter(f => !aggregate.exists(_._1.contains(f)))
   }
-  def clusters(visibleSquare: GeoSquare): List[List[Cluster]] = ???
+
+  def clusters(visibleSquare: GeoSquare): List[List[Cluster]] = {
+    //TODO first generate the first List of clusters from the square
+    //TODO change this
+    val thresholdDiv: Int = 2
+    //TODO should contain the original list at the begining
+    var res: List[List[Cluster]] = Nil
+    (0 to 10).foreach{ b =>
+      //TODO could have used 0.0 to 1.0 by 0.1 but generates strange results
+      val beta = b / 10 
+      val maxDist = beta * totalArea / thresholdDiv
+      res ++= List(clusterOnce(res.last, maxDist))
+    }
+    res
+  }
 
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]) = {
     val maxTweets = tweetCounts.values.max
