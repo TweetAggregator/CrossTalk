@@ -15,10 +15,13 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
   val queries = TweetQuery(keywords, square, row, col).subqueries
   /*List of listeners*/
   val listeners: List[ActorRef] = queries.map(x => ActorSystem().actorOf(Props(new Counter(x.area, self))))
-
-  def squareCoords(square: GeoSquare): (Int, Int) = ???
+  
+  val squareCoords: Map[GeoSquare, (Int, Int)] = queries.map(_.area).zipWithIndex.map{
+    x => (x._1, (x._2 % row, x._2 % col))
+  }.toMap
+  //def squareCoords(square: GeoSquare): (Int, Int) = ???
   val totalArea = row * col
-  def totalTweetDensity = ???
+  def totalTweetDensity = total / totalArea
   def clusterDistance(cluster1: Cluster, cluster2: Cluster) = ???
   def clusterThreshold(visibleSquare: GeoSquare) = ???
 
