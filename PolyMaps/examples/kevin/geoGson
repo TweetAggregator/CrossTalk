@@ -1,0 +1,45 @@
+<html>
+<head>
+  <title>Test</title>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css" />
+  <script type="text/javascript" src="../../polymaps.js"></script>
+    <!--[if lte IE 8]>
+      <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.ie.css" />
+      <![endif]-->
+      <style>
+        #map { height: 100%; }
+      </style>
+    </head>
+    <body>
+    <div>
+      <div id="map" style="height:100%;float:left;width:85%;"></div>
+      <script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+      <script src="geogson.js"></script>
+      <div id="venns" class="Venn" style="float:right;height:100%;width:14.5%;padding-left:5px;">
+
+        <span>
+          <button onclick="drawRegion()">new region</button>
+          <button onclick="drawCircleRegion()">new region Circle</button>
+          <button onclick="reset()">reset</button>
+
+          <p id="myDiv">
+          </p>
+        </span>
+        <script src="http://d3js.org/d3.v2.min.js"></script>
+        <script src="venn.js"></script>
+<script>
+// define sets and set set intersections
+var sets = [{label: "A", size: 10}, {label: "B", size: 10}, {label: "C", size: 15}],
+    overlaps = [{sets: [0,1], size: 2}, {sets: [1,2], size: 3}, {sets: [0,2], size: 1}];
+
+// get positions for each set
+sets = venn.venn(sets, overlaps);
+
+// draw the diagram in the 'Venn' div
+venn.drawD3Diagram(d3.select(".Venn"), sets, 300, 300);
+</script>
+      </div>
+      </div>
+
+    </body>
+</html>

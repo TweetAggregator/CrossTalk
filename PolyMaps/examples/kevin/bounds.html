@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+   <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+    <script type="text/javascript" src="../../polymaps.js"></script>
+    <script type="text/javascript" src="../../lib/nns/nns.js"></script>
+     <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+    <style type="text/css">
+
+@import url("../example.css");
+
+#district path {
+  fill: lightsteelblue;
+  fill-opacity: .5;
+  stroke: steelblue;
+}
+
+.map rect {
+  fill: #fff;
+  fill-opacity: .15;
+  stroke: red;
+  shape-rendering: crispEdges;
+}
+
+.layer g {
+  fill: #000;
+  fill-opacity: .15;
+  stroke: #E5E0D9;
+  shape-rendering: auto;
+  vector-effect: non-scaling-stroke;
+}
+
+.map g {
+  fill: #fff;
+  fill-opacity: .15;
+  stroke: red;
+  shape-rendering: crispEdges;
+}
+
+.layer rect {
+  fill: #000;
+  fill-opacity: .15;
+  stroke: #E5E0D9;
+  shape-rendering: auto;
+  vector-effect: non-scaling-stroke;
+}
+
+    </style>
+  </head>
+  
+  <body>
+
+    <div>
+      <div id="map" style="height:100%;float:left;width:85%;">
+
+        
+   
+        <span id="copy">
+          &copy; 2010
+          <a href="http://www.cloudmade.com/">CloudMade</a>,
+          <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors,
+          <a href="http://creativecommons.org/licenses/by-sa/2.0/">CCBYSA</a>.
+        </span>
+      </div>
+            <script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+        <script type="text/javascript" src="bounds.js"></script>
+      <div id="venns" class="Venn" style="float:right;height:100%;width:14.5%;padding-left:5px;">
+
+        <span>
+          <button onclick="drawRegion()">new region</button>
+          <button onclick="drawCircleRegion()">new region Circle</button>
+          <button onclick="reset()">reset</button>
+
+          <p id="myDiv">
+          </p>
+        </span>
+        <script src="http://d3js.org/d3.v2.min.js"></script>
+        <script src="venn.js"></script>
+<script>
+// define sets and set set intersections
+var sets = [{label: "A", size: 10}, {label: "B", size: 10}, {label: "C", size: 15}],
+    overlaps = [{sets: [0,1], size: 2}, {sets: [1,2], size: 3}, {sets: [0,2], size: 1}];
+
+// get positions for each set
+sets = venn.venn(sets, overlaps);
+
+// draw the diagram in the 'Venn' div
+venn.drawD3Diagram(d3.select(".Venn"), sets, 300, 300);
+</script>
+      </div>
+    </div>
+  </body>
+</html>
