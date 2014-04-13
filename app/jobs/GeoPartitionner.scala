@@ -22,7 +22,14 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
   //def squareCoords(square: GeoSquare): (Int, Int) = ???
   val totalArea = row * col
   def totalTweetDensity = total / totalArea
-  def clusterDistance(cluster1: Cluster, cluster2: Cluster) = ???
+
+  /*Supposed to return the area joining the two cluster + # of tweets*/
+  def clusterDistance(cluster1: Cluster, cluster2: Cluster) = {
+    val clusters = cluster1::cluster2::Nil
+    val (topx, topy) =(clusters.map(_.topLeft._1).toList.min, clusters.map(_.topLeft._2).toList.min)
+    val (botx, boty) = (clusters.map(_.bottomRight._1).toList.max, clusters.map(_.bottomRight._2).toList.max) 
+
+  }
   def clusterThreshold(visibleSquare: GeoSquare) = ???
 
   /* 
