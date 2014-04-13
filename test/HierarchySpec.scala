@@ -13,6 +13,7 @@ import models.Tweet
 import play.api.libs.json.Json
 import akka.actor.{Actor, ActorRef}
 import models._
+import jobs.TweetManager._
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 
@@ -38,6 +39,8 @@ class HierarchySpec extends Specification {
       val geoPart: ActorRef = Props(new GeoPartitionner("Obama"::Nil, GeoSquare(-129.4, 20.0, -79, 50.6), defaultRow, defaultCol))
             
       geoPart ! StartGeo
+      Thread.sleep(1000)
+      TweetManagerRef ! Start
       Thread.sleep(20000)
       geoPart ! Collect
       Thread.sleep(1000)
