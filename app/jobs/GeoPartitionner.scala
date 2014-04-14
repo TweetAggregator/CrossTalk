@@ -27,7 +27,9 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
     val clusters = cluster1::cluster2::Nil
     val (topx, topy) =(clusters.map(_.topLeft._1).toList.min, clusters.map(_.topLeft._2).toList.min)
     val (botx, boty) = (clusters.map(_.bottomRight._1).toList.max, clusters.map(_.bottomRight._2).toList.max) 
-    (Cluster((topx, topy), (botx, boty), (clusters.map(_.numTweets).sum)),(botx -topx) * (boty -topy)) 
+    //(Cluster((topx, topy), (botx, boty), (clusters.map(_.numTweets).sum)),(botx -topx) * (boty -topy)) 
+    //TODO: subclusters
+    (Cluster((topx, topy), (botx, boty), Set()), (botx-topx)*(boty-topy))
   }
   
   /*TODO what do you intend to do with this ?*/
@@ -42,19 +44,19 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
    //TODO I don't see what List[List is supposed to represent ? below is how I thought we could do
   //def clusterOnce(startClusters: List[List[Cluster]], dist: Int) = ???
 
-  def clusterOnce(oldClust: List[Cluster], dist: Int): List[Cluster] = {
-    val pairs = (for(s <- oldClust; e <- oldClust if(s.isOnTop(e) && s!=e)) yield (s, e))
+  def clusterOnce(oldClust: Set[Cluster], dist: Int): Set[Cluster] = {
+    val pairs = for (s <- oldClust; e <- oldClust) yield (s, e)
     val aggregate = pairs.map(p => clusterAggregate(p._1, p._2)).filter(_._2 <= dist)
     //TODO need to filter according to the rule of tweets per square meters
-    aggregate.map(_._1) ::: oldClust.filter(f => !aggregate.exists(_._1.contains(f)))
+    aggregate.map(_._1) ++ oldClust.filter(f => !aggregate.exists(_._1.contains(f)))
   }
 
-  def clusters(visibleSquare: GeoSquare): List[List[Cluster]] = {
+  def clusters(visibleSquare: GeoSquare): List[Set[Cluster]] = {
     //TODO first generate the first List of clusters from the square
     //TODO change this
     val thresholdDiv: Int = 2
     //TODO should contain the original list at the begining
-    var res: List[List[Cluster]] = Nil
+    var res: List[Set[Cluster]] = Nil
     (0 to 10).foreach{ b =>
       //TODO could have used 0.0 to 1.0 by 0.1 but generates strange results
       val beta = b / 10 
