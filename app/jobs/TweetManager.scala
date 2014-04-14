@@ -40,6 +40,7 @@ object TweetManager {
     /** A list of queries to start. Only used prior to the start of the Manager. */
     var queriesToStart: List[(TweetQuery, ActorRef)] = Nil
 
+
     def receive = {
 
       case AddQueries(queries) =>
