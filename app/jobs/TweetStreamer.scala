@@ -21,6 +21,8 @@ import TweetManager._
 import java.io.InputStream
 import models.GeoSquare
 import play.api.libs.json.JsResultException
+import models._
+
 /**
  * Gets a stream of tweets from the Streaming API
  * https://dev.twitter.com/docs/api/1.1/post/statuses/filter
@@ -36,21 +38,19 @@ class TweetStreamer(query: TweetQuery, listener: ActorRef) extends Actor {
   var stream: InputStream = null
 
   def receive = {
-    case "start" => /* First execution */
+    case Start => /* First execution */
       val locationParam = query.area.long1 + "," + query.area.lat1 + "," + query.area.long2 + "," + query.area.lat2
-      //val keywordsParam = query.keywords.mkString(",")
       stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", locationParam)
       sendToListener()
 
-    case "callback" => /* Callback execution (query update) */
-      callback match {
-        case Some(properties) => sendToListener()
-        case None =>
-          /* A parsing error occurred or our searcher has been kicked by the API, restarting... */
-          receive("start")
-      }
+    case Ping => /* Callback execution (query update) */
+      if (stream == null)
+        receive(Start)
+      else
+        sendToListener()
+      
 
-    case _ => sys.error("Not a valid input for the Tweer Searcher!")
+    case _ => sys.error("Not a valid input for the Tweer Streamer!")
   }
 
   /**
@@ -58,23 +58,17 @@ class TweetStreamer(query: TweetQuery, listener: ActorRef) extends Actor {
    */
   def sendToListener() = {
     val ret = readAll(stream)
-    try {
-      val (values, clb) = parseJson(ret)
-      callback = Some(clb)
-      values foreach (listener ! Tweet(_, query))
-    } catch {
-      case _: JsResultException => /* Error while parsing (Rate limit exceeded) */
-        callback = None /* Will restart the searcher next time it receive a callback */
-    }
+    val values = parseJson(ret)
+    listener ! Tweet(values, query)
   }
 
   def askFor(request: String, location: String) = {
     val postRequest = new HttpPost(request)
 
     //We set the parameters in a weird way that fits with SCALA/Apache HTTP compatibilities
-    val params = new java.util.ArrayList[BasicNameValuePair](2)
+    val params = new java.util.ArrayList[BasicNameValuePair](1)
     //params.add(new BasicNameValuePair("track",keywords))
-    params.add(new BasicNameValuePair("location",location))
+    params.add(new BasicNameValuePair("locations",location))
     postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
     postRequest.setEntity(new UrlEncodedFormEntity(params))
 
@@ -89,19 +83,29 @@ class TweetStreamer(query: TweetQuery, listener: ActorRef) extends Actor {
     val inr = new BufferedReader(new InputStreamReader(in))
     val bf = new StringBuilder
     var rd = inr.readLine
-    while (rd != null) { 
-      val currentJSon = inr.readLine
-      val text = currentJSon.split("\"text\":\"").apply(1).split("\",\n\"source\"").apply(0)
-      println(text)
-      println("HOHOHOHOHO")
-      bf.append(rd); rd = inr.readLine 
+    var value = 0
+    var containsOneOfTheKeywords = false
+    while (!containsOneOfTheKeywords) { 
+      val currentJSon = rd
+      if (currentJSon != null){
+        val text = currentJSon.split("\"text\":\"").apply(1).split("\",").apply(0)
+        
+        for ( i <- 0 to (query.keywords.length - 1)){
+           if (text.contains(query.keywords.apply(i)))
+             containsOneOfTheKeywords = true
+        }
+        if (containsOneOfTheKeywords){
+          bf.append(currentJSon)
+        }
+        rd = inr.readLine 
+      }
     }
     bf.toString
   }
 
   /** Parse a string into a list of JsValue and a callback String from the Twitter Json */
-  def parseJson(str: String): (Array[JsValue], String) = {
+  def parseJson(str: String): JsValue = {
     val glb = Json.parse(str.toString)
-    (((glb \ "statuses").as[Array[JsValue]]), (glb \ "search_metadata" \ "refresh_url").as[JsString].value)
+    glb
   }
 }

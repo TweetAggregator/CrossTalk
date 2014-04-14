@@ -34,6 +34,8 @@ object TweetManager {
 
     /** A list of running and cancellable Searcher, along with their reference actors */
     var searches: List[Cancellable] = Nil
+    /** A list of running and cancellable Streamers, along with their reference actors */
+    var streams: List[Cancellable] = Nil
     
     /** A list of queries to start. Only used prior to the start of the Manager. */
     var queriesToStart: List[(TweetQuery, ActorRef)] = Nil
@@ -50,6 +52,12 @@ object TweetManager {
         var startTime = 0
         searches = queriesToStart map { qur =>
           val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2)))
+          val cancellable = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
+          startTime += threshold
+          cancellable
+        }
+	searches = queriesToStart map { qur =>
+          val searcherRef = toRef(Props(new TweetStreamer(qur._1, qur._2)))
           val cancellable = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
           startTime += threshold
           cancellable
