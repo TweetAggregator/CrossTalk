@@ -23,7 +23,7 @@ case object Stop
 case object Opacities
 
 case class Cluster(topLeft: (Int, Int), bottomRight: (Int, Int),var subClusters: Set[LeafCluster]) {
-  val numTweets: Long = subClusters.map(_.numTweets).sum 
+  def numTweets: Long = subClusters.map(_.numTweets).sum 
   
   def intersect(that: Cluster): Boolean =
     subClusters.exists(that.subClusters.contains(_: LeafCluster))
@@ -38,7 +38,7 @@ case class Cluster(topLeft: (Int, Int), bottomRight: (Int, Int),var subClusters:
   }
 
   def area = subClusters.size
-  def tweetMeter: Float = this.numTweets.toFloat / this.area.toFloat
+  def tweetMeter: Double = this.numTweets.toFloat / this.area.toFloat
   def <(that: Cluster): Boolean = subClusters.size < that.subClusters.size
   def >(that: Cluster): Boolean = subClusters.size > that.subClusters.size
 }
