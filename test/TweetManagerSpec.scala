@@ -62,6 +62,23 @@ class TweetManagerSpec extends Specification {
   }
 
   /* NB: Those test might fail depending of the network congestion */
+  "Tweet Streamer" should {
+    "get some tweets" in new WithApplication {
+      nbReceived = 0
+      val qur = TweetQuery("a" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val listener = ActorSystem() actorOf (Props(new Listener))
+      val actor = ActorSystem().actorOf(Props(new TweetStreamer(qur, listener)))
+
+      actor ! Start
+      Thread.sleep(20000) /* Just print tweets for 20 secs */
+      actor ! Ping
+      Thread.sleep(10000) /* Just print tweets for 10 secs */
+      println("> " + nbReceived)
+      nbReceived should be greaterThan (0)
+    }
+  }
+
+  /* NB: Those test might fail depending of the network congestion */
   "Tweet Manager" should {
     "start queries, and stop them" in new WithApplication {
       nbReceived = 0
