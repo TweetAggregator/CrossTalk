@@ -75,6 +75,13 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
     aggreg
   }
 
+  /*@brief  Removes the clusters that are not important significatif
+            TODO find a way to define significance*/
+  def cleanClusters(clusters: Set[Cluster]): Set[Cluster] = {
+    val maxDensity = clusters.maxBy(_.tweetMeter).tweetMeter
+    clusters.filter(c => c.tweetMeter >= (maxDensity / CORRECTOR))
+  }
+
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]) = {
     val maxTweets = tweetCounts.values.max
     tweetCounts.mapValues(0.5*_/maxTweets)
