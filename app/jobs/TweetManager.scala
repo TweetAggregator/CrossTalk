@@ -51,17 +51,13 @@ object TweetManager {
         assert(searches.isEmpty, "Cannot restart queries again without cancelling the ones running.")
         val searchRate = threshold * queriesToStart.size
         var startTime = 0
-        searches = queriesToStart map { qur =>
+        searches = queriesToStart flatMap { qur =>
           val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2)))
-          val cancellable = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
+          /* val streamerRef = toRef(Props(new TweetStreamer(qur._1, qur._2))) */
+          val cancellable1 = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
+          /* val cancellable2 = streamerRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping) */
           startTime += threshold
-          cancellable
-        }
-	searches = queriesToStart map { qur =>
-          val searcherRef = toRef(Props(new TweetStreamer(qur._1, qur._2)))
-          val cancellable = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
-          startTime += threshold
-          cancellable
+          cancellable1 /* :: cancellable2 */ :: Nil
         }
         queriesToStart = Nil /* Reset the queries to start; all are started! */
 

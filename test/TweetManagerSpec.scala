@@ -70,9 +70,37 @@ class TweetManagerSpec extends Specification {
       val actor = ActorSystem().actorOf(Props(new TweetStreamer(qur, listener)))
 
       actor ! Start
-      Thread.sleep(20000) /* Just print tweets for 20 secs */
+      Thread.sleep(10000) /* Just print tweets for 20 secs */
       actor ! Ping
-      Thread.sleep(10000) /* Just print tweets for 10 secs */
+      Thread.sleep(1000) /* Just print tweets for 10 secs */
+      actor ! Ping
+      Thread.sleep(1000) /* Just print tweets for 10 secs */
+      actor ! Ping
+      Thread.sleep(1000) /* Just print tweets for 10 secs */
+      println("> " + nbReceived)
+      nbReceived should be greaterThan (0)
+    }
+
+    "get some tweets from two requests" in new WithApplication {
+      nbReceived = 0
+      val qur1 = TweetQuery("a" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val qur2 = TweetQuery("a" :: Nil, GeoSquare(-79, 20, 0, 50.6), 1, 1) /* There must be some tweets contaning "e" ! */
+      val listener = ActorSystem() actorOf (Props(new Listener))
+      val actor1 = ActorSystem().actorOf(Props(new TweetStreamer(qur1, listener)))
+      val actor2 = ActorSystem().actorOf(Props(new TweetStreamer(qur2, listener)))
+
+      actor1 ! Start
+      actor2 ! Start
+      Thread.sleep(10000) /* Just print tweets for 20 secs */
+      actor1 ! Ping
+      actor2 ! Ping
+      Thread.sleep(1000) /* Just print tweets for 10 secs */
+      actor1 ! Ping
+      actor2 ! Ping
+      Thread.sleep(1000) /* Just print tweets for 10 secs */
+      actor1 ! Ping
+      actor2 ! Ping
+      Thread.sleep(1000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
