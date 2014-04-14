@@ -22,17 +22,31 @@ case object Stop
 
 case object Opacities
 
-case class Cluster(topLeft: (Int, Int), bottomRight: (Int, Int), subClusters: Set[LeafCluster]) {
-  val numTweets: Int = subClusters.map(_.numTweets).sum
-
-  def merge(that: Cluster) = ???
+case class Cluster(topLeft: (Int, Int), bottomRight: (Int, Int),var subClusters: Set[LeafCluster]) {
+  val numTweets: Long = subClusters.map(_.numTweets).sum 
   
   def intersect(that: Cluster): Boolean =
     subClusters.exists(that.subClusters.contains(_: LeafCluster))
 
-  def contains(that: Cluster): Boolean = {
-    this.topLeft._1 <= that.topLeft._1 && this.topLeft._2 <= that.topLeft._2 && this.bottomRight._1 >= that.bottomRight._1 && this.bottomRight._2 >= that.bottomRight._2
+  def strictIntersect(that: Cluster): Boolean = this.intersect(that) && !(this.contains(that) || that.contains(this))
+
+  def contains(that: Cluster): Boolean = 
+    that.subClusters.forall(this.subClusters.contains(_))
+  
+  def contains(point: (Int, Int)): Boolean = {
+    topLeft._1 <= point._1 && topLeft._2 <= point._2 && bottomRight._1 >= point._1 && bottomRight._2 >= point._2
+  }
+
+  def area = subClusters.size
+  def tweetMeter: Float = this.numTweets.toFloat / this.area.toFloat
+  def <(that: Cluster): Boolean = subClusters.size < that.subClusters.size
+  def >(that: Cluster): Boolean = subClusters.size > that.subClusters.size
+}
+object Cluster {
+  def apply(subClusters: Set[LeafCluster]): Cluster = {
+    val x = subClusters.map(_.pos._1)
+    val y = subClusters.map(_.pos._2)
+    new Cluster((x.min, y.min), (x.max, y.max), subClusters)
   }
 }
-
-case class LeafCluster(pos: (Int, Int), numTweets: Int)
+case class LeafCluster(pos: (Int, Int), numTweets: Long)
