@@ -76,10 +76,10 @@ object TweetManager {
    */
   val consumer = {
     /* Access token, saved as Play Configuration Parameters */
-    val consumerKey = Play.current.configuration.getString("twitter.consumerKey").getOrElse(sys.error("No consumer key found in conf."))
-    val consumerSecret = Play.current.configuration.getString("twitter.consumerSecret").getOrElse(sys.error("No consumer secret found in conf."))
-    val accessToken = Play.current.configuration.getString("twitter.accessToken").getOrElse(sys.error("No access token found in conf."))
-    val accessTokenSecret = Play.current.configuration.getString("twitter.accessTokenSecret").getOrElse(sys.error("No access token secret found in conf."))
+    val consumerKey = Play.current.configuration.getString("twitter.k2.consumerKey").getOrElse(sys.error("No consumer key found in conf."))
+    val consumerSecret = Play.current.configuration.getString("twitter.k2.consumerSecret").getOrElse(sys.error("No consumer secret found in conf."))
+    val accessToken = Play.current.configuration.getString("twitter.k2.accessToken").getOrElse(sys.error("No access token found in conf."))
+    val accessTokenSecret = Play.current.configuration.getString("twitter.k2.accessTokenSecret").getOrElse(sys.error("No access token secret found in conf."))
 
     val consumer = new CommonsHttpOAuthConsumer(consumerKey, consumerSecret)
     consumer.setTokenWithSecret(accessToken, accessTokenSecret)
