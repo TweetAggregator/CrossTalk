@@ -29,7 +29,7 @@ import models._
  * https://dev.twitter.com/docs/api/1.1/get/search/tweets
  * Max #request/15minutes: 450
  */
-class TweetSearcher(query: TweetQuery, listener: ActorRef) extends Actor {
+class TweetSearcher(query: TweetQuery, listener: ActorRef, checker: ActorRef) extends Actor {
 
   var callback: Option[String] = None /* Store the params used to check for updates */
 
@@ -58,7 +58,7 @@ class TweetSearcher(query: TweetQuery, listener: ActorRef) extends Actor {
     try {
       val (values, clb) = parseJson(ret)
       callback = Some(clb)
-      values foreach (listener ! Tweet(_, query))
+      values foreach (v => checker ! (Tweet(v, query), listener))
     } catch {
       case _: JsResultException => /* Error while parsing (Rate limit exceeded) */
         callback = None /* Will restart the searcher next time it receive a callback */
