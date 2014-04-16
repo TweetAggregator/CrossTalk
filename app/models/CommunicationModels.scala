@@ -50,3 +50,8 @@ object Cluster {
   }
 }
 case class LeafCluster(pos: (Int, Int), numTweets: Long)
+
+case class Pixel(pos:(Int, Int),var l: Int,var d: Double)
+case class SuperPixel (k: Int,var pos:(Int, Int), var d: Double){
+  def getCopy: SuperPixel = SuperPixel(k, pos, d)
+}
