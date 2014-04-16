@@ -19,7 +19,7 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
     val (dLat, dLong) = ((lat2 - lat1) * Math.PI / 180, (long2 - long1) * Math.PI / 180)
     val v1 = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLong / 2) * Math.sin(dLong / 2)
     val v2 = 2 * Math.atan2(Math.sqrt(v1), Math.sqrt(1 - v1))
-    earthRadius * v2 / 2
+    Math.sqrt((Math.pow(earthRadius * v2, 2) / 2)) / 2
   }
 }
 
@@ -30,7 +30,7 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
   /** Format the keywords for logical ORs */
   val kwsInSearchFormat: String = {
     if (keywords.isEmpty) sys.error("Cannot start a query with empty keywords")
-    else keywords.tail.foldLeft("\"" + keywords.head + "\"")((a, b) => a + " OR \"" + b + "\"")
+    else keywords.tail.foldLeft(keywords.head)((a, b) => a + " OR " + b)
       .replaceAll(" ", "%20").replaceAll("\"", "%22").replaceAll("#", "%23").take(1000)
   }
   def subqueries: List[TweetQuery] = (rows, cols) match {

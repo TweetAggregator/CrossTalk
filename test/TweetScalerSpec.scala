@@ -38,6 +38,7 @@ class TweetScalerSpec extends Specification {
           duplicateCount += 1
           println("duplicate found, nb of duplicates: " + duplicateCount + "/" + generalCount)
         }
+        ids :+= id
     }
   }
 
@@ -45,6 +46,7 @@ class TweetScalerSpec extends Specification {
     var count = 0
     def receive = {
       case Tweet(value, origin) =>
+        println("\t" + (value \ "text"))
       	reporter ! (((value \ "id").as[JsNumber].value.toLong), origin.kwsInSearchFormat)
         count += 1
         if (count % 50 == 0) reporter ! origin.kwsInSearchFormat
@@ -55,9 +57,9 @@ class TweetScalerSpec extends Specification {
     "start a lot of queries, check for duplicates, and never stop" in new WithApplication  {
       /* Requests are all over the US */
       val queries = List(
-          TweetQuery("Switzerland" :: "Swiss" :: "swiss" :: "switzerland" :: "SWITZERLAND" :: "Suisse" :: "Schweiz" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12),
-          TweetQuery("Bank" :: "Money" :: "BANK" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12),
-          TweetQuery("swiss bank" :: "Swiss Bank" :: "Switzerland bank" :: "UBS" :: "Credit Suisse" :: "SWISS BANK" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12))
+          TweetQuery("#GoT" :: "Game of Thrones" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12),
+          TweetQuery("Barak" :: "Barak Obama" :: "Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12),
+          TweetQuery("joffrey lannister" :: "lannister" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 12, 12))
       val reporter = toRef(Props(new Reporter(queries map (_.kwsInSearchFormat))))
       
       val subqueries = queries flatMap (_.subqueries) map (qu => (qu, toRef(Props(new Listener(reporter)))))

@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 import play.api.libs.concurrent.Execution.Implicits._
 import utils.AkkaImplicits._
 
-/* TODO: cover cases for the Streaming API */
+/* TODO: cover cases for the Streaming API, if doable */
 /**
  * Manage all the tweets streamer to return from the two APIs, and ensure that the quotas are enforced.
  * Since we want a dynamic update, the receive method can execute various queries :
@@ -32,8 +32,8 @@ object TweetManager {
 
     val threshold = 60 * 60 / 450 / 4 /* seconds, see https://dev.twitter.com/docs/rate-limiting/1.1/limits */
 
-    /** A list of running and cancellable Searcher, along with their reference actors */
-    var searches: List[Cancellable] = Nil
+    /** A list of running and cancellables, along with their reference actors */
+    var cancellables: List[Cancellable] = Nil
     /** A list of running and cancellable Streamers, along with their reference actors */
     var streams: List[Cancellable] = Nil
     
@@ -44,26 +44,30 @@ object TweetManager {
     def receive = {
 
       case AddQueries(queries) =>
-        assert(searches.isEmpty, "Cannot add more queries without cancelling the ones running.")
+        assert(cancellables.isEmpty, "Cannot add more queries without cancelling the ones running.")
         queriesToStart ++= queries
         
       case Start =>
-        assert(searches.isEmpty, "Cannot restart queries again without cancelling the ones running.")
+        assert(cancellables.isEmpty, "Cannot restart queries again without cancelling the ones running.")
+
+        val checkerRef = toRef(Props(new TweetDuplicateChecker(queriesToStart.size*100)))
+
         val searchRate = threshold * queriesToStart.size
         var startTime = 0
-        searches = queriesToStart flatMap { qur =>
-          val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2)))
+        cancellables = queriesToStart flatMap { qur =>
+          val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2, checkerRef)))
           /* val streamerRef = toRef(Props(new TweetStreamer(qur._1, qur._2))) */
           val cancellable1 = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
           /* val cancellable2 = streamerRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping) */
           startTime += threshold
           cancellable1 /* :: cancellable2 */ :: Nil
         }
+        cancellables :+= checkerRef.schedule(searchRate, searchRate, TimeUnit.SECONDS, Cleanup) /* Schedule the duplicate checker */
         queriesToStart = Nil /* Reset the queries to start; all are started! */
 
       case Stop =>
-        searches foreach (_.cancel)
-        searches = Nil
+        cancellables foreach (_.cancel)
+        cancellables = Nil
 
       case _ => sys.error("Wrong message sent to the TweetManager")
     }
@@ -76,10 +80,10 @@ object TweetManager {
    */
   val consumer = {
     /* Access token, saved as Play Configuration Parameters */
-    val consumerKey = Play.current.configuration.getString("twitter.consumerKey").getOrElse(sys.error("No consumer key found in conf."))
-    val consumerSecret = Play.current.configuration.getString("twitter.consumerSecret").getOrElse(sys.error("No consumer secret found in conf."))
-    val accessToken = Play.current.configuration.getString("twitter.accessToken").getOrElse(sys.error("No access token found in conf."))
-    val accessTokenSecret = Play.current.configuration.getString("twitter.accessTokenSecret").getOrElse(sys.error("No access token secret found in conf."))
+    val consumerKey = Play.current.configuration.getString("twitter.k2.consumerKey").getOrElse(sys.error("No consumer key found in conf."))
+    val consumerSecret = Play.current.configuration.getString("twitter.k2.consumerSecret").getOrElse(sys.error("No consumer secret found in conf."))
+    val accessToken = Play.current.configuration.getString("twitter.k2.accessToken").getOrElse(sys.error("No access token found in conf."))
+    val accessTokenSecret = Play.current.configuration.getString("twitter.k2.accessTokenSecret").getOrElse(sys.error("No access token secret found in conf."))
 
     val consumer = new CommonsHttpOAuthConsumer(consumerKey, consumerSecret)
     consumer.setTokenWithSecret(accessToken, accessTokenSecret)

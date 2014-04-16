@@ -25,13 +25,15 @@ class TweetManagerSpec extends Specification {
         print("-")
     }
   }
+  
+  var checker = ActorSystem().actorOf(Props(new TweetDuplicateChecker(0)))
 
   /* NB: Those test might fail depending of the network congestion */
   "Tweet Searcher Actor" should {
 
     "return a list of tweets" in new WithApplication {
       val listener = ActorSystem() actorOf (Props(new Listener))
-      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener,checker)))
       actor ! Start
       Thread.sleep(30000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
@@ -40,8 +42,9 @@ class TweetManagerSpec extends Specification {
 
     "return a list of tweets and do a callback" in new WithApplication {
       nbReceived = 0
+      checker ! Cleanup
       val listener = ActorSystem() actorOf (Props(new Listener))
-      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener,checker)))
       actor ! Start
       actor ! Ping
       Thread.sleep(30000) /* Just print tweets for 20 secs */
@@ -51,8 +54,9 @@ class TweetManagerSpec extends Specification {
 
     "launch a query with multiple keywords" in new WithApplication {
       nbReceived = 0
+      checker ! Cleanup
       val listener = ActorSystem() actorOf (Props(new Listener))
-      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener)))
+      val actor = ActorSystem().actorOf(Props(new TweetSearcher(TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1), listener,checker)))
       actor ! Start
       actor ! Ping
       Thread.sleep(20000) /* Just print tweets for 20 secs */
@@ -65,6 +69,7 @@ class TweetManagerSpec extends Specification {
   "Tweet Streamer" should {
     "get some tweets" in new WithApplication {
       nbReceived = 0
+      checker ! Cleanup
       val qur = TweetQuery("a" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
       val listener = ActorSystem() actorOf (Props(new Listener))
       val actor = ActorSystem().actorOf(Props(new TweetStreamer(qur, listener)))
