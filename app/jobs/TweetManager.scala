@@ -15,6 +15,8 @@ import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import play.api.libs.concurrent.Execution.Implicits._
 import utils.AkkaImplicits._
+import scala.util.Random
+import scala.language.postfixOps
 
 /* TODO: cover cases for the Streaming API, if doable */
 /**
@@ -50,11 +52,12 @@ object TweetManager {
       case Start =>
         assert(cancellables.isEmpty, "Cannot restart queries again without cancelling the ones running.")
 
-        val checkerRef = toRef(Props(new TweetDuplicateChecker(queriesToStart.size*100)))
+        val keysSet = queriesToStart.map(qu => qu._1.keywords).toSet
+        val checkerRef = toRef(Props(new TweetDuplicateChecker(queriesToStart.size*100 / keysSet.size, keysSet)))
 
         val searchRate = threshold * queriesToStart.size
         var startTime = 0
-        cancellables = queriesToStart flatMap { qur =>
+        cancellables = queriesToStart.shuffle flatMap { qur =>
           val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2, checkerRef)))
           /* val streamerRef = toRef(Props(new TweetStreamer(qur._1, qur._2))) */
           val cancellable1 = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
@@ -89,5 +92,12 @@ object TweetManager {
     consumer.setTokenWithSecret(accessToken, accessTokenSecret)
 
     consumer
+  }
+
+  implicit class RichList[T](lst: List[T]) {
+    def shuffle: List[T] = {
+          val rds = new Random
+      lst.map(entry => (entry, rds.nextInt)).sortBy(x => x._2).map(entry => entry._1)
+    }
   }
 }
