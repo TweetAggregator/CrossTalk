@@ -21,9 +21,11 @@ object ClusteringLib {
     val S: Int = Math.sqrt(K).toInt
     var inter: List[((Int, Int), Double)] = Nil
     for(x <- (0 to S); y <- (0 to S)) {
-      val f = squareCoords.filter(s => s._2._1 / S == x && s._2._2 / S == y)
-      val res = ((x,y), f.map(e => densities(e._1).toDouble / (K * K).toDouble).sum / f.size)
-      inter :+= res
+      if(!inter.exists(e => e._1 == ((x,y)))){
+        val f = squareCoords.filter(s => s._2._1 / S == x && s._2._2 / S == y)
+        val res = ((x,y), f.map(e => densities(e._1).toDouble / (K * K).toDouble).sum / f.size)
+        inter :+= res
+      }
     }
     superPixels = inter.zipWithIndex.map(i => SuperPixel(i._2, i._1._1, i._1._2))
   } 
