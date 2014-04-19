@@ -73,7 +73,7 @@ class TweetStreamer(query: TweetQuery, listener: ActorRef) extends Actor {
     postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
     postRequest.setEntity(new UrlEncodedFormEntity(params))
 
-    consumer.sign(postRequest)
+    consumer().sign(postRequest)
 
     val twitterResponse = client.execute(postRequest) /* Send the request and get the response */
     twitterResponse.getEntity().getContent()

@@ -15,89 +15,116 @@ import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 import play.api.libs.concurrent.Execution.Implicits._
 import utils.AkkaImplicits._
+import utils.Enrichments._
+import play.libs.Akka
 import scala.util.Random
-import scala.language.postfixOps
 
 /* TODO: cover cases for the Streaming API, if doable */
 /**
  * Manage all the tweets streamer to return from the two APIs, and ensure that the quotas are enforced.
- * Since we want a dynamic update, the receive method can execute various queries :
- *  1		Start multiple queries
- *  2		Stop all the queries
+ * Since we want a dynamic update, the receive method can execute various queries:
+ *  1		Add queries to the list to start
+ *  2		Start the queries added
+ *  3		Stop all the queries
+ *  4   Pause all the queries
+ *  5   Resume all the queries
  *
- *  Note that there should be only one instance of the manager per application.
+ *  Note that there should be only one instance of the manager per application, hence the nesting with the companion object.
+ *  @pre All the queries added are already subdivided.
  */
 object TweetManager {
 
   /* Nested class to enforce singleton */
   class TweetManager extends Actor {
-
-    val threshold = 60 * 60 / 450 / 4 /* seconds, see https://dev.twitter.com/docs/rate-limiting/1.1/limits */
-
-    /** A list of running and cancellables, along with their reference actors */
-    var cancellables: List[Cancellable] = Nil
-    /** A list of running and cancellable Streamers, along with their reference actors */
-    var streams: List[Cancellable] = Nil
     
+    /** Period between two ping to the Twitter API for the tweet/search API. */
+    val period = getConfInt("tweetManager.period", "TweetManager: no period specified for the connection with Twitter.")
+    /** limit on the number of Akka Actor allowed for the research of the tweet/search API. Queries will be split among them. */
+    val searcherBound = getConfInt("tweetManager.searcherBound", "TweetManager: no bound specified on the number of searchers.")
+
+    /** A list of actors launched by the Manager. */
+    var actorRefs: List[ActorRef] = Nil
     /** A list of queries to start. Only used prior to the start of the Manager. */
     var queriesToStart: List[(TweetQuery, ActorRef)] = Nil
-
 
     def receive = {
 
       case AddQueries(queries) =>
-        assert(cancellables.isEmpty, "Cannot add more queries without cancelling the ones running.")
+        assert(actorRefs.isEmpty, "TweetManager: Cannot add more queries without cancelling the ones running.")
         queriesToStart ++= queries
-        
+
       case Start =>
-        assert(cancellables.isEmpty, "Cannot restart queries again without cancelling the ones running.")
-
-        val keysSet = queriesToStart.map(qu => qu._1.keywords).toSet
-        val checkerRef = toRef(Props(new TweetDuplicateChecker(queriesToStart.size*100 / keysSet.size, keysSet)))
-
-        val searchRate = threshold * queriesToStart.size
+        assert(actorRefs.isEmpty, "TweetManager: Cannot restart queries again without cancelling the ones running.")
+        assert(!queriesToStart.isEmpty, "TweetManager: Cannot start no query at all.")
+        
+        /* Calculate the number of searcher and the rate of research */
+        val nbSearcher = Math.min(searcherBound, queriesToStart.size)
+        val searchRate = period * nbSearcher
         var startTime = 0
-        cancellables = queriesToStart.shuffle flatMap { qur =>
-          val searcherRef = toRef(Props(new TweetSearcher(qur._1, qur._2, checkerRef)))
-          /* val streamerRef = toRef(Props(new TweetStreamer(qur._1, qur._2))) */
-          val cancellable1 = searcherRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping)
-          /* val cancellable2 = streamerRef.schedule(startTime, searchRate, TimeUnit.SECONDS, Ping) */
-          startTime += threshold
-          cancellable1 /* :: cancellable2 */ :: Nil
+        
+        /* Let's create the duplicate checker */
+        val keysSet = queriesToStart.map(qu => qu._1.keywords).toSet
+        val checkerRef = context.actorOf(Props(new TweetDuplicateChecker(queriesToStart.size, keysSet, period)))
+        checkerRef.scheduleOnce(searchRate,TimeUnit.SECONDS, Cleanup) /* Schedule the duplicate checker once. It will then schedule itself. */
+        actorRefs :+= checkerRef
+
+        /* Create a counter to evenly use the available keys for the Twitter API */
+        val twitterKeyCounter = MultiCounter(Math.ceil(queriesToStart.size.toDouble / nbTwitterKeys).toInt)
+        
+        /* Let's shuffle the list of query and split it for the searchers */
+        queriesToStart.shuffle.split(nbSearcher) foreach { qurs =>
+          val searcherRef = context.actorOf(Props(new TweetSearcher(qurs, checkerRef, searchRate, twitterKeyCounter.incr)))
+          searcherRef.scheduleOnce(startTime, TimeUnit.SECONDS, Ping) /* Schedule it once. It will then schedule itself. */
+          actorRefs :+= searcherRef
+          startTime += period
         }
-        cancellables :+= checkerRef.schedule(searchRate, searchRate, TimeUnit.SECONDS, Cleanup) /* Schedule the duplicate checker */
         queriesToStart = Nil /* Reset the queries to start; all are started! */
 
-      case Stop =>
-        cancellables foreach (_.cancel)
-        cancellables = Nil
+      case Refused => 
+        /* Activated when a TweetSearcher notify the manager that its request has been refused by the API.
+         * The manager will then say to all the Searcher to wait a bit before resuming the research, to 
+         * avoid cascading refusal from the API. */ 
+        actorRefs.tail foreach (_ ! Wait)
 
-      case _ => sys.error("Wrong message sent to the TweetManager")
+      case Stop =>
+        assert(!actorRefs.isEmpty, "TweetManager: Cannot stop if nothing is scheduled.")
+        actorRefs foreach (_ ! Stop)
+        actorRefs = Nil
+
+      case Pause =>
+        assert(!actorRefs.isEmpty, "TweetManager: Cannot pause if nothing is scheduled.")
+        actorRefs foreach (_! Stop)
+
+      case Resume =>
+        assert(!actorRefs.isEmpty, "TweetManager: Cannot resume if nothing is scheduled.")
+        actorRefs foreach( _! Resume)
+
+      case _ => sys.error("TweetManager: Wrong message.")
     }
   }
 
+  /* Body of the companion object */
+
+  /* Reference to the singleton Manager */
   val TweetManagerRef = toRef(Props(new TweetManager()))
+  
+  /* Number of keys available for the Twitter API */
+  val nbTwitterKeys = getConfInt("twitter.nbKeys", "No consumer key found in conf.")
 
   /**
-   * Return an OAuth consumer with the keys ready for the Twitter API.
+   * @param key		The key set to use. If not specified, is random.
+   * @return an OAuth consumer with the keys ready for the Twitter API.
    */
-  val consumer = {
+  def consumer(twitterKey: Int = new Random(System.currentTimeMillis).nextInt(nbTwitterKeys)) = {
     /* Access token, saved as Play Configuration Parameters */
-    val consumerKey = Play.current.configuration.getString("twitter.k2.consumerKey").getOrElse(sys.error("No consumer key found in conf."))
-    val consumerSecret = Play.current.configuration.getString("twitter.k2.consumerSecret").getOrElse(sys.error("No consumer secret found in conf."))
-    val accessToken = Play.current.configuration.getString("twitter.k2.accessToken").getOrElse(sys.error("No access token found in conf."))
-    val accessTokenSecret = Play.current.configuration.getString("twitter.k2.accessTokenSecret").getOrElse(sys.error("No access token secret found in conf."))
+    val consumerKey = getConfString(s"twitter.k${twitterKey}.consumerKey", "No consumer key found in conf.")
+    val consumerSecret = getConfString(s"twitter.k${twitterKey}.consumerSecret", "No consumer secret found in conf.")
+    val accessToken = getConfString(s"twitter.k${twitterKey}.accessToken", "No access token found in conf.")
+    val accessTokenSecret = getConfString(s"twitter.k${twitterKey}.accessTokenSecret", "No access token secret found in conf.")
 
     val consumer = new CommonsHttpOAuthConsumer(consumerKey, consumerSecret)
     consumer.setTokenWithSecret(accessToken, accessTokenSecret)
 
     consumer
-  }
-
-  implicit class RichList[T](lst: List[T]) {
-    def shuffle: List[T] = {
-          val rds = new Random
-      lst.map(entry => (entry, rds.nextInt)).sortBy(x => x._2).map(entry => entry._1)
-    }
   }
 }
