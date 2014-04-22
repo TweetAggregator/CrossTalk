@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 class ClusteringTests extends FunSuite {
   val square: GeoSquare = GeoSquare(-129.4,20.0, -79, 50.6) 
   val queries = TweetQuery("prout"::Nil, square, 100, 100).subqueries
-  val coords = queries.map(_.area).zipWithIndex.map{x => (x._1, (x._2 % 100, x._2 % 100))}.toMap
+  val coords = queries.map(_.area).zipWithIndex.map{x => (x._1, (x._2 % 100, x._2 / 100))}.toMap
   var res = coords.keys.map{ k => 
     val p = coords(k)
     if(p._2 < 25 && p._1 < 25){
@@ -21,7 +21,7 @@ class ClusteringTests extends FunSuite {
       (k, 1L)
     }
   }.toMap 
-  val clust: ClustHC = new ClustHC(coords, res, 100, 100)
+  /*val clust: ClustHC = new ClustHC(coords, res, 100, 100)
 
   test("HC: Should correctly compute the total number of tweets"){
     assert(clust.total == 150600 , "Wrong number of tweets computed")
@@ -31,7 +31,7 @@ class ClusteringTests extends FunSuite {
   }
   test("HC: Should cluster well !"){
     val result = clust.clusterResult
-    println(clust.cleanClusters(result.last))
-  }
+    println(clust.cleanClusters(result.last) map (x => x.numTweets))
+  }*/
   
 }

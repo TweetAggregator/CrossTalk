@@ -4,7 +4,6 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import models.GeoSquare
 import TweetManager._
 import models._
-import TweetManager._
 
 class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: Int) extends Actor {
   /*Total Number of tweets*/
@@ -19,7 +18,7 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
   val listeners: List[ActorRef] = queries.map(x => ActorSystem().actorOf(Props(new Counter(x.area, self))))
   
   def squareCoords: Map[GeoSquare, (Int, Int)] = queries.map(_.area).zipWithIndex.map{
-    x => (x._1, (x._2 % row, x._2 % col))
+    x => (x._1, (x._2 % row, x._2 / col))
   }.toMap
 
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]) = {
