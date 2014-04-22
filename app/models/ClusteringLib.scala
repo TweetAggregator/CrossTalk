@@ -59,7 +59,7 @@ object ClusteringLib {
   }
 
   def merge {
-    //TODO this shit looks weird
+    //TODO implement this
   }
 
   def D(a: Pixel, b: SuperPixel): Double = {
