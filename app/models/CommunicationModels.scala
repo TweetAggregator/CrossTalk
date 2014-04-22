@@ -12,11 +12,16 @@ case object ReportCount
 case object StartGeo
 case object Collect
 
+/* Messages for communication with the TweetManager, the TweetSearcher and TweetStreamer */
 case object Start
 case object Ping
 case class AddQueries(queries: List[(TweetQuery, ActorRef)])
 case object Stop
+case object Pause
+case object Resume
 case object Cleanup
+case object Refused
+case object Wait
 
 case object Opacities
 
