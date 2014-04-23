@@ -1,0 +1,25 @@
+#district path {
+  fill: lightsteelblue;
+  fill-opacity: .5;
+  stroke: steelblue;
+}
+
+.map rect {
+  fill: blue;
+  fill-opacity: .15;
+  stroke: blue;
+  shape-rendering: crispEdges;
+}
+
+.map .region {
+  fill: #fff;
+  fill-opacity: .15;
+  stroke: red;
+  stroke-width: 2;
+  shape-rendering: crispEdges;
+}
+
+.map .subregion {
+  fill: green; /* opacity depending on tweet frequency */
+  shape-rendering: crispEdges;
+}
