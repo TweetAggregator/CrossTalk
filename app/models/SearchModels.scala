@@ -25,6 +25,8 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
     val v2 = 2 * Math.atan2(Math.sqrt(v1), Math.sqrt(1 - v1))
     Math.sqrt((Math.pow(earthRadius * v2, 2) / 2)) * 2 / 3
   }
+  
+  def containsGeo(long: Double, lat: Double): Boolean = (long >= long1 && long <= long2 && lat >= lat1 && lat <= lat2)
 }
 
 /**
