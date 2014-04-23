@@ -13,6 +13,7 @@ import akka.actor.Actor
 import models._
 import jobs.TweetManager._
 import play.libs.Akka
+import akka.actor.ActorRef
 
 @RunWith(classOf[JUnitRunner])
 class TweetManagerSpec extends Specification {
@@ -70,15 +71,16 @@ class TweetManagerSpec extends Specification {
       nbReceived should be greaterThan (0)
     }
   }
-
   /* NB: Those test might fail depending of the network congestion */
-  /*"Tweet Streamer" should {
+  "Tweet Streamer" should {
     "get some tweets" in new WithApplication {
       nbReceived = 0
-      val qur = TweetQuery("a" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
-      
+      val qur = TweetQuery("hey" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      var listQuery: List[(TweetQuery, ActorRef)] = Nil
       val listener = Akka.system.actorOf(Props(new Listener))
-      val actor = Akka.system.actorOf(Props(new TweetStreamer(qur, listener)))
+      
+      listQuery :+= (qur, listener)
+      val actor = Akka.system.actorOf(Props(new TweetStreamer(listQuery)))
 
       actor ! Start
       Thread.sleep(10000) /* Just print tweets for 20 secs */
@@ -90,15 +92,21 @@ class TweetManagerSpec extends Specification {
       Thread.sleep(1000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
+      actor ! Stop
     }
 
     "get some tweets from two requests" in new WithApplication {
       nbReceived = 0
-      val qur1 = TweetQuery("a" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
-      val qur2 = TweetQuery("a" :: Nil, GeoSquare(-79, 20, 0, 50.6), 1, 1) /* There must be some tweets contaning "e" ! */
+      val qur1 = TweetQuery("morning" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val qur2 = TweetQuery("night" :: Nil, GeoSquare(-79, 20, 0, 50.6), 1, 1) /* There must be some tweets contaning "e" ! */
       val listener = Akka.system.actorOf(Props(new Listener))
-      val actor1 = Akka.system.actorOf(Props(new TweetStreamer(qur1, listener)))
-      val actor2 = Akka.system.actorOf(Props(new TweetStreamer(qur2, listener)))
+      
+      var listQuery2: List[(TweetQuery, ActorRef)] = Nil
+      var listQuery3: List[(TweetQuery, ActorRef)] = Nil
+      listQuery2 :+= (qur1, listener)
+      listQuery3 :+= (qur2, listener)
+      val actor1 = Akka.system.actorOf(Props(new TweetStreamer(listQuery2)))
+      val actor2 = Akka.system.actorOf(Props(new TweetStreamer(listQuery3)))
 
       actor1 ! Start
       actor2 ! Start
@@ -114,9 +122,9 @@ class TweetManagerSpec extends Specification {
       Thread.sleep(1000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
+      println("e")
     }
-  }*/
-
+  }
   /* NB: Those test might fail depending of the network congestion */
   "Tweet Manager" should {
     "start queries, and stop them" in new WithApplication {

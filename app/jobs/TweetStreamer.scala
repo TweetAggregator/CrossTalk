@@ -22,6 +22,7 @@ import TweetManager._
 import java.io.InputStream
 import models.GeoSquare
 import play.api.libs.json.JsResultException
+import collection.mutable.HashMap
 import models._
 
 /**
@@ -29,8 +30,7 @@ import models._
  * https://dev.twitter.com/docs/api/1.1/post/statuses/filter
  * Max #request/15minutes: 450, Max #keywords=10
  */
-class TweetStreamer(query: TweetQuery, listener: ActorRef) extends Actor {
-
+class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
   /* We set up the HTTP client and the oauth module */
   val client = new DefaultHttpClient()
 
@@ -38,30 +38,98 @@ class TweetStreamer(query: TweetQuery, listener: ActorRef) extends Actor {
 
   var stream: InputStream = null
 
+  var squareToListener: HashMap[String, List[(TweetQuery, ActorRef)]] = HashMap()
+  var locationParam = ""
+  var setOfKeywords: List[Array[String]] = Nil
+  
+  var containsOneOfTheKeywords = false
+  
   def receive = {
     case Start => /* First execution */
-      val locationParam = query.area.long1 + "," + query.area.lat1 + "," + query.area.long2 + "," + query.area.lat2
+      setOfKeywords = parseRequest(query).map(currentString => currentString.split(","))
       stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", locationParam)
-      sendToListener()
+      readAll(stream)
 
     case Ping => /* Callback execution (query update) */
       if (stream == null)
         receive(Start)
       else
-        sendToListener()
-      
+        readAll(stream)
+    
+    case Stop => stream.close()
 
-    case _ => sys.error("Not a valid input for the Tweer Streamer!")
+    case _ => sys.error("Not a valid input for the Tweet Streamer!")
   }
-
+  
+  /**
+   * Returns a list of keywords, updates the list squareToListener that gives us for each geosquare 
+   * a listener and updates the locationparam
+  */
+  def parseRequest(requests: List[(TweetQuery, ActorRef)]): List[String] = {
+    var listKeyWords: List[String] = Nil // The list of all the sets of keywords, because there will be more than one
+    
+    //We want to do a search on a big square, we are going to degine it's bounds
+    var inferiorBounds: (Double, Double) = (361,361)
+    var superiorBounds: (Double, Double) = (-361,-361)
+    
+    //We parse the list
+    var nextCouple: (TweetQuery, ActorRef) = requests.head
+    var bottomList: List[(TweetQuery, ActorRef)] = requests
+    
+    while (!bottomList.isEmpty){
+      val currentHashKeywords = hashKeyWords(nextCouple._1.keywords) //we do a hash for our keywords
+      //We add it in the right place on the hashmap
+      if (squareToListener.contains(currentHashKeywords)){
+        squareToListener(currentHashKeywords) :+= (nextCouple._1, nextCouple._2) //We remember each of the geosquare to give tweets to the right listener
+      }
+      else{
+        var newList: List[(TweetQuery, ActorRef)] = Nil
+        newList :+= (nextCouple._1, nextCouple._2)
+        squareToListener.put(currentHashKeywords, newList)
+      }
+      //We try to add te set of keywords to 
+      
+      if (!listKeyWords.contains(currentHashKeywords)){
+        listKeyWords :+= currentHashKeywords
+      }
+      
+      //Then we update the bounds
+      val currentSquare: GeoSquare = nextCouple._1.area
+      
+      if (currentSquare.long1 < inferiorBounds._1)
+        inferiorBounds = (currentSquare.long1, inferiorBounds._2)
+      if (currentSquare.lat1 < inferiorBounds._2)
+        inferiorBounds = (inferiorBounds._1, currentSquare.lat1)
+      
+      if (currentSquare.long2 > superiorBounds._1)
+        superiorBounds = (currentSquare.long2, superiorBounds._2)
+      if (currentSquare.lat2 > superiorBounds._2)
+        superiorBounds = (superiorBounds._1, currentSquare.lat2)
+      
+      
+      nextCouple = requests.head
+      bottomList = requests.tail
+    }
+    
+    //And we return a list of geoparameters for each list of keywords
+    locationParam = inferiorBounds._1 + "," + inferiorBounds._2 + "," + superiorBounds._1 + "," + superiorBounds._2
+    listKeyWords
+  }
+  
+  def hashKeyWords(listOfWords: List[String]): String = listOfWords match {
+    case string :: bottom => string + "," + hashKeyWords(bottom)
+    case Nil => ""
+  }
+  
   /**
    * Execute the request in parameter, parse it and send the tweets to the listener.
+   * We have to send the tweets to the right listener
    */
-  def sendToListener() = {
+ /* def sendToListener() = {
     val ret = readAll(stream)
     val values = parseJson(ret)
     listener ! Tweet(values, query)
-  }
+  }*/
 
   def askFor(request: String, location: String) = {
     val postRequest = new HttpPost(request)
@@ -79,34 +147,66 @@ class TweetStreamer(query: TweetQuery, listener: ActorRef) extends Actor {
     twitterResponse.getEntity().getContent()
   }
 
+  /** 
+   *  Tells us if this tweet match our request of words
+   */
+  def sendToListenerIfCorrect(currentJSon: String, currentSetOfwords: Array[String]){
+    val hashCurrentSet = hashKeyWords(currentSetOfwords.toList)
+    var textArray = currentJSon.split("\"text\":\"")
+      if (textArray.size > 1){
+	    textArray = textArray.apply(1).split("\",")
+	    if (textArray.size > 1){
+	    val text = textArray.apply(0)
+	    //We check if we can use this tweet
+        for ( i <- 0 to (currentSetOfwords.length - 1)){
+          if (text.contains(currentSetOfwords.apply(i))){
+            //SEND TO CORRECT LISTENER
+            var currentListenersOfThisTweet: List[(TweetQuery, ActorRef)] = squareToListener(hashCurrentSet)
+            var currentGeoSquare: (TweetQuery, ActorRef) = null
+            
+            val jsonToSend: JsValue = parseJson(currentJSon)
+            var geoJS: JsValue = jsonToSend \ "geo"
+            
+	        if (geoJS.toString != "null"){
+	          geoJS = geoJS \ "coordinates"
+	          while (currentListenersOfThisTweet != Nil){
+	            currentGeoSquare = currentListenersOfThisTweet.head
+	            if (currentGeoSquare._1.area.containsGeo(geoJS.apply(1).as[Double], geoJS.apply(0).as[Double])){
+	              println("Got one tweet from tweet streamer " + text + geoJS.apply(0).as[Double] + ' ' + geoJS.apply(1).as[Double])
+	              currentGeoSquare._2 ! Tweet(jsonToSend, currentGeoSquare._1)
+	              containsOneOfTheKeywords = true
+	            }
+	            currentListenersOfThisTweet = currentListenersOfThisTweet.tail
+	          }
+            }
+          }
+        }
+        }
+      }
+  }
+  
+  
   /** Read all the data present in the InputStream in and return it as a String */
-  def readAll(in: InputStream): String = {
+  def readAll(in: InputStream) = {
     val inr = new BufferedReader(new InputStreamReader(in))
     val bf = new StringBuilder
     var rd = inr.readLine
     var value = 0
-    var containsOneOfTheKeywords = false
+    
     while (!containsOneOfTheKeywords) { 
       val currentJSon = rd
       if (currentJSon != null){
-        val text = currentJSon.split("\"text\":\"").apply(1).split("\",").apply(0)
-        
-        for ( i <- 0 to (query.keywords.length - 1)){
-           if (text.contains(query.keywords.apply(i)))
-             containsOneOfTheKeywords = true
-        }
-        if (containsOneOfTheKeywords){
-          bf.append(currentJSon)
-        }
+        setOfKeywords.foreach((arrayKeyWords:Array[String]) => sendToListenerIfCorrect(currentJSon, arrayKeyWords))
         rd = inr.readLine 
       }
     }
-    bf.toString
+    containsOneOfTheKeywords = false
   }
 
   /** Parse a string into a list of JsValue and a callback String from the Twitter Json */
   def parseJson(str: String): JsValue = {
     val glb = Json.parse(str.toString)
+    //println(glb)
     glb
   }
-}
+} 
