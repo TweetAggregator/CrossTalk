@@ -49,6 +49,15 @@ object Enrichments {
     Play.current.configuration.getInt(key).getOrElse(sys.error(error))
 
   /**
+   * get a configuration value
+   *  @param key		The key to get
+   *  @param error		The error message to return in case the configuration is not found
+   *
+   *  @return the Double corresponding to the key
+   */
+  def getConfDouble(key: String, error: String) =
+    Play.current.configuration.getDouble(key).getOrElse(sys.error(error))
+  /**
    * Multistep counter. The inner counter must be increased by 'step' in order to change
    * the output.
    * @param step		The step of the multistep counter.
