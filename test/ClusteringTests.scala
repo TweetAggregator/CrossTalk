@@ -27,10 +27,10 @@ class ClusteringTests extends FunSuite {
   val slic: ClusteringLib = new ClusteringLib(coords, res)
  
   test("HC: Should correctly compute the total number of tweets"){
-    assert(clust.total == 72, "Wrong number of tweets computed")
+    assert(clust.total == 31, "Wrong number of tweets computed")
   }
   test("HC: Should have the correct density"){
-    assert(clust.totalTweetDensity == 72.0 / 81.0, "Wrong density")
+    assert(clust.totalTweetDensity == 31.0 / 81.0, "Wrong density")
   }
   test("HC: Should cluster well !"){
     //val result = clust.clusterResult
@@ -42,7 +42,7 @@ class ClusteringTests extends FunSuite {
   }
 
   test("Slic: Should have correct total"){
-    assert(slic.total == 72, "Slic doesn't have correct total")
+    assert(slic.total == 31, "Slic doesn't have correct total")
   }
   test("Slic: K should be 9"){
     assert(slic.K == 9)
@@ -57,7 +57,7 @@ class ClusteringTests extends FunSuite {
       println(s)
     }
     println("The pixels:")
-    slic.pixels.sortBy(_.pos).foreach{
+    slic.pixels.sortBy(_.l).foreach{
       println(_)
     }
   }
