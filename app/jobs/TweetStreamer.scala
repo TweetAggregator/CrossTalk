@@ -188,7 +188,7 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
 	          while (currentListenersOfThisTweet != Nil && !containsOneOfTheKeywords){
 	            currentGeoSquare = currentListenersOfThisTweet.head
 	            if (currentGeoSquare._1.area.containsGeo(geoJS.apply(1).as[Double], geoJS.apply(0).as[Double])){
-	              println("Got one tweet from tweet streamer " + text + geoJS.apply(0).as[Double] + ' ' + geoJS.apply(1).as[Double])
+	              //println("Got one tweet from tweet streamer " + text + geoJS.apply(0).as[Double] + ' ' + geoJS.apply(1).as[Double])
 	              currentGeoSquare._2 ! Tweet(jsonToSend, currentGeoSquare._1)
 	              containsOneOfTheKeywords = true
 	              
