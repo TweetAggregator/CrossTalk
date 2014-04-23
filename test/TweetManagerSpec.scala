@@ -121,7 +121,6 @@ class TweetManagerSpec extends Specification {
       Thread.sleep(1000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
-      println("e")
     }
   }
   /* NB: Those test might fail depending of the network congestion */
@@ -133,6 +132,7 @@ class TweetManagerSpec extends Specification {
       val qurs3 = TweetQuery("Bloomberg" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs4 = TweetQuery("Putin" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs5 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs6 = TweetQuery("the" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val listener =Akka.system.actorOf(Props(new Listener))
 
