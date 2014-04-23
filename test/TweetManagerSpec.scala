@@ -25,7 +25,7 @@ class TweetManagerSpec extends Specification {
         nbReceived += 1
         print("-")
     }
-  }
+  }/*
   /* NB: Those test might fail depending of the network congestion */
   "Tweet Searcher Actor" should {
 
@@ -69,16 +69,20 @@ class TweetManagerSpec extends Specification {
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
-  }
+  }*/
   /* NB: Those test might fail depending of the network congestion */
   "Tweet Streamer" should {
     "get some tweets" in new WithApplication {
       nbReceived = 0
-      val qur = TweetQuery("hey" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val qur = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val qur2 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qur3 = TweetQuery("hey" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       var listQuery: List[(TweetQuery, ActorRef)] = Nil
       val listener = Akka.system.actorOf(Props(new Listener))
       
       listQuery :+= (qur, listener)
+      listQuery :+= (qur2, listener)
+      listQuery :+= (qur3, listener)
       val actor = Akka.system.actorOf(Props(new TweetStreamer(listQuery)))
 
       actor ! Start
@@ -113,18 +117,16 @@ class TweetManagerSpec extends Specification {
       actor1 ! Ping
       actor2 ! Ping
       Thread.sleep(1000) /* Just print tweets for 10 secs */
-      actor1 ! Ping
-      actor2 ! Ping
       Thread.sleep(1000) /* Just print tweets for 10 secs */
-      actor1 ! Ping
-      actor2 ! Ping
       Thread.sleep(1000) /* Just print tweets for 10 secs */
       println("> " + nbReceived)
+      actor1 ! Stop
+      actor2 ! Stop
       nbReceived should be greaterThan (0)
     }
   }
   /* NB: Those test might fail depending of the network congestion */
-  "Tweet Manager" should {
+  /*"Tweet Manager" should {
     "start queries, and stop them" in new WithApplication {
       nbReceived = 0
       val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
@@ -132,11 +134,10 @@ class TweetManagerSpec extends Specification {
       val qurs3 = TweetQuery("Bloomberg" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs4 = TweetQuery("Putin" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs5 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-      val qurs6 = TweetQuery("the" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val listener =Akka.system.actorOf(Props(new Listener))
 
-      TweetManagerRef ! AddQueries((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: (qurs4, listener) :: (qurs5, listener) :: Nil)
+      TweetManagerRef ! AddQueries((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: (qurs4, listener) :: (qurs5, listener)  :: (qurs6, listener) :: Nil)
       TweetManagerRef ! Start
       Thread.sleep(40000) /* Just print tweets for 40 secs */
       /*TweetManagerRef ! Pause
@@ -147,5 +148,5 @@ class TweetManagerSpec extends Specification {
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
-  }
+  }*/
 }
