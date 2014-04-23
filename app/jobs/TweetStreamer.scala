@@ -23,7 +23,11 @@ import java.io.InputStream
 import models.GeoSquare
 import play.api.libs.json.JsResultException
 import collection.mutable.HashMap
+import akka.actor.Cancellable
 import models._
+import utils.AkkaImplicits._
+import utils.Enrichments._
+import java.util.concurrent.TimeUnit
 
 /**
  * Gets a stream of tweets from the Streaming API
@@ -34,7 +38,8 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
   /* We set up the HTTP client and the oauth module */
   val client = new DefaultHttpClient()
 
-  var callback: Option[String] = None /* Store the params used to check for updates */
+  var running = true
+  var scheduled: Option[Cancellable] = None
 
   var stream: InputStream = null
 
@@ -55,8 +60,13 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
         receive(Start)
       else
         readAll(stream)
+      /* TODO: set the searchRate properly */
+      if (running) scheduled = Some(self.scheduleOnce(3, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
     
-    case Stop => stream.close()
+    case Stop => 
+      if(scheduled.isDefined) scheduled.get.cancel
+      running = false
+      stream.close()
 
     case _ => sys.error("Not a valid input for the Tweet Streamer!")
   }
