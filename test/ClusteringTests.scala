@@ -23,19 +23,7 @@ class ClusteringTests extends FunSuite {
       (k, 0L)
     }
   }.toMap 
-  val clust: ClustHC = new ClustHC(coords, res, 9, 9)
   val slic: ClusteringLib = new ClusteringLib(coords, res)
- 
-  test("HC: Should correctly compute the total number of tweets"){
-    assert(clust.total == 31, "Wrong number of tweets computed")
-  }
-  test("HC: Should have the correct density"){
-    assert(clust.totalTweetDensity == 31.0 / 81.0, "Wrong density")
-  }
-  test("HC: Should cluster well !"){
-    //val result = clust.clusterResult
-    //println(clust.cleanClusters(result.last))
-  }
   test("Show me the coords"){
     assert(queries.size == 81)
     assert(coords.size == 81)

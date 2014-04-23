@@ -4,7 +4,6 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import models.GeoSquare
 import TweetManager._
 import models._
-import TweetManager._
 
 class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: Int) extends Actor {
   /*Total Number of tweets*/
