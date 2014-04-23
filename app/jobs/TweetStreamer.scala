@@ -61,11 +61,14 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
       else
         readAll(stream)
       /* TODO: set the searchRate properly */
-      if (running) scheduled = Some(self.scheduleOnce(3, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
+      if (running) scheduled = Some(self.scheduleOnce(1, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
     
     case Stop => 
       if(scheduled.isDefined) scheduled.get.cancel
       running = false
+      if (stream == null){
+        println (setOfKeywords(0))
+      }
       stream.close()
 
     case _ => sys.error("Not a valid input for the Tweet Streamer!")
@@ -83,10 +86,11 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
     var superiorBounds: (Double, Double) = (-361,-361)
     
     //We parse the list
-    var nextCouple: (TweetQuery, ActorRef) = requests.head
+    var nextCouple: (TweetQuery, ActorRef) = null
     var bottomList: List[(TweetQuery, ActorRef)] = requests
     
-    while (!bottomList.isEmpty){
+    while (bottomList != Nil){
+      nextCouple = bottomList.head
       val currentHashKeywords = hashKeyWords(nextCouple._1.keywords) //we do a hash for our keywords
       //We add it in the right place on the hashmap
       if (squareToListener.contains(currentHashKeywords)){
@@ -117,8 +121,7 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
         superiorBounds = (superiorBounds._1, currentSquare.lat2)
       
       
-      nextCouple = requests.head
-      bottomList = requests.tail
+      bottomList = bottomList.tail
     }
     
     //And we return a list of geoparameters for each list of keywords
@@ -127,7 +130,9 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
   }
   
   def hashKeyWords(listOfWords: List[String]): String = listOfWords match {
+    case string :: Nil => string
     case string :: bottom => string + "," + hashKeyWords(bottom)
+    
     case Nil => ""
   }
   
@@ -161,30 +166,32 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
    *  Tells us if this tweet match our request of words
    */
   def sendToListenerIfCorrect(currentJSon: String, currentSetOfwords: Array[String]){
-    val hashCurrentSet = hashKeyWords(currentSetOfwords.toList)
+    //We make a hash of the keyword sot search in the hashmap
+    val hashCurrentSet = hashKeyWords(currentSetOfwords.toList) 
+    //Then we begin by extracting the "test" field to see if we find the words we are looking for
     var textArray = currentJSon.split("\"text\":\"")
       if (textArray.size > 1){
 	    textArray = textArray.apply(1).split("\",")
 	    if (textArray.size > 1){
 	    val text = textArray.apply(0)
-	    //We check if we can use this tweet
+	    //We check for each word if the tweet contains if
         for ( i <- 0 to (currentSetOfwords.length - 1)){
           if (text.contains(currentSetOfwords.apply(i))){
-            //SEND TO CORRECT LISTENER
-            var currentListenersOfThisTweet: List[(TweetQuery, ActorRef)] = squareToListener(hashCurrentSet)
+            //We send it to the correct listener by looking on the hashmap
+            var currentListenersOfThisTweet: List[(TweetQuery, ActorRef)] = squareToListener(hashCurrentSet) //We take the hash for our set of keywords
             var currentGeoSquare: (TweetQuery, ActorRef) = null
             
             val jsonToSend: JsValue = parseJson(currentJSon)
             var geoJS: JsValue = jsonToSend \ "geo"
-            
 	        if (geoJS.toString != "null"){
 	          geoJS = geoJS \ "coordinates"
-	          while (currentListenersOfThisTweet != Nil){
+	          while (currentListenersOfThisTweet != Nil && !containsOneOfTheKeywords){
 	            currentGeoSquare = currentListenersOfThisTweet.head
 	            if (currentGeoSquare._1.area.containsGeo(geoJS.apply(1).as[Double], geoJS.apply(0).as[Double])){
 	              println("Got one tweet from tweet streamer " + text + geoJS.apply(0).as[Double] + ' ' + geoJS.apply(1).as[Double])
 	              currentGeoSquare._2 ! Tweet(jsonToSend, currentGeoSquare._1)
 	              containsOneOfTheKeywords = true
+	              
 	            }
 	            currentListenersOfThisTweet = currentListenersOfThisTweet.tail
 	          }

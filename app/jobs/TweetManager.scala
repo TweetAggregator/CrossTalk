@@ -10,6 +10,7 @@ import models._
 import akka.actor.Cancellable
 import akka.actor.ActorSystem
 import akka.actor.Props
+import akka.actor.Actor
 import TweetManager._
 import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
@@ -45,13 +46,13 @@ object TweetManager {
     /** A list of actors launched by the Manager. */
     var actorRefs: List[ActorRef] = Nil
     /** A list of queries to start. Only used prior to the start of the Manager. */
-    var queriesToStart: List[(TweetQuery, ActorRef)] = Nil
+    var queriesToStart: List[List[(TweetQuery, ActorRef)]] = Nil
 
     def receive = {
 
       case AddQueries(queries) =>
         assert(actorRefs.isEmpty, "TweetManager: Cannot add more queries without cancelling the ones running.")
-        queriesToStart ++= queries
+        queriesToStart :+= queries
 
       case Start =>
         assert(actorRefs.isEmpty, "TweetManager: Cannot restart queries again without cancelling the ones running.")
@@ -63,7 +64,7 @@ object TweetManager {
         var startTime = 0
         
         /* Let's create the duplicate checker */
-        val keysSet = queriesToStart.map(qu => qu._1.keywords).toSet
+        val keysSet = queriesToStart.flatten.map(qu => qu._1.keywords).toSet
         val checkerRef = context.actorOf(Props(new TweetDuplicateChecker(queriesToStart.size, keysSet, period)))
         checkerRef.scheduleOnce(searchRate,TimeUnit.SECONDS, Cleanup) /* Schedule the duplicate checker once. It will then schedule itself. */
         actorRefs :+= checkerRef
@@ -72,11 +73,19 @@ object TweetManager {
         val twitterKeyCounter = MultiCounter(Math.ceil(queriesToStart.size.toDouble / nbTwitterKeys).toInt)
         
         /* Let's shuffle the list of query and split it for the searchers */
-        queriesToStart.shuffle.split(nbSearcher) foreach { qurs =>
+        queriesToStart.flatten.shuffle.split(nbSearcher) foreach { qurs =>
           val searcherRef = context.actorOf(Props(new TweetSearcher(qurs, checkerRef, searchRate, twitterKeyCounter.incr)))
           searcherRef.scheduleOnce(startTime, TimeUnit.SECONDS, Ping) /* Schedule it once. It will then schedule itself. */
           actorRefs :+= searcherRef
           startTime += period
+        }
+        
+        /* We start an instance of the streamer for each of the squares of search*/
+        queriesToStart foreach { qurs =>
+         val streamerRef = context.actorOf(Props(new TweetStreamer(qurs)))
+         streamerRef.scheduleOnce(startTime, TimeUnit.SECONDS, Ping)
+         actorRefs :+= streamerRef
+         startTime += period
         }
         queriesToStart = Nil /* Reset the queries to start; all are started! */
 
