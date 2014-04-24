@@ -34,6 +34,6 @@ case class LeafCluster(pos: (Int, Int), numTweets: Long, area: GeoSquare)
 /* Model for the SLIC clustering */
 
 case class Pixel(pos:(Int, Int), var l: Int,var d: Double)
-case class SuperPixel (k: Int, var pos:(Int, Int), var d: Double){
+case class SuperPixel (k: Int, var pos:(Double, Double), var d: Double){
   def getCopy: SuperPixel = SuperPixel(k, pos, d)
 }
