@@ -85,7 +85,7 @@ class TweetSearcher(qList: List[(TweetQuery, ActorRef)], checker: ActorRef, sear
           TweetManagerRef ! Refused
         case _: javax.net.ssl.SSLPeerUnverifiedException => 
           Logger.info("TweetSearcher: error while authenticating with Twitter (probably just a little network error, nothing to worry about).")
-        case _: java.net.UnknownHostException =>
+        case _: Exception =>
           Logger.info("TweetSearcher: api.twitter.com not found (DNS server or your internet connection down).")
       } finally {
         next = (next + 1) % qurs.size /* Round-robin */

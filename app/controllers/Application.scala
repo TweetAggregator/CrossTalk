@@ -6,6 +6,9 @@ import jobs.DummyActor
 import akka.actor.ActorSystem
 import akka.actor.Props
 
+/**
+ * Main controller (about / welcome page)
+ */
 object Application extends Controller {
 
   def index = Action {

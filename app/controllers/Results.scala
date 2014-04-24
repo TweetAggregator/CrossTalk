@@ -6,8 +6,8 @@ import play.api.data._
 import play.api.data.Forms._
 
 /**
- * Gathering the tweets and processing the results
+ * Everything related to the display of the results
  */
-object Gathering extends Controller {
+object Results extends Controller {
 
 }

@@ -48,6 +48,9 @@ class HierarchySpec extends Specification {
       val res = Await.result(totalFuture, Duration(5, "seconds"))
       println(s"Total from future: $res")
       geoPart ! Winner
+      
+      TweetManagerRef ! Stop
+      Thread.sleep(1000)
   
      }
   }

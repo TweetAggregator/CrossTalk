@@ -20,7 +20,6 @@ import utils.Enrichments._
 import play.libs.Akka
 import scala.util.Random
 
-/* TODO: cover cases for the Streaming API, if doable */
 /**
  * Manage all the tweets streamer to return from the two APIs, and ensure that the quotas are enforced.
  * Since we want a dynamic update, the receive method can execute various queries:
@@ -32,6 +31,7 @@ import scala.util.Random
  *
  *  Note that there should be only one instance of the manager per application, hence the nesting with the companion object.
  *  @pre All the queries added are already subdivided.
+ *  @pre All queries added using one call to AddQuery are contiguous. This is a constrains to use the TweetStreamer.
  */
 object TweetManager {
 

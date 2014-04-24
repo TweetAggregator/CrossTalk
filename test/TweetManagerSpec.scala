@@ -25,7 +25,8 @@ class TweetManagerSpec extends Specification {
         nbReceived += 1
         print("-")
     }
-  }/*
+  }
+  
   /* NB: Those test might fail depending of the network congestion */
   "Tweet Searcher Actor" should {
 
@@ -34,10 +35,12 @@ class TweetManagerSpec extends Specification {
 
       val listener = Akka.system.actorOf(Props(new Listener))
       val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords), 2)))
-      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil,checker, 30, 0)))
+      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 30, 0)))
 
       actor ! Ping
-      Thread.sleep(30000) /* Just print tweets for 10 secs */
+      Thread.sleep(30000) /* Just print tweets for 30 secs */
+      actor ! Stop
+      Thread.sleep(1000)
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
@@ -46,12 +49,14 @@ class TweetManagerSpec extends Specification {
       nbReceived = 0
       val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
-      val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords),2)))
+      val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords), 2)))
       val listener = Akka.system.actorOf(Props(new Listener))
-      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil,checker, 10, 0)))
+      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 10, 0)))
 
       actor ! Ping
-      Thread.sleep(30000) /* Just print tweets for 20 secs */
+      Thread.sleep(30000) /* Just print tweets for 30 secs */
+      actor ! Stop
+      Thread.sleep(1000)
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
@@ -60,16 +65,19 @@ class TweetManagerSpec extends Specification {
       nbReceived = 0
       val query = TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
-      val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords),2)))
+      val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords), 2)))
       val listener = Akka.system.actorOf(Props(new Listener))
-      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil,checker, 20, 0)))
+      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 20, 0)))
 
       actor ! Ping
       Thread.sleep(20000) /* Just print tweets for 20 secs */
+      actor ! Stop
+      Thread.sleep(1000)
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
-  }*/
+  }
+  
   /* NB: Those test might fail depending of the network congestion */
   "Tweet Streamer" should {
     "get some tweets" in new WithApplication {
@@ -79,20 +87,16 @@ class TweetManagerSpec extends Specification {
       val qur3 = TweetQuery("hey" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       var listQuery: List[(TweetQuery, ActorRef)] = Nil
       val listener = Akka.system.actorOf(Props(new Listener))
-      
+
       listQuery :+= (qur, listener)
       listQuery :+= (qur2, listener)
       listQuery :+= (qur3, listener)
       val actor = Akka.system.actorOf(Props(new TweetStreamer(listQuery)))
 
       actor ! Start
-      Thread.sleep(10000) /* Just print tweets for 20 secs */
-      actor ! Ping
-      Thread.sleep(1000) /* Just print tweets for 10 secs */
-      actor ! Ping
-      Thread.sleep(1000) /* Just print tweets for 10 secs */
-      actor ! Ping
-      Thread.sleep(1000) /* Just print tweets for 10 secs */
+      Thread.sleep(20000) /* Just print tweets for 20 secs */
+      actor ! Stop
+      Thread.sleep(1000)
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
       actor ! Stop
@@ -103,7 +107,7 @@ class TweetManagerSpec extends Specification {
       val qur1 = TweetQuery("morning" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
       val qur2 = TweetQuery("night" :: Nil, GeoSquare(-79, 20, 0, 50.6), 1, 1) /* There must be some tweets contaning "e" ! */
       val listener = Akka.system.actorOf(Props(new Listener))
-      
+
       var listQuery2: List[(TweetQuery, ActorRef)] = Nil
       var listQuery3: List[(TweetQuery, ActorRef)] = Nil
       listQuery2 :+= (qur1, listener)
@@ -113,21 +117,18 @@ class TweetManagerSpec extends Specification {
 
       actor1 ! Start
       actor2 ! Start
-      Thread.sleep(10000) /* Just print tweets for 20 secs */
-      actor1 ! Ping
-      actor2 ! Ping
-      Thread.sleep(1000) /* Just print tweets for 10 secs */
-      Thread.sleep(1000) /* Just print tweets for 10 secs */
-      Thread.sleep(1000) /* Just print tweets for 10 secs */
+      Thread.sleep(40000) /* Just print tweets for 40 secs */
       println("> " + nbReceived)
       actor1 ! Stop
       actor2 ! Stop
+      Thread.sleep(1000)
       nbReceived should be greaterThan (0)
     }
   }
+  
   /* NB: Those test might fail depending of the network congestion */
-  /*"Tweet Manager" should {
-    "start queries, and stop them" in new WithApplication {
+  "Tweet Manager" should {
+    "start queries, and stop them" in {
       nbReceived = 0
       val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs2 = TweetQuery("Ukraine" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
@@ -135,18 +136,18 @@ class TweetManagerSpec extends Specification {
       val qurs4 = TweetQuery("Putin" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs5 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
-      val listener =Akka.system.actorOf(Props(new Listener))
+      val listener = Akka.system.actorOf(Props(new Listener))
 
-      TweetManagerRef ! AddQueries((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: (qurs4, listener) :: (qurs5, listener)  :: (qurs6, listener) :: Nil)
+      TweetManagerRef ! AddQueries((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: (qurs4, listener) :: (qurs5, listener) :: Nil)
       TweetManagerRef ! Start
       Thread.sleep(40000) /* Just print tweets for 40 secs */
       /*TweetManagerRef ! Pause
       TweetManagerRef ! Resume*/
       Thread.sleep(20000)
       TweetManagerRef ! Stop
-      Thread.sleep(20000) /* Just print tweets for 40 secs */
+      Thread.sleep(5000) /* Just wait for 20 secs, nothing more should be received. */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)
     }
-  }*/
+  }
 }
