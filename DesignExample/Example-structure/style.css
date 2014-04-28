@@ -1,0 +1,250 @@
+
+
+*
+{
+	font-family: "Book Antiqua";
+}
+
+body
+{	margin: 0;
+	padding: 0;
+    background-image: url("file:///Users/gouedard/Documents/Test_Web/images/back.jpg");
+	background-attachment: fixed;
+	background-repeat: no-repeat;
+    height: 100%;   
+}
+
+/* HEADER PART*****************************************/
+header
+{
+	
+	background: #000099	repeat-x;
+	margin: 0;
+	width: 100%;
+	height:100%
+
+}
+
+.titre
+{	
+	display: block;
+	margin-top: 1px;
+	width: 175px;
+	height: 85px;
+	margin-left:auto;
+    margin-right: auto;
+	border-style: solid;
+	border-radius: 30px;
+	border-color: #000099;	
+}
+
+/* END HEADER PART****************************************/
+
+
+/* MIDDLE PART*******************************************/
+
+
+/* FLOATING FRAME****************/
+.left{
+	display: block;
+	margin-top: 30px;
+ 	margin-bottom: 100px;  
+	float: left;
+	width: 30%;
+	text-align: center;
+	height: 450px;
+	border: solid;
+	border-radius: 30px;
+	border-color: #000099;
+	background: #DEDEDE;
+}
+
+.right{
+ 	margin-top: 400px;
+	float: right;
+	width: 30%;
+	text-align: center;
+	height: 450px;;
+	border: solid;
+	border-radius: 30px;
+	border-color: #000099;
+	background: #DEDEDE;
+}
+
+
+.funny2{
+width: 250px;
+height: 300px;
+}
+
+/*END FLOATING FRAME******************/
+
+/* MAIN FRAME ************************/
+
+.main{	
+	display: block;
+	height: 100%;
+	border: solid;
+	border-radius: 30px;
+	border-color: #000099;
+	background: #EFEFEF;
+	text-align: center;
+	margin-top: 70px;
+	margin-left: 300px;
+	margin-right: 300px;
+    margin-bottom : 40px
+}
+
+.funny
+{
+display: block;
+margin-left: auto;
+margin-right: auto;
+width: 450px;
+height: 700px;
+}
+
+/*END MAIN FRAME ***********************/
+
+/* END MIDDLE PART ******************************************/
+
+/* FOOTER PART **************************************************/
+
+footer{	
+	width: 100%;
+	height: 40px;
+	color:#FFFFFF;
+	font-weight:bold;
+	bottom:0px;
+	
+	text-align:center;
+	background:  #000099	repeat-x;
+	
+}
+
+/* END FOOTER PART ***********************************************/
+
+
+/*MENU PART (part of header) **************************************/
+#menu, #menu ul /* Liste */     
+{
+
+        float: left;
+        padding : 0; /* pas de marge intérieure */
+        margin : 0; /* ni extérieure */
+        list-style : none; /* on supprime le style par défaut de la liste */
+        line-height : 21px; /* on définit une hauteur pour chaque élément */
+        text-align : center; /* on centre le texte qui se trouve dans la liste */
+        
+}
+
+#menu /* Ensemble du menu */
+{		
+        font-weight : bold; /* on met le texte en gras */
+        font-size : 12px; /* hauteur du texte : 12 pixels */
+        
+}
+
+#menu a /* Contenu des listes */
+{
+        display : block; /* on change le type d'élément, les liens deviennent des balises de type block */
+        padding : 0; /* aucune marge intérieure */
+        background : #000099; /* couleur de fond */        
+        color : #fff; /* couleur du texte */
+        text-decoration : none; /* on supprime le style par défaut des liens (la plupart du temps = souligné) */
+        width : 255px; /* largeur */
+}
+
+#menu .second /* Contenu des listes: seconde couche */
+{
+        display : block; /* on change le type d'élément, les liens deviennent des balises de type block */
+        padding : 0; /* aucune marge intérieure */
+        background :#1155DD; /* couleur de fond */        
+        color : #fff; /* couleur du texte */
+        text-decoration : none; /* on supprime le style par défaut des liens (la plupart du temps = souligné) */
+        width : 255px; /* largeur */
+}
+
+#menu .third /* Contenu des listes: troisième couche  */
+{
+        display : block; /* on change le type d'élément, les liens deviennent des balises de type block */
+        padding : 0; /* aucune marge intérieure */
+        background :#3377FF; /* couleur de fond */        
+        color : #fff; /* couleur du texte */
+        text-decoration : none; /* on supprime le style par défaut des liens (la plupart du temps = souligné) */
+        width : 255px; /* largeur */
+}
+
+
+#menu li /* Elements des listes */      
+{ 
+		
+        float : left; 
+        /* pour IE qui ne reconnaît pas "transparent" */
+        border-right : 1px solid #000;  on met une bordure blanche à droite de chaque élément */
+        
+}
+
+/* IE ne reconnaissant pas le sélecteur ">" */
+html>body #menu li
+{
+        /*border-right: 1px solid transparent ; /* on met une bordure transparente à droite de chaque élément */
+}
+
+#menu li ul /* Sous-listes */
+{ 
+        position: absolute; /* Position absolue */
+        width: 255px; /* Largeur des sous-listes */
+        left: -999em; /* Hop, on envoie loin du champ de vision */
+        
+}
+
+
+#menu li ul li /* Éléments de sous-listes */
+{
+        
+        border-top : 1px solid #000; 
+        
+}
+
+/* IE ne reconnaissant pas le sélecteur ">" */
+html>body #menu li ul li                
+{
+        border-top : 1px solid #000; 
+        background : rgb(255,255,255);
+}
+
+#menu li ul ul 
+{
+        margin    : -22px 0 0 255px ; 
+        background : rgb(0,0,0);
+        border-left     : 1px solid #000 ; /* Petite bordure à gauche pour ne pas coller ... */  
+        border-top : 1px solid #000;    
+}
+
+
+html>body #menu li ul ul                
+{
+        border-left     : 1px solid transparent ; /* on met une bordure transparente sur la gauche de chaque élément */
+        border-top : 1px solid #000;
+}
+
+
+#menu li:hover ul ul, #menu li.sfhover ul ul /* Sous-sous-listes lorsque la souris passe sur un élément de liste */
+{
+        left: -999em; /* On expédie les sous-sous-listes hors du champ de vision */
+}
+
+#menu li:hover ul, #menu li li:hover ul, #menu li.sfhover ul, #menu li li.sfhover ul  /* Sous-listes lorsque la souris passe sur un élément de liste ET sous-sous-lites lorsque la souris passe sur un élément de sous-liste */
+{
+        left: auto; /* Repositionnement normal */
+        min-height: 0; /* Corrige un bug sous IE */
+}
+
+/* END MENU PART (part of header) **************************************/
+
+
+
+
+
+
