@@ -10,4 +10,12 @@ import play.api.data.Forms._
  */
 object Results extends Controller {
 
+  def computeVenn = Action {
+    
+    val sets: List[(Int, String, Int)] = List((0, "A", 10), (1, "B", 15))
+    val nbSet = sets.size
+    val inters: List[((Int, Int), Int)] = List(((0, 1), 2))
+    
+    Ok(views.html.venn(nbSet, sets, inters))
+  }
 }
