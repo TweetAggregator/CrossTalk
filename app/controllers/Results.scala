@@ -12,9 +12,9 @@ object Results extends Controller {
 
   def computeVenn = Action {
     
-    val sets: List[(Int, String, Int)] = List((0, "A", 10), (1, "B", 15))
+    val sets: List[(Int, String, Int)] = List((0, "A", 199), (1, "B", 15), (2, "C", 100))
     val nbSet = sets.size
-    val inters: List[((Int, Int), Int)] = List(((0, 1), 2))
+    val inters: List[((Int, Int), Int)] = List(((0, 1), 2), ((1,2), 10), ((0,2), 70))
     
     Ok(views.html.venn(nbSet, sets, inters))
   }
