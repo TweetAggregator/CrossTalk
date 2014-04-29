@@ -16,5 +16,9 @@ object Application extends Controller {
     dummyActor ! "Hello World !"
     Ok(views.html.index("Your new application is ready."))
   }
+  
+  def homepageTest = Action {
+	Ok(views.html.test())
+  }
 
 }
