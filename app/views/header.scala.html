@@ -1,3 +1,4 @@
+@()
 <!DOCTYPE html>
 <!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> 
 <![endif]-->
@@ -6,7 +7,18 @@
 <!--[if IE 8]> <html class="no-js lt-ie9" lang="en"> <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 <head>
+	<!-- CSS Bootstrap & Custom -->
+    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/bootstraps.css")">
+	
+	<!-- Main CSS -->
 	<link rel="stylesheet" href="@routes.Assets.at("stylesheets/templatemo_style.css")">
+	
+	<!-- Scripts -->
+	<script src="@routes.Assets.at("javascripts/jquery-1.10.2.min.js")"></script>
+	<script src="@routes.Assets.at("javascripts/jquery-migrate-1.2.1.min.js")"></script>
+	<script src="@routes.Assets.at("javascripts/jquery.lightbox.js")"></script>
+	<script src="@routes.Assets.at("javascripts/templatemo_custom.js")"></script>
+	<script src="@routes.Assets.at("javascripts/tabs.js")"></script>
 </head>
 
 <body>
@@ -41,10 +53,3 @@
 			</div> <!-- /.container -->
 		</div> <!-- /.main-navigation -->
 	</div> <!-- /.site-header -->
-	
-		<!-- Scripts -->
-	<script src="@routes.Assets.at("javascripts/jquery-1.10.2.min.js")"></script>
-	<script src="@routes.Assets.at("javascripts/jquery-migrate-1.2.1.min.js")"></script>
-	<script src="@routes.Assets.at("javascripts/jquery.lightbox.js")"></script>
-	<script src="@routes.Assets.at("javascripts/templatemo_custom.js")"></script>
-</body>
