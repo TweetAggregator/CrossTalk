@@ -12,6 +12,19 @@
 <script src="http://d3js.org/d3.v2.min.js"></script>
 <script src="venn.js"></script>
 <script>
+var b = 3;
+if(b == 2){
+// define sets and set set intersections
+var sets = [{label: "A", size: 10}, {label: "B", size: 10}],
+    overlaps = [{sets: [0,1], size: 2}];
+
+// get positions for each set
+sets = venn.venn(sets, overlaps);
+
+// draw the diagram in the 'Venn' div
+venn.drawD3Diagram(d3.select(".Venn"), sets, 300, 300);
+}
+if(b == 3){
 // define sets and set set intersections
 var sets = [{label: "A", size: 10}, {label: "B", size: 10}, {label: "C", size: 15}],
     overlaps = [{sets: [0,1], size: 2}, {sets: [1,2], size: 3}, {sets: [0,2], size: 1}];
@@ -21,5 +34,6 @@ sets = venn.venn(sets, overlaps);
 
 // draw the diagram in the 'Venn' div
 venn.drawD3Diagram(d3.select(".Venn"), sets, 300, 300);
+}
 </script>
 </html>
