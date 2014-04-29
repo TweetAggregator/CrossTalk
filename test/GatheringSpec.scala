@@ -1,8 +1,30 @@
 import org.specs2.mutable._
 import org.specs2.runner._
 
+import controllers._
+import play.api._
+import play.api.mvc._
+import play.api.test._
+import play.api.data._
+import play.api.data.Forms._
+import play.api.cache.Cache
+
 object GatheringControllerSpec extends Specification {
 
   class TestController() extends Controller with GatheringController
 
+  "Gathering controller" should {
+    "read data from the cache" in new WithApplication {
+      val controller = new TestController()
+
+      Cache.set("keywords", List("Obama", "Beer"))
+      Cache.set("startLanguage", "en")
+      Cache.set("targetLanguages", List("fr", "de"))
+      Cache.set("squares", List((-129.4, 20.0, -79.0, 50.6)))
+
+      controller.start() must not beNull
+    }
+  }
+
+  //TODO: test with too many keywords
 }

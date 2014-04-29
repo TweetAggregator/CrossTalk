@@ -1,18 +1,54 @@
 package controllers
 
+import scala.collection.mutable.MutableList
+
 import play.api._
 import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
+import play.api.cache.Cache
+import play.api.Play.current
+import akka.actor.ActorRef
+import akka.actor.Props
+import akka.actor.ActorSystem
+import akka.pattern.ask
+import play.libs.Akka
+
+import jobs._
+import models._
+import utils.AkkaImplicits._
+import TweetManager._
 
 /**
  * Gathering the tweets and processing the results
  */
 trait GatheringController { this: Controller =>
-  def start = {
+  val geoParts: MutableList[ActorRef] = MutableList()
+  
+  def start() = {
     //TODO: get form data from cache
     //TODO: start a tweetmanager searching for the data
-    //TODO: get translations
+    //TODO: how to choose grid size?
+    //TODO: error handling
+    val keywords = Cache.getAs[List[String]]("keywords").get
+    val startLanguage = Cache.getAs[String]("startLanguage").get
+    val targetLanguages = Cache.getAs[List[String]]("targetLanguages").get
+    val squares = Cache.getAs[List[(Double, Double, Double, Double)]]("squares").get
+    val tradsAndSyns =
+      for (keyword <- keywords) yield {
+        val (trads, syns) = Translator(startLanguage, targetLanguages, keyword)()
+        (trads.flatten ++ syns).map(_.as[String])
+      }
+    val allKeywords = (keywords ++ tradsAndSyns.flatten).distinct
+    
+    for (square <- squares) {
+      val geoSquare = GeoSquare(square._1, square._2, square._3, square._4)
+      val geoPart: ActorRef = Props(new GeoPartitionner(allKeywords, geoSquare, 10, 10))
+      geoParts += geoPart
+      geoPart ! StartGeo
+    }
+    TweetManagerRef ! Start
+
     Ok
   }
 
