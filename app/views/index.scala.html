@@ -1,11 +1,13 @@
 @(message: String)
+
 <!DOCTYPE html>
 <html>
   <head>
     <script type="text/javascript" src="@routes.Assets.at("javascripts/polymaps.min.js")"></script>
     <!--script type="text/javascript" src="../../lib/nns/nns.js"></script-->
 
-
+    <script type="text/javascript" src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")"></script>
+        <script type="text/javascript" src="@routes.Assets.at("javascripts/jquery.dform-1.1.0.js")"></script>
     <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/polymaps.css")">
     <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/tweetagg.css")">
   </head>
@@ -29,23 +31,16 @@
         <span>
           <button onclick="drawRegion()">new region</button>
           <button onclick="reset()">reset</button>
+         <form id="myform"></form>
+          @helper.form(action = routes.Application.submit){
+
+          <button >Launch</button>
+          }
+
           <p id="myDiv">
            <script> update(); </script>
           </p>
         </span>
-         <script src= "http://d3js.org/d3.v2.min.js"></script>
-         <script src="@routes.Assets.at("javascripts/venn.js")" type="text/javascript"></script>
-<script>
-// define sets and set set intersections
-var sets = [{label: "A", size: 10}, {label: "B", size: 10}, {label: "C", size: 15}],
-    overlaps = [{sets: [0,1], size: 2}, {sets: [1,2], size: 3}, {sets: [0,2], size: 1}];
-
-// get positions for each set
-sets = venn.venn(sets, overlaps);
-
-// draw the diagram in the 'Venn' div
-venn.drawD3Diagram(d3.select(".Venn"), sets, 300, 300);
-</script>
       </div>
     </div>
   </body>

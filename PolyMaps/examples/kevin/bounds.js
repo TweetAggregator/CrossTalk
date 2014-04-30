@@ -9,9 +9,7 @@ var interact = po.interact(); //create separate object for the focus so we can r
 map.add(interact); //enable move and zoom events
 map.on("resize", update);
 map.on("move", update);
-map.add(po.geoJson()
-    .features([{geometry: {coordinates: [-122.258, 37.805], type: "Point"}}])
-    .on("load", load));
+
 //map tiles initialization
 map.add(po.image()
     .url(po.url("http://{S}tile.cloudmade.com"
@@ -22,7 +20,9 @@ map.add(po.image()
 // +/- buttons on map
 map.add(po.compass()
     .pan("none"));
-
+map.add(po.geoJson()
+    .features([{geometry: {coordinates: [-122.258, 37.805], type: "Point"}}])
+    .on("load", load));
 
 
 /* 

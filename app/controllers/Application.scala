@@ -1,6 +1,7 @@
 package controllers
 
 import play.api._
+import play.api.libs.json._
 import play.api.mvc._
 import jobs.DummyActor
 import akka.actor.ActorSystem
@@ -16,9 +17,17 @@ object Application extends Controller {
     dummyActor ! "Hello World !"
     Ok(views.html.index("Your new application is ready."))
   }
-  
-  def homepageTest = Action {
-	Ok(views.html.test())
+  def submit = Action { implicite_request =>
+  	val dummyActor = ActorSystem().actorOf(Props(new DummyActor()))
+    dummyActor ! "Launch button clicked"
+    val scalaCoordinatesList = List[(Double,Double)]()
+         val list = List( "hoge\"hoge", "moge'mo\"ge" )
+     val json = Json.stringify( Json.obj( 
+       "list" -> JsArray( list.map( JsString(_) ) )
+     ))
+   Ok(views.html.index2(json))
+
+
   }
 
 }

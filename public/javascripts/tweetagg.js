@@ -1,3 +1,4 @@
+
 var po = org.polymaps;
 
 var map = po.map()
@@ -20,6 +21,8 @@ map.add(po.image()
 // +/- zoom buttons on map
 map.add(po.compass()
     .pan("none"));
+
+var coordinates_array = [];
 
 /* 
   converts {"x": screenCoordX, "y": screenCoordY}
@@ -118,7 +121,10 @@ div.addEventListener("mouseup", function(){
       end.x = start.x+parseInt(rect.getAttribute("width"));
       end.y = start.y+parseInt(rect.getAttribute("height"));
       var topLeft = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+start.y+'}'))
+     // var topRight = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+end.y+'}'))
       var bottomRight = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+end.y+'}'))
+     // var bottomLeft = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+start.y+'}'))
+      coordinates_array.push([topLeft,bottomRight]);
 
       addNewRegion(topLeft, bottomRight)
       map.add(interact) //put back move and resize focus on the map
@@ -191,8 +197,11 @@ function reset() {
      regions[0].parentNode.removeChild(regions[0]);
   }
 }
-
+var testArray = []
 function debug() {
+  testArray.push([3.33,5.22]);
+  testArray.push([4.63,73.12]);
+  var jsonTestArray = JSON.stringify(testArray);
   var x = pxToGeo(JSON.parse('{"x":'+100+', "y": '+100+'}'));
   var y = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+500+'}'));
   addNewRegion(x, y);
@@ -216,5 +225,10 @@ function debug() {
   x = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+40+'}'));
   y = pxToGeo(JSON.parse('{"x":'+1100+', "y": '+60+'}'));
   addNewRegion(x, y);
+  // Generate a form
+        $("#myform").dform(jsonTestArray);
 }
+
+
 debug(); //only used for debugging
+

@@ -20,6 +20,8 @@ map.add(po.image()
 // +/- zoom buttons on map
 map.add(po.compass()
     .pan("none"));
+// global array for string the coordinates of ALL the rectangles
+var coordinates_array = [];
 
 /* 
   converts {"x": screenCoordX, "y": screenCoordY}
@@ -164,7 +166,7 @@ div.addEventListener("mousemove", function() {
 }, false);
 
 /*
- * finalizing the newly added the rectangle, i.e. pinning it to the map
+ * finalizing the newly added the rectangle, i.e. pinning it to the map and store the coordinates topLeft-bottomRight
  */
 div.addEventListener("mouseup", function(){
     if (flag == 1) {
@@ -178,7 +180,7 @@ div.addEventListener("mouseup", function(){
       end.y = start.y+parseInt(rect.getAttribute("height"));
       var topLeft = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+start.y+'}'))
       var bottomRight = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+end.y+'}'))
-
+      coordinates_array.push([topLeft,bottomRight]);
       addNewRegion(topLeft, bottomRight)
       map.add(interact) //put back move and resize focus on the map
   }
