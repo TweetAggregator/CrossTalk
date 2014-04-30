@@ -125,9 +125,13 @@ div.addEventListener("mouseup", function(){
       var bottomRight = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+end.y+'}'))
      // var bottomLeft = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+start.y+'}'))
       coordinates_array.push([topLeft,bottomRight]);
+      
+      var jCoordinates = JSON.stringify(coordinates_array)
+      coordinates.value = jCoordinates
 
       addNewRegion(topLeft, bottomRight)
       map.add(interact) //put back move and resize focus on the map
+      
   }
 }, false);
 
@@ -196,9 +200,11 @@ function reset() {
   while (regions[0]) {
      regions[0].parentNode.removeChild(regions[0]);
   }
+  coordinates_array = [];
+  coordinates.value = "";
 }
-var testArray = []
-function debug() {
+/*var testArray = []
+/*function debug() {
   testArray.push([3.33,5.22]);
   testArray.push([4.63,73.12]);
   var jsonTestArray = JSON.stringify(testArray);
@@ -230,5 +236,4 @@ function debug() {
 }
 
 
-debug(); //only used for debugging
-
+debug(); //only used for debugging */

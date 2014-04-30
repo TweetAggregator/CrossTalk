@@ -31,10 +31,9 @@
         <span>
           <button onclick="drawRegion()">new region</button>
           <button onclick="reset()">reset</button>
-         <form id="myform"></form>
           @helper.form(action = routes.Application.submit){
-
-          <button >Launch</button>
+          	<input type="hidden" name="coordinates" id="coordinates" value="">
+          	<button>Launch</button>
           }
 
           <p id="myDiv">

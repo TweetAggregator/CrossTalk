@@ -6,6 +6,8 @@ import play.api.mvc._
 import jobs.DummyActor
 import akka.actor.ActorSystem
 import akka.actor.Props
+import play.api.data._
+import play.api.data.Forms._
 
 /**
  * Main controller (about / welcome page)
@@ -17,15 +19,15 @@ object Application extends Controller {
     dummyActor ! "Hello World !"
     Ok(views.html.index("Your new application is ready."))
   }
-  def submit = Action { implicite_request =>
-  	val dummyActor = ActorSystem().actorOf(Props(new DummyActor()))
-    dummyActor ! "Launch button clicked"
-    val scalaCoordinatesList = List[(Double,Double)]()
-         val list = List( "hoge\"hoge", "moge'mo\"ge" )
-     val json = Json.stringify( Json.obj( 
-       "list" -> JsArray( list.map( JsString(_) ) )
-     ))
-   Ok(views.html.index2(json))
+  
+  def submit = Action { implicit request =>
+  	
+   val reqData = request.body.asFormUrlEncoded
+   println(reqData)
+    
+   val scalaCoordinatesList = List[(Double,Double, Double, Double)]()
+    
+   Ok(views.html.index2())
 
 
   }
