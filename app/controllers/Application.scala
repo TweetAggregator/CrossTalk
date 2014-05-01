@@ -19,17 +19,19 @@ object Application extends Controller {
     dummyActor ! "Hello World !"
     Ok(views.html.index("Your new application is ready."))
   }
-  
+
   def submit = Action { implicit request =>
-  	
-   val reqData = request.body.asFormUrlEncoded
-   println(reqData)
-    
-   val scalaCoordinatesList = List[(Double,Double, Double, Double)]()
-    
-   Ok(views.html.index2())
 
+    val reqData = request.body.asFormUrlEncoded
+    println(reqData)
 
+    val scalaCoordinatesList = List[(Double, Double, Double, Double)]()
+
+    Ok(views.html.index2())
+  }
+
+  def designExample = Action {
+    Ok(views.html.test())
   }
 
 }
