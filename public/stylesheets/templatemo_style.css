@@ -315,28 +315,28 @@ a.menu-toggle-btn {
 /*------------------------------------------------------
 	About Styles 
 --------------------------------------------------------*/
-.about p {
+.homepage p {
   margin-top: 30px;
 }
-.about ul {
+.homepage ul {
   margin-top: 30px;
 }
-.about ul li {
+.homepage ul li {
   margin-left: 20px;
 }
-.about ul li:before {
+.homepage ul li:before {
   content: "+";
   margin-right: 10px;
   color: #919191;
 }
-.about #icons-about ul li {
+.homepage #icons-about ul li {
   margin: 0;
 }
-.about #icons-about ul li:before {
+.homepage #icons-about ul li:before {
   content: '';
   margin: 0;
 }
-.about #icons-about .icon-item {
+.homepage #icons-about .icon-item {
   display: block;
   padding: 30px 25px;
   margin-bottom: 30px;
@@ -344,18 +344,18 @@ a.menu-toggle-btn {
   cursor: pointer;
   text-align: center;
 }
-.about #icons-about .icon-item i {
+.homepage #icons-about .icon-item i {
   font-size: 24px;
   color: white;
 }
-.about #icons-about .icon-item span {
+.homepage #icons-about .icon-item span {
   margin-top: 25px;
   display: block;
   font-size: 18px;
   color: white;
   font-weight: 600;
 }
-.about #icons-about .active {
+.homepage #icons-about .active {
   background-color: #b10021;
 }
 

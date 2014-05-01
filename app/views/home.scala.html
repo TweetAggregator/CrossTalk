@@ -1,3 +1,77 @@
 @()
 
-<p>Vivamus eleifend vestibulum auctor. Nam ac leo sed nulla iaculis commodo sit amet a ligula. <a href="#">Proin consequat</a> magna nec sodales hendrerit. Nam commodo mi dolor, quis egestas lectus viverra eu. Cras accumsan ultrices turpis et lacinia. Sed non lobortis purus. Phasellus consequat, magna id rutrum lacinia, magna urna malesuada magna, ut fringilla odio sapien at nunc. <a href="http://www.tooplate.com" rel="nofollow">Proin nisl purus</a>, semper at fermentum sit amet, vehicula eget dolor. Integer sodales vehicula magna mattis semper. Etiam pellentesque semper mi vitae tempus. Praesent ut metus sed lacus egestas blandit eget gravida enim. Ut rutrum suscipit velit sit amet tempor. Donec rutrum, lacus non blandit rhoncus, nisi orci tempus risus, non vehicula enim lacus et est. In non gravida metus. Duis augue mauris, ullamcorper quis blandit sit amet, laoreet sed dui.</p>
+	<div id="menu-container">
+		<div class="content homepage" id="menu-4">
+			<div class="container">
+				<div class="row">
+					<div class="col-md-9 col-sm-10">
+						<div class="about-us-content">
+							<div class="toggle-content" id="tab4">
+								<h2 class="page-title">Environment and motivation</h2>
+                                
+								<p> All public messages posted on Twitter are freely accessible through the Internet, allowing for some interesting statistical tools which analyze the way tweets propagate.</p>
+								<p> Tweeping already provides a real-time feed display. All the new tweets are put onto a map, which allows interesting views. It is for example possible to see the sun rising above the US while the number of tweets grows from East to West, but it is impossible to read the messages, as there are way too many of them. One thing is lacking from this tool: a filter. Trends inside the Twitter platform already provide real-time feedback on various subjects, but not specifically displayed on a map. This could have interesting use cases, such as comparing what Swiss-German and Swiss-French people think about a popular vote, or analyzing the way people see Barak Obama in swing states. Such a thing is already partially implemented by Trendsmap.</p>
+								<p> But this tool could be made even more powerful by adding something currently lacking: population-based statistics. The idea here is to search for various trends and try to relate the populations of the users posting about them. Such analyses could for instance be displayed as a Venn diagram on the side of the map, allowing for some interesting ways to observe correlation and intersection between trends. This tool could for example try to answer such questions as: do Swiss citizens speaking about the vote of February 9th also speak about Erasmus? Is it more the case in Zurich or in Lausanne?</p>  
+
+							</div> <!-- /.toggle-content -->
+							<div class="toggle-content" id="tab5">
+								<h2 class="page-title">Description of the project</h2>
+								<p>The goal of the project is to create a minimalistic tool allowing users to select trends, display them on a map in real-time, and try to see who speaks about multiple trends. This could be dynamically updated using a web interface coded in Javascript and HTML5, but a simple version would be to launch a background thread for each request, which will then produce a web page that will be updated as tweets are posted. Reloading the page will allow a new display of the last tweets. This would avoid having costly requirements such as coding a full interface in Javascript. </p>
+								<p> below is the list of the various subparts of the project:</p>
+								<ul>
+									<li> Data retrieval and unification </li>
+									<li> Localisation</li>
+									<li> Map display</li>
+									<li> Intersection algorithm</li>
+                                    <li> Venn diagram</li>
+                                    <li> Keywords translation</li>
+								</ul>
+								<p> For more information, the reader can refer to the <a href="https://github.com/TweetAggregator/TweetAggregator/wiki/_pages"> wiki </a>
+							</div> <!-- /.toggle-content -->
+							<div class="toggle-content" id="tab6">
+								<h2 class="page-title">Presentation of the team</h2>
+								<p> We are a team of ten members. We will split the work on the subparts described above depending on our strength.</p> 
+								<ul>
+									<li>Kevin Serrano</li>
+									<li>Gianni Scarnera</li>
+									<li>Clement Moutet</li>
+									<li>Timo Babst</li>
+									<li>Pierre Gouedard</li>
+									<li>Adrien Ghosn</li>
+									<li>Joris Beau</li>
+									<li>Mathieu Demarne</li>
+									<li>Cedric Bastin</li>
+									<li>Lewis Brown</li>
+								</ul>	
+								<p> TA: <a href="http://people.epfl.ch/mohammed.elseidy"> Mohammed El Seidy </a>							
+							</div> <!-- /.toggle-content -->
+						</div> <!-- /.inner-content -->
+					</div> <!-- /.col-md-9 -->
+					<div class="col-md-3 col-sm-2">
+						<div id="icons-about">
+							<ul class="tabs">
+								<li>
+									<a href="#tab4" class="icon-item">
+										<span>Motivation</span>
+									</a> <!-- /.icon-item -->
+								</li>
+								<li>
+									<a href="#tab5" class="icon-item">
+										<span>Description</span>
+									</a> <!-- /.icon-item -->
+								</li>
+								<li>
+									<a href="#tab6" class="icon-item">
+										<span>The team</span>
+									</a> <!-- /.icon-item -->
+								</li>
+							</ul>
+						</div> <!-- /.icons -->
+					</div> <!-- /.col-md-3 -->
+				</div> <!-- /.row -->
+			</div> <!-- /.container -->
+		</div> <!-- /.services -->
+
+	</div> <!-- /#menu-container -->
+
+

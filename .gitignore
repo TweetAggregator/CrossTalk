@@ -20,3 +20,4 @@ project/plugins/project/
 .cache
 *.swp
 *.swo
+*.DS_Store
