@@ -9,6 +9,7 @@
 
 @phoneField(field: Field, className: String = "phone") = {
     @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
+           <input type="hidden" name="@name" value="@value"> 
                <li> <h5>@field.value
         <a class="removePhone btn danger">Remove</a></h5>
         </li>
@@ -34,7 +35,7 @@
     </div>
 }
 
-@main(title, nav = "contact") {
+@main(title, nav = "summary") {
     
     @if(contactForm.hasErrors) {
         <div class="alert-message error">

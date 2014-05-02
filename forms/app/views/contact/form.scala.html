@@ -4,24 +4,22 @@
 @import helper.twitterBootstrap._
 
 @title = {
-    Translation results
+    Keywords for the search
 }
 
 @phoneField(field: Field, className: String = "phone") = {
-        <li> <h5>@field.value
-        <a class="removePhone btn danger">Remove</a></h5>
-        </li>
-
+    @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
+        <input type="text" name="@name" value="@value"> 
+        <a class="removePhone btn danger">Remove</a>
+    }
 }
 
 @informationGroup(field: Field, className: String = "profile") = {
     <div class="twipsies well @className">
         
-        <a class="removeProfile btn danger pull-right">Remove this language</a>
-        
-            
- <h4>@field("email").value</h4>         
-        <div class="phones">
+        <a class="removeProfile btn danger pull-right">Remove this profile</a>
+
+         <div class="phones">
 
             @repeat(field("phones"), min = 0) { phone =>
                 
@@ -29,6 +27,20 @@
     
             }
             
+            @**
+             * Keep an hidden block that will be used as template for Javascript copy code
+             **@
+            @phoneField(
+                field("phones[x]"),
+                className = "phone_template"
+            )
+            
+            <div class="clearfix">
+                <div class="input">
+                    <a class="addPhone btn success">Add keyword</a>
+                </div>
+            </div>
+        
         </div>
 
     </div>
@@ -42,11 +54,11 @@
         </div>
     }
     
-    @helper.form(action = routes.Contacts.editForm) {
+    @helper.form(action = routes.Contacts.submit) {
         
         
         <fieldset>
-
+            <legend>Enter your Keywords</legend>
             
             <div id="profiles">
             
@@ -62,13 +74,18 @@
                 @informationGroup(
                     contactForm("informations[x]"),
                     className = "profile_template"
-                )   
+                )
+                
+                <div class="manage">
+                    <a class="addProfile btn success">Add another input language</a>
+                </div>
+            
             </div>
             
         </fieldset>
         
         <div class="actions">
-            <input type="submit" class="btn primary" value="Insert">
+            <input type="submit" class="btn primary" value="Translate Keywords">
             <a href="@routes.Application.index" class="btn">Cancel</a>
         </div>
         
