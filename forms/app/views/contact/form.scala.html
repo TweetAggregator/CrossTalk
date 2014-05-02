@@ -4,37 +4,31 @@
 @import helper.twitterBootstrap._
 
 @title = {
-    Add keywords to the current search
+    Translation results
 }
 
-@keywordField(field: Field, className: String = "keyword") = {
-    @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
-        <input type="text" name="@name" value="@value"> 
-        hahahaha
-        <a class="removePhone btn danger">Remove</a>
-    }
+@phoneField(field: Field, className: String = "phone") = {
+        <li> <h5>@field.value
+        <a class="removePhone btn danger">Remove</a></h5>
+        </li>
+
 }
 
 @informationGroup(field: Field, className: String = "profile") = {
     <div class="twipsies well @className">
         
- 
-        <div class="phones">
-            
-            @**
-             * Keep an hidden block that will be used as template for Javascript copy code
-             **@
-            @keywordField(
-                field("phones[x]"),
-                className = "phone_template"
-            )
-            
-            <div class="clearfix">
-                <div class="input">
-                    <a class="addPhone btn success">Add keyword</a>
-                </div>
-            </div>
+        <a class="removeProfile btn danger pull-right">Remove this language</a>
         
+            
+ <h4>@field("email").value</h4>         
+        <div class="phones">
+
+            @repeat(field("phones"), min = 0) { phone =>
+                
+                @phoneField(phone)
+    
+            }
+            
         </div>
 
     </div>
@@ -48,10 +42,11 @@
         </div>
     }
     
-    @helper.form(action = routes.Contacts.submit) {
+    @helper.form(action = routes.Contacts.editForm) {
+        
         
         <fieldset>
-            <legend>Keywords</legend>
+
             
             <div id="profiles">
             
@@ -67,22 +62,25 @@
                 @informationGroup(
                     contactForm("informations[x]"),
                     className = "profile_template"
-                )
-                
+                )   
             </div>
             
-        </fieldset>        
+        </fieldset>
         
         <div class="actions">
-            <input type="submit" class="btn primary" value="Done">
-            <a href="@routes.Application.index" class="btn">Back</a>
+            <input type="submit" class="btn primary" value="Insert">
+            <a href="@routes.Application.index" class="btn">Cancel</a>
         </div>
         
     }
     
     <script type="text/javascript" charset="utf-8">
         
-       
+        $('.removeProfile').live('click', function(e) {
+            $(this).parents('.profile').remove()
+            renumber()
+        })
+        
         $('.removePhone').live('click', function(e) {
             var phones = $(this).parents('.phones')
             $(this).parents('.phone').remove()
@@ -95,8 +93,26 @@
             template.before('<div class="clearfix phone">' + template.html() + '</div>')
             renumber(phones)
         })
-
-                var renumber = function(phones) {
+        
+        $('.addProfile').live('click', function(e) {
+            var template = $('.profile_template')
+            template.before('<div class="twipsies well profile">' + template.html() + '</div>')
+            renumber()
+        })
+        
+        // -- renumber fields
+        
+        // Rename fields to have a coherent payload like:
+        //
+        // informations[0].label
+        // informations[0].email
+        // informations[0].phones[0]
+        // informations[0].phones[1]
+        // ...
+        //
+        // This is probably not the easiest way to do it. A jQuery plugin would help.
+        
+        var renumber = function(phones) {
             $('.profile').each(function(i) {
                 $('input', this).each(function() {
                     $(this).attr('name', $(this).attr('name').replace(/informations\[.+?\]/g, 'informations[' + i + ']'))
@@ -106,5 +122,7 @@
                 })
             })
         }
+        
     </script>
-    }    
+    
+}

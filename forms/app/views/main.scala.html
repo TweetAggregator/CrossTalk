@@ -12,6 +12,21 @@
     </head>
     <body>
         
+        <div class="topbar">
+            <div class="fill">
+                <div class="container">
+                    <a class="brand" href="@routes.Application.index()">Forms</a>
+                    <ul class="nav">
+                        <li class="@("active".when(nav == "signup"))">
+                            <a href="@routes.SignUp.form">Sign up</a>
+                        </li>
+                        <li class="@("active".when(nav == "contact"))">
+                            <a href="@routes.Contacts.form">Contacts</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
         <div class="container">
 
@@ -28,6 +43,12 @@
                 </div>
                 
             </div>
+
+            <footer>
+                <p>
+                    <a href="http://www.playframework.com">www.playframework.com</a>
+                </p>
+            </footer>
 
         </div>
         

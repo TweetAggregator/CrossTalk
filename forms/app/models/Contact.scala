@@ -1,6 +1,10 @@
 package models
 
 case class Contact(
-  keyWords: List[String]
+  informations: Seq[ContactInformation]
 )
 
+case class ContactInformation(
+  email: Option[String],
+  phones: List[String]
+)

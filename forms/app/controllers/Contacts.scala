@@ -15,27 +15,71 @@ object Contacts extends Controller {
   /**
    * Contact Form definition.
    */
-  val keyWordForm: Form[Contact] = Form(
+  val contactForm: Form[Contact] = Form(
     
     // Defines a mapping that will handle Contact values
     mapping(
-      "keyWords" -> list(text)
-    )
-    (Contact.apply)(Contact.unapply)
+      // Defines a repeated mapping
+      "informations" -> seq(
+        mapping(
+          "email" -> optional(email),
+          "phones" -> list(
+            text) 
+        )(ContactInformation.apply)(ContactInformation.unapply)
+      )
+      
+    )(Contact.apply)(Contact.unapply)
   )
   
   /**
    * Display an empty form.
    */
   def form = Action {
-    Ok(html.contact.form(keyWordForm));
+    Ok(html.contact.form(contactForm));
   }
   
+  /**
+   * Display a form pre-filled with an existing Contact.
+   */
+  def editForm = Action { implicit request =>
+val resultForm = contactForm.bindFromRequest.get
+println("THIS IS THE END " + resultForm)
+Ok(html.contact.end())
+  }
+
+  
+  /**
+   * Handle form submission.
+   */
   def submit = Action { implicit request =>
-    val form = keyWordForm.bindFromRequest
-    println(form)
-    val contact = Contact( form.data.values.toList) //form.value.get
-    Ok(html.contact.summary(contact))
+val resultForm = contactForm.bindFromRequest.get
+println(resultForm)
+println("RESULT :D:D:D:D " + resultForm.informations.apply(0).phones)
+
+val keywords = resultForm.informations.apply(0).phones
+
+
+    //TODO rajouter liste de requete de traducitons 
+    //renvoyer l anglais en premier
+    //les autres langues sont optionnelles
+    val existingContact = Contact(
+     informations = List(
+        ContactInformation(
+         Some("Afficher l anglais en premier toujours!"), keywords
+        ),
+        ContactInformation(
+         Some("Français"), List("mouton", "belier")
+        )
+      )
+    )
+    Ok(html.contact.summary(contactForm.fill(existingContact)))
+    
+  }
+
+  def selectKeywords = Action { implicit request =>
+val resultForm = contactForm.bindFromRequest.get
+println("THIS IS THE END " + resultForm)
+Ok(html.contact.summary(contactForm))
   }
   
 }
