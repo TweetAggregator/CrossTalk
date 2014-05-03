@@ -1,0 +1,16 @@
+/* Template for the display of the forms */
+
+.templ_keyword {
+  display: none;
+}
+.templ_language {
+  display: none;
+}
+.language {
+  margin: 7px 7px 7px 7px;
+  border-top : 1px solid #000;
+}
+.btn {
+  padding: 10px;
+  border: 1px solid #CFCFCF !important;
+}

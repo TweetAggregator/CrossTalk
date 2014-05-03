@@ -1,0 +1,106 @@
+@(keywordsForm: Form[AllTranslations])
+
+@import helper._
+@import helper.twitterBootstrap._
+
+@** *********************************************************************** **@
+@** Helper for the view **@
+
+@keywordField(field: Field, className: String = "keyword") = {
+    @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
+        <input type="text" name="@name" value="@value"> 
+        <a class="removeKeyword btn">Remove</a>
+    }
+}
+
+@languageBlock(field: Field, className: String = "language") = {
+    <div class="clearfix @className">
+        <a class="removeLanguage btn">Remove this language</a>
+         <div class="keywords">
+            @repeat(field("keywords"), min = 0) { keyword => @keywordField(keyword) }
+            
+            @** Hidden block that will be used as template for Javascript copy code **@
+            @keywordField(field("keywords[x]"), className = "templ_keyword")
+            
+            <div class="clearfix">
+                <div class="input">
+                    <a class="addKeyword btn">Add keyword</a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+}
+
+@** *********************************************************************** **@
+@** Actual display **@
+
+@header("Tweet Aggregator")
+
+	<h1>Enter your Keywords</h1>
+	@helper.form(action = setup.routes.Keywords.initialSubmission) {
+ 		<div id="keywords">
+ 		
+			@repeat(keywordsForm("translations")) { language =>
+				@languageBlock(language)
+			}
+	     
+	     @** An hidden block for language that will be used as template for Javascript copy code **@
+	     @languageBlock(
+	         keywordsForm("translations[x]"),
+	         className = "templ_language"
+	     )
+	  
+	     <div class="manage">
+		     <a class="addLanguage btn">Add another input language</a>
+	     </div>
+		</div>
+
+    <div class="actions">
+        <input type="submit" value="Translate Keywords">
+        <a href="@routes.Application.index" class="btn">Cancel</a>
+    </div>
+      
+  }
+  
+@** *********************************************************************** **@
+@** Now we need to add some scripts **@
+    
+    <script type="text/javascript" charset="utf-8">
+					$('.removeLanguage').live('click', function(e) {
+						$(this).parents('.language').remove()
+						renumber()
+					})
+
+					$('.removeKeyword').live('click', function(e) {
+						var keywords = $(this).parents('.keywords')
+						$(this).parents('.keyword').remove()
+						renumber(keywords)
+					})
+
+					$('.addKeyword').live('click', function(e) {
+								var keywords = $(this).parents('.keywords')
+								var template = $('.templ_keyword', keywords)
+								template.before('<div class="clearfix keyword">' + template.html() + '</div>')
+								renumber(keywords)
+							})
+
+					$('.addLanguage').live('click', function(e) {
+								var template = $('.templ_language')
+								template.before('<div class="clearfix language">' + template.html() + '</div>')
+								renumber()
+							})
+
+				var renumber = function(keywords) {
+        	$('.language').each(function(i) {
+        	$('input', this).each(function() {
+        		$(this).attr('name', $(this).attr('name').replace(/translations\[.+?\]/g, 'translations[' + i + ']'))
+         	})
+          $('.keyword input', this).each(function(i) {
+          	$(this).attr('name', $(this).attr('name').replace(/keywords\[.+\]/g, 'keywords[' + i + ']'))
+          })
+          })
+        }
+				</script>
+    
+@footer()
