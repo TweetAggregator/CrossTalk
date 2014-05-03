@@ -34,7 +34,7 @@
     </div>
 }
 
-@main("summary") {
+@main(title, nav = "summary") {
     
     @if(contactForm.hasErrors) {
         <div class="alert-message error">
@@ -42,7 +42,7 @@
         </div>
     }
     
-    @helper.form(action = routes.Keywords.finalSubmission) {
+    @helper.form(action = setup.routes.Keywords.finalSubmission) {
         
         
         <fieldset>

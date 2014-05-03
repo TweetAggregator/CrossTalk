@@ -11,6 +11,6 @@ GET		/designExample				controllers.Application.designExample
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
 # Keywords
-GET     /enterKeywords                   	controllers.setup.Keywords.form
-POST    /finalKeywords		    		controllers.setup.Keywords.finalSubmission
-POST    /initialKeywords                   	controllers.setup.Keywords.initialSubmission
+GET     /enterKeywords                   	controllers.Keywords.form
+POST    /finalKeywords		    		controllers.Keywords.finalSubmission
+POST    /initialKeywords                   	controllers.Keywords.initialSubmission

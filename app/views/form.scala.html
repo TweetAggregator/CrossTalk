@@ -47,8 +47,13 @@
 }
 
     
-@header("Test")
-    @helper.form(action = setup.Keywords.initialSubmission) {
+    @if(contactForm.hasErrors) {
+        <div class="alert-message error">
+            <p><strong>Oops</strong> Please fix all errors</p>
+        </div>
+    }
+    
+    @helper.form(action = setup.routes.Keywords.initialSubmission) {
         
         
         <fieldset>
@@ -136,4 +141,3 @@
         
     </script>
     
-@footer()
