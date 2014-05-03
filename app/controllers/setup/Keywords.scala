@@ -36,7 +36,7 @@ object Keywords extends Controller {
     val resultForm = keywordsForm.bindFromRequest.get
 
     println("THIS IS THE END " + resultForm)
-    Ok(html.keywordsEnd())
+    Ok(html.keywordsEnd("pipi"))
   }
 
   /**
@@ -53,21 +53,14 @@ object Keywords extends Controller {
     val startLanguage = "en"
     val targetLanguages = List("fra", "de")
 
-    /*    val tradsAndSyns =
+    val tradsAndSyns =
       for (keyword <- keywords) yield {
-        val (trads, syns) = routes.Translator(startLanguage, targetLanguages, keyword)()
-        (trads.flatten ++ syns).map(_.as[String])
-      }*/
-    //TODO rajouter liste de requete de traducitons 
-    //renvoyer l anglais en premier
-    //les autres langues sont optionnelles
-    val existingContact = AllTranslations(
-      translations = List(
-        Translation(
-          Some("Afficher l anglais en premier toujours!"), keywords),
-        Translation(
-          Some("Français"), List("mouton", "belier"))))
-    Ok(html.keywordsSummary(keywordsForm.fill(existingContact)))
+        val (trads, syns) = jobs.Translator(startLanguage, targetLanguages, keyword)()
+//        (trads.flatten ++ syns).map(_.as[String])
+          Translation( Some(keyword),(trads.flatten ++ syns).map(_.as[String]) )
+      }
+
+    Ok(html.keywordsSummary(keywordsForm.fill(AllTranslations(tradsAndSyns))))
 
   }
 }
