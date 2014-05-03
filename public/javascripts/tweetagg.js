@@ -5,11 +5,15 @@ var map = po.map()
 var div = document.getElementById("map"),
     svg = div.appendChild(po.svg("svg"));
 map.container(svg);
-
 var interact = po.interact(); //create separate object for the focus so we can remove it when drawing a rectangle
 map.add(interact); //enable move and zoom events
 map.on("resize", update);
 map.on("move", update);
+var center = new Object;
+center.lat = 46.5198
+center.lon = 6.6335
+//map.center(center)
+//map.zoom(21)
 
 //map tiles initialization
 map.add(po.image()
@@ -22,6 +26,10 @@ map.add(po.image()
 map.add(po.compass()
     .pan("none"));
 
+function debug(object) {
+	console.log(JSON.stringify(object));//, null, 4));
+}
+
 var coordinates_array = [];
 
 /* 
@@ -33,22 +41,34 @@ function pxToGeo(json) {
 }
 
 /*
-  calculates and stores the geographical information corresponding to the current view of the map
-*/
+ * build the initial map with a corresponding view as well as the selected regions if any
+ */
+function reload(viewCenter, mapZoom, regionList) {
+	if (!map) {
+		console.log("update() busy wait loop")
+		setTimeout(function() {reload(viewCenter, zoom, regionList) }, 10) //busy wait while map is not yet loaded
+	}
+	console.log("reload:")
+	console.log(viewCenter) //JSON.toJSON does NOT work!
+	console.log("zoom:"+mapZoom)
+	map.zoom(mapZoom).center(viewCenter);
+	//load rectangles?
+}
+/*
+ *  calculates and stores the geographical information corresponding to the current view of the map
+ */
 var topCorner;
 var bottomCorner;
 function update() {
-  topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
-  bottomCorner = pxToGeo(map.size());
-  var myString = "<br/>lat 0: ".concat(topCorner.lat.toString()) +
-    "<br/>lon: ".concat(topCorner.lon) +
-    "<br/>lat".concat(bottomCorner.lat) +
-    "<br/>lon".concat(bottomCorner.lon);
-  //document.getElementById('myDiv').innerHTML = myString ; //show the information in the sidebar
-}
-
-function load(e) {
-
+	if (!map || !document.getElementById("viewCenter") || !document.getElementById("zoomLevel")) {
+		console.log("update() busy wait loop")
+		setTimeout(function() {update() }, 10) //busy wait while map is not yet loaded
+	}
+	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
+	bottomCorner = pxToGeo(map.size());
+	console.log(map.center())
+	document.getElementById("viewCenter").value = JSON.stringify(map.center())
+	document.getElementById("zoomLevel").value = map.zoom()
 }
 
 /*
@@ -127,7 +147,10 @@ div.addEventListener("mouseup", function(){
       coordinates_array.push([topLeft,bottomRight]);
       
       var jCoordinates = JSON.stringify(coordinates_array)
-      coordinates.value = jCoordinates
+      //coordinates.value = jCoordinates
+      document.getElementById("coordinates").value = jCoordinates
+      //console.log(coordinates.value)
+      //debug(coordinates.value)
 
       addNewRegion(topLeft, bottomRight)
       map.add(interact) //put back move and resize focus on the map

@@ -3,8 +3,8 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
-POST	/mapSubmit					controllers.Application.submit
+GET     /map                        controllers.Application.index
+POST	/map     					controllers.Application.submit
 GET		/designExample				controllers.Application.designExample
 
 # Map static resources from the /public folder to the /assets URL path
