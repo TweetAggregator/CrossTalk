@@ -1,0 +1,49 @@
+@(viewCenter: String, mapZoom: Double, regionList: String)
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.at("javascripts/jquery.dform-1.1.0.js")"></script>
+    
+    <script type="text/javascript" src="@routes.Assets.at("javascripts/polymaps.min.js")"></script>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/polymaps.css")">
+    
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/tweetagg.css")">
+  </head>
+  
+  <body>
+    <div>
+    <div id="top">
+    <button onclick="nothing()">hi</button>
+    </div>
+      <div id="map" style="height:85%;float:left;width:85%;">
+    	<script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
+      	<script>
+      		reload(@Html(viewCenter), @mapZoom, @Html(regionList))
+      	</script>
+        <span id="copy">
+          &copy; 2010
+          <a href="http://www.cloudmade.com/">CloudMade</a>,
+          <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors,
+          <a href="http://creativecommons.org/licenses/by-sa/2.0/">CCBYSA</a>.
+        </span>
+      </div>
+      <div id="venns" class="venns" style="float:right;height:85%;width:14.5%;padding-left:5px;">
+        <span>
+          <button onclick="drawRegion()">new region</button>
+          <button onclick="reset()">reset</button>
+          @helper.form(action = routes.Application.submit){
+          	<input type="hidden" name="viewCenter" id="viewCenter" value="">
+          	<input type="hidden" name="zoomLevel" id="zoomLevel" value="">
+          	<input type="hidden" name="coordinates" id="coordinates" value=""> <!-- value is updated in tweetagg.js each time a region is drawn -->
+          	<button>Launch</button>
+          }
+          <p id="myDiv">
+           
+          </p>
+        </span>
+      </div>
+    </div>
+  </body>
+</html>
