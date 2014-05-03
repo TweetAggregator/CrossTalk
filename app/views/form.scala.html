@@ -1,41 +1,51 @@
-@(contactForm: Form[Contact])
+@(contactForm: Form[AllTranslations])
 
 @import helper._
 @import helper.twitterBootstrap._
 
 @title = {
-    Translation results
+    Keywords for the search
 }
 
 @phoneField(field: Field, className: String = "phone") = {
     @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
-           <input type="hidden" name="@name" value="@value"> 
-               <li> <h5>@field.value
-        <a class="removePhone btn danger">Remove</a></h5>
-        </li>
+        <input type="text" name="@name" value="@value"> 
+        <a class="removePhone btn danger">Remove</a>
     }
 }
+
 @informationGroup(field: Field, className: String = "profile") = {
     <div class="twipsies well @className">
         
-        <a class="removeProfile btn danger pull-right">Remove this language</a>
-        
-            
- <h4>@field("email").value</h4>         
-        <div class="phones">
+        <a class="removeProfile btn danger pull-right">Remove this profile</a>
 
-            @repeat(field("phones"), min = 0) { phone =>
+         <div class="keywords">
+
+            @repeat(field("keywords"), min = 0) { phone =>
                 
                 @phoneField(phone)
     
             }
             
+            @**
+             * Keep an hidden block that will be used as template for Javascript copy code
+             **@
+            @phoneField(
+                field("keywords[x]"),
+                className = "phone_template"
+            )
+            
+            <div class="clearfix">
+                <div class="input">
+                    <a class="addPhone btn success">Add keyword</a>
+                </div>
+            </div>
+        
         </div>
 
     </div>
 }
 
-@main(title, nav = "summary") {
     
     @if(contactForm.hasErrors) {
         <div class="alert-message error">
@@ -43,15 +53,15 @@
         </div>
     }
     
-    @helper.form(action = routes.Contacts.editForm) {
+    @helper.form(action = setup.routes.Keywords.initialSubmission) {
         
         
         <fieldset>
-            <legend>Remove inacurate translations</legend>
+            <legend>Enter your Keywords</legend>
             
             <div id="profiles">
             
-                @repeat(contactForm("informations")) { information =>
+                @repeat(contactForm("translations")) { information =>
                 
                     @informationGroup(information)
                 
@@ -61,15 +71,20 @@
                  * Keep an hidden block that will be used as template for Javascript copy code
                  **@
                 @informationGroup(
-                    contactForm("informations[x]"),
+                    contactForm("translations[x]"),
                     className = "profile_template"
-                )   
+                )
+                
+                <div class="manage">
+                    <a class="addProfile btn success">Add another input language</a>
+                </div>
+            
             </div>
             
         </fieldset>
         
         <div class="actions">
-            <input type="submit" class="btn primary" value="Start the search with those keywords!">
+            <input type="submit" class="btn primary" value="Translate Keywords">
             <a href="@routes.Application.index" class="btn">Cancel</a>
         </div>
         
@@ -83,16 +98,16 @@
         })
         
         $('.removePhone').live('click', function(e) {
-            var phones = $(this).parents('.phones')
+            var keywords = $(this).parents('.keywords')
             $(this).parents('.phone').remove()
-            renumber(phones)
+            renumber(keywords)
         })
         
         $('.addPhone').live('click', function(e) {
-            var phones = $(this).parents('.phones')
-            var template = $('.phone_template', phones)
+            var keywords = $(this).parents('.keywords')
+            var template = $('.phone_template', keywords)
             template.before('<div class="clearfix phone">' + template.html() + '</div>')
-            renumber(phones)
+            renumber(keywords)
         })
         
         $('.addProfile').live('click', function(e) {
@@ -107,23 +122,22 @@
         //
         // informations[0].label
         // informations[0].email
-        // informations[0].phones[0]
-        // informations[0].phones[1]
+        // informations[0].keywords[0]
+        // informations[0].keywords[1]
         // ...
         //
         // This is probably not the easiest way to do it. A jQuery plugin would help.
         
-        var renumber = function(phones) {
+        var renumber = function(keywords) {
             $('.profile').each(function(i) {
                 $('input', this).each(function() {
                     $(this).attr('name', $(this).attr('name').replace(/informations\[.+?\]/g, 'informations[' + i + ']'))
                 })
                 $('.phone input', this).each(function(i) {
-                    $(this).attr('name', $(this).attr('name').replace(/phones\[.+\]/g, 'phones[' + i + ']'))
+                    $(this).attr('name', $(this).attr('name').replace(/keywords\[.+\]/g, 'keywords[' + i + ']'))
                 })
             })
         }
         
     </script>
     
-}
