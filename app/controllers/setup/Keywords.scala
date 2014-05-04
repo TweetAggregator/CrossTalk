@@ -5,6 +5,8 @@ import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
+    import play.api.cache.Cache
+    import play.api.Play.current
 
 import views._
 
@@ -22,14 +24,17 @@ object Keywords extends Controller {
         mapping(
           "targetLanguage" -> text,
           "originalKeyword" -> text,
-          "keywords" -> list(text))  (Translation.apply)(Translation.unapply)))(AllTranslations.apply)(AllTranslations.unapply))
+          "keywords" -> list(text) )  (Translation.apply)(Translation.unapply)))(AllTranslations.apply)(AllTranslations.unapply)
+          )
 
 
   val initialInputForm: Form[InitialInput] = Form(
 
         mapping(
           "languages" -> list(text),
-          "keywords" -> list(text)  )(InitialInput.apply)(InitialInput.unapply))
+          "keywords" -> list(nonEmptyText)  )(InitialInput.apply)(InitialInput.unapply)
+verifying("Please add at least one keyword!",x => !x.keywords.isEmpty )
+          )
 
 
   /**
@@ -46,7 +51,14 @@ object Keywords extends Controller {
     val resultForm = keywordsForm.bindFromRequest.get
 
     println("THIS IS THE END " + resultForm)
-    Ok(html.keywordsEnd("pipi"))
+
+    //List("InitKeyWord",List("Translations")) fromTimoToJorisAndLewis
+//    println("MERCI CEDRIC" + resultForm.output)
+
+    Cache.set("fromTimoToJorisAndLewis", resultForm.output)
+
+
+    Ok(html.keywordsEnd("Blabla"))
   }
 
   /**
@@ -54,16 +66,23 @@ object Keywords extends Controller {
    */
   def initialSubmission = Action { implicit request =>
 
-    val resultForm = initialInputForm.bindFromRequest.get
+    initialInputForm.bindFromRequest.fold ({
+      formWithErrors => BadRequest(html.keywordsForm(initialInputForm))} ,
+      {
+      resultForm =>
     println(resultForm)
     //println("RESULT :D:D:D:D " + resultForm.translations.apply(0).keywords)
 
     val keywords = resultForm.keywords
     val translationLanguages = resultForm.languages
   //resultForm.translations.apply(1).keywords
-println("MEEEE " + translationLanguages)
-    val startLanguage = "en"
 
+    val startLanguage = "en"
+    println("Those kw : " + keywords)
+
+    var submitThis = for (keyword <- keywords) yield {
+        Translation("Ignore",keyword,List("Ignore"))
+    }
     val tradsAndSyns =
       for (keyword <- keywords) yield {
         for (language <- translationLanguages) yield {
@@ -71,9 +90,14 @@ println("MEEEE " + translationLanguages)
           Translation( targetLanguages.apply(language.toInt)._2,keyword,(trads.flatten).map(_.as[String]) )
         }
       }
-    
+      submitThis= submitThis.++(tradsAndSyns.flatten)
 
-    Ok(html.keywordsSummary(keywordsForm.fill(AllTranslations(tradsAndSyns.flatten))))
+    
+println("Will send this to summary form :  " + submitThis)
+    Ok(html.keywordsSummary(keywordsForm.fill(AllTranslations(submitThis))))
+
+}
+    )
 //  Ok(html.keywordsSummary(keywordsForm.fill(AllTranslations(List(Translation("French","mouse",List("souris", "rat", "souriceau")), Translation("German","mouse",List("Maus", "Computermaus", "mausen", "Mäuserich", "Mäuse fangen", "Ratte")), Translation("French","bottle",List("bouteille", "biberon", "embouteiller", "canette")), Translation("German","bottle",List("Flasche", "Flaschen", "in Flaschen abfüllen", "Pulle")))))))
 
   }
