@@ -17,11 +17,21 @@
 
 @languageBlock(field: Field, className: String = "language") = {
     <div class="clearfix @className">
-        <a class="removeLanguage btn">Remove everything related to this keyword</a>
+        Translation of @field("originalKeyword").value
+        to @field("targetLanguage").value
 
-        @field("language").value
+
+        <a class="removeLanguage btn">Remove everything related to this translation</a>
+
         @inputText(
-            field("language"), 
+            field("targetLanguage"), 
+            'style -> "display: none",
+            '_label -> ""
+        )
+
+
+        @inputText(
+            field("originalKeyword"), 
             'style -> "display: none",
             '_label -> ""
         )
@@ -31,11 +41,6 @@
             @** Hidden block that will be used as template for Javascript copy code **@
             @keywordField(field("keywords[x]"), className = "templ_keyword")
             
-            <div class="clearfix">
-                <div class="input">
-                    <a class="addKeyword btn">Add keyword</a>
-                </div>
-            </div>
             
         </div>
     </div>

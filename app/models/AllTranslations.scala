@@ -5,7 +5,8 @@ case class AllTranslations(
 )
 
 case class Translation(
-  language: Option[String],
+  targetLanguage :String, 
+  originalKeyword: String,
   keywords: List[String]
 )
 

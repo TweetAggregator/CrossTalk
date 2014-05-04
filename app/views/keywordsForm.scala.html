@@ -1,4 +1,4 @@
-@(keywordsForm: Form[AllTranslations])
+@(initialInputForm: Form[InitialInput])
 
 @import helper._
 @import helper.twitterBootstrap._
@@ -13,14 +13,14 @@
     }
 }
 
-@languageBlock(field: Field, className: String = "language") = {
+@languageBlock(className: String = "language") = {
     <div class="clearfix @className">
-        <a class="removeLanguage btn">Remove this language</a>
+ 
          <div class="keywords">
-            @repeat(field("keywords"), min = 0) { keyword => @keywordField(keyword) }
+            @repeat(initialInputForm("keywords"), min = 0) { keyword => @keywordField(keyword) }
             
             @** Hidden block that will be used as template for Javascript copy code **@
-            @keywordField(field("keywords[x]"), className = "templ_keyword")
+            @keywordField(initialInputForm("keywords[x]"), className = "templ_keyword")
             
             <div class="clearfix">
                 <div class="input">
@@ -34,30 +34,24 @@
 
 @** *********************************************************************** **@
 @** Actual display **@
-
 @header("Tweet Aggregator")
+
+
 
 	<h1>Enter your Keywords</h1>
 	@helper.form(action = setup.routes.Keywords.initialSubmission) {
  		<div id="keywords">
- 		
-			@repeat(keywordsForm("translations")) { language =>
-				@languageBlock(language)
-			}
-	     
-	     @** An hidden block for language that will be used as template for Javascript copy code **@
-	     @languageBlock(
-	         keywordsForm("translations[x]"),
-	         className = "templ_language"
-	     )
-	  
-	     <div class="manage">
-		     <a class="addLanguage btn">Add another input language</a>
-	     </div>
-		</div>
+ 				@languageBlock()
 
+
+     <h1>  Choose translation languages </h1>
+   @for((t, index) <- setup.Keywords.targetLanguages.zipWithIndex) {
+       <input type="checkbox" name="languages[@index]" value="@index">@t._2 <br>
+   }
+			
+	     
     <div class="actions">
-        <input type="submit" value="Translate Keywords">
+        <input type="submit" value="Find synonyms and translations!">
         <a href="@routes.Application.index" class="btn">Cancel</a>
     </div>
       
