@@ -30,16 +30,15 @@ trait GatheringController { this: Controller =>
     //TODO: start a tweetmanager searching for the data
     //TODO: how to choose grid size?
     //TODO: error handling
-    val keywords = Cache.getAs[List[String]]("keywords").get
-    val startLanguage = Cache.getAs[String]("startLanguage").get
-    val targetLanguages = Cache.getAs[List[String]]("targetLanguages").get
+
     val squares = Cache.getAs[List[(Double, Double, Double, Double)]]("squares").get
-    val tradsAndSyns =
-      for (keyword <- keywords) yield {
-        val (trads, syns) = Translator(startLanguage, targetLanguages, keyword)()
-        (trads.flatten ++ syns).map(_.as[String])
-      }
-    val allKeywords = (keywords ++ tradsAndSyns.flatten).distinct
+
+    // Get keywords and translations
+    val keywordsList = Cache.getAs[List[(String, List[String])]]("fromTimoToJorisAndLewis").get // list of tuple (initialKeyword, translations&synonyms)
+    val startKey: List[String] = keywordsList.map(_._1)
+    val otherKey: List[String] = keywordsList.map(_._2).flatten
+    val allKeywords = (startKey ++ otherKey).distinct
+
     
     for (square <- squares) {
       val geoSquare = GeoSquare(square._1, square._2, square._3, square._4)
