@@ -23,6 +23,8 @@ object GatheringControllerSpec extends Specification {
       Cache.set("squares", List((-129.4, 20.0, -79.0, 50.6)))
 
       controller.start() must not beNull
+
+      Thread.sleep(2000)
     }
   }
 
