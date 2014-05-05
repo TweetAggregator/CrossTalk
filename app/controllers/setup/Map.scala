@@ -5,7 +5,6 @@ import akka.actor.Props
 import play.api._
 import play.api.mvc._
 import play.api.data._
-import jobs.DummyActor
 import play.api.data.Forms._
 import play.api.libs.json._
 
@@ -18,8 +17,6 @@ object Map extends Controller {
    * the initial function called when the website is first loaded
    */
   def index = Action {
-    val dummyActor = ActorSystem().actorOf(Props(new DummyActor()))
-    dummyActor ! "Hello World !"
     Ok(views.html.map("{lat: 46.5198, lon: 6.6335}", 12, "[]", "[]"))
   }
 
