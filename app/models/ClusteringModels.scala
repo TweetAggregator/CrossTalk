@@ -14,6 +14,7 @@ case class Cluster(var subClusters: Set[LeafCluster]) {
     val lats2 = subClusters.map(_.area.lat2)
     GeoSquare(longs1.min, lats1.min, longs2.max, lats2.max)
   }
+  val center = ((area.long1 + area.long2) / 2, (area.lat1 + area.lat2) / 2)
   
   val numTweets: Long = subClusters.map(_.numTweets).sum
   val size = subClusters.size
