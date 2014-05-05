@@ -515,3 +515,9 @@ body.blurred > * {
 * other displays with a 2x resolution. You can also create a media
 * query for retina AND a certain size if you want. Go Nuts.
 ******************************************************************/
+
+/* PERSONALIZED STYLES */
+.logo {
+  width:200px;
+  height:41px;
+}

@@ -39,7 +39,7 @@ trait GatheringController { this: Controller =>
     val squares = Cache.getAs[List[Square]]("squares").get
 
     // Keywords and translations: list of tuple (initialKeyword, translations&synonyms)
-    val keywordsList = Cache.getAs[List[(String, List[String])]]("fromTimoToJorisAndLewis").get
+    val keywordsList = Cache.getAs[List[(String, List[String])]]("keywords").get
     assert(keywordsList.size == 2)
 
     // Separate ANDed keywords by spaces

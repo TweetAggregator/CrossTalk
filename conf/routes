@@ -3,12 +3,15 @@
 # ~~~~
 
 # Home page
-#TODO
 GET    /                  controllers.Application.index 
 
 # Map selection
-GET     /map               controllers.setup.Map.index
-POST	/map     		   controllers.setup.Map.submit
+GET    /map               controllers.setup.Map.index
+POST   /map               controllers.setup.Map.submit
+
+# General setup 
+GET    /viewParams        controllers.setup.General.viewParams
+GET    /resetParams       controllers.setup.General.resetParams 
 
 # Map static resources from the /public folder to the /assets URL path
 GET    /assets/*file      controllers.Assets.at(path="/public", file)
@@ -17,6 +20,3 @@ GET    /assets/*file      controllers.Assets.at(path="/public", file)
 GET    /enterKeywords     controllers.setup.Keywords.form
 POST   /finalKeywords     controllers.setup.Keywords.finalSubmission
 POST   /initialKeywords   controllers.setup.Keywords.initialSubmission
-
-# Design example TODO: remove, should become a part of the main page
-GET    /designExample     controllers.Application.designExample
