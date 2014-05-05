@@ -1,6 +1,6 @@
 package controllers
 
-import scala.collection.mutable.MutableList
+import scala.collection.mutable.Map
 
 import play.api._
 import play.api.mvc._
@@ -23,48 +23,64 @@ import TweetManager._
  * Gathering the tweets and processing the results
  */
 trait GatheringController { this: Controller =>
-  val geoParts: MutableList[ActorRef] = MutableList()
+  type Square = (Double, Double, Double, Double)
+  // For each square, three geoparts: keyword1, keyword2 and keywor1&2
+  val geoParts: Map[Square, (ActorRef, ActorRef, ActorRef)] = Map()
+
+  def geoPart(square: Square, keys: List[String]): ActorRef = {
+    val geoSquare = GeoSquare(square._1, square._2, square._3, square._4)
+    Props(new GeoPartitionner(keys, geoSquare, 10, 10))
+  }
   
   def start() = {
-    //TODO: get form data from cache
-    //TODO: start a tweetmanager searching for the data
-    //TODO: how to choose grid size?
+    //TODO: choose grid size
     //TODO: error handling
 
-    val squares = Cache.getAs[List[(Double, Double, Double, Double)]]("squares").get
+    val squares = Cache.getAs[List[Square]]("squares").get
 
-    // Get keywords and translations
-    val keywordsList = Cache.getAs[List[(String, List[String])]]("fromTimoToJorisAndLewis").get // list of tuple (initialKeyword, translations&synonyms)
-    val startKey: List[String] = keywordsList.map(_._1)
-    val otherKey: List[String] = keywordsList.map(_._2).flatten
-    val allKeywords = (startKey ++ otherKey).distinct
+    // Keywords and translations: list of tuple (initialKeyword, translations&synonyms)
+    val keywordsList = Cache.getAs[List[(String, List[String])]]("fromTimoToJorisAndLewis").get
+    assert(keywordsList.size == 2)
 
-    
+    // Separate ANDed keywords by spaces
+    val keys1::keys2::_ = for ((k, trs) <- keywordsList) yield (k::trs).mkString(" ")
+
     for (square <- squares) {
-      val geoSquare = GeoSquare(square._1, square._2, square._3, square._4)
-      val geoPart: ActorRef = Props(new GeoPartitionner(allKeywords, geoSquare, 10, 10))
-      geoParts += geoPart
-      geoPart ! StartGeo
+      val gps = (geoPart(square, List(keys1)),
+                 geoPart(square, List(keys2)),
+                 geoPart(square, List(keys1, keys2)))
+      gps._1 ! StartGeo
+      gps._2 ! StartGeo
+      gps._3 ! StartGeo
+      geoParts += square -> gps
     }
-    TweetManagerRef ! Start
 
+    Thread.sleep(5000)
+
+    TweetManagerRef ! Start
     Ok
   }
 
   def pause = {
-    //TODO: stop the tweetmanager
+    TweetManagerRef ! Pause
     Ok
   }
 
   def resume = {
-    //TODO: start the tweetmanager again
+    TweetManagerRef ! Resume
     Ok
   }
 
   def computeDisplayData = {
-    //TODO: opacity
-    //TODO: Venn diagram
     //TODO: clustering
+    TweetManagerRef ! Stop
+
+    //TODO: Venn diagram
+    // nbSet: Int, sets: List[(Int, String, Int)], inters: List[(Int, Int), Int)]
+
+    //TODO: opacity
+    // viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String
+
     Ok
   }
 
