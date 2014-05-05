@@ -1,5 +1,7 @@
 package models
 
+/* Model used for the forms for the keyword selection */
+
 case class AllTranslations(
   translations: Seq[Translation]
 ) {
@@ -24,3 +26,7 @@ case class Translation(
   keywords: List[String]
 )
 
+case class InitialInput(
+  languages: List[String],
+  keywords: List[String]
+)

@@ -53,6 +53,7 @@ object TweetManager {
       case AddQueries(queries) =>
         assert(actorRefs.isEmpty, "TweetManager: Cannot add more queries without cancelling the ones running.")
         queriesToStart :+= queries
+        sender ! Done
 
       case Start =>
         assert(actorRefs.isEmpty, "TweetManager: Cannot restart queries again without cancelling the ones running.")
