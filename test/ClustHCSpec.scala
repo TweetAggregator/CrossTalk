@@ -5,7 +5,6 @@ import play.api.test._
 import play.api.test.Helpers._
 import akka.actor.ActorSystem
 import akka.actor.Props
-import jobs.DummyActor
 import models._
 import scala.util.Random
 import clustering.ClustHC

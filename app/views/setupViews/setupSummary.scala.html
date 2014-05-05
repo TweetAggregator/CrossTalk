@@ -1,0 +1,32 @@
+@(keywords: Option[List[(String, List[String])]], coordinates: Option[List[(Double, Double, Double, Double)]])
+
+@header("Crosstalk")
+
+<h1>Setup summary</h1>
+
+<h2>Lists of keywords</h2>
+
+@if(keywords.isDefined) {
+	<ul>
+	@for(keySet <- keywords.get){
+		<li><b>@keySet._1: </b> @keySet._2.mkString(", ")</li>
+	}
+	</ul>
+} else {
+	No keyword selected yet.
+}
+
+<h2>Zones</h2>
+
+@if(coordinates.isDefined) {
+	@for(coordinate <- coordinates.get){
+		<ul>
+		<li>(@coordinate._1, @coordinate._2), (@coordinate._3, @coordinate._4)</li>
+		</ul>
+	}
+} else {
+	No coordinates selected yet.
+}
+<center><a href="@setup.routes.General.resetParams">Reset parameters</a></center>
+
+@footer()

@@ -20,7 +20,7 @@
       <div id="map" style="height:85%;float:left;width:85%;">
     	<script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
       	<script>
-      		reload(@Html(viewCenter), @mapZoom, @Html(regionList))
+      		init(@Html(viewCenter), @mapZoom, @Html(regionList))
       	</script>
         <span id="copy">
           &copy; 2010
@@ -36,6 +36,7 @@
           @helper.form(action = setup.routes.Map.submit){
           	<input type="hidden" name="viewCenter" id="viewCenter" value="">
           	<input type="hidden" name="zoomLevel" id="zoomLevel" value="">
+          	<input type="hidden" name="viewBoundaries" id="viewBoundaries" value="">
           	<input type="hidden" name="coordinates" id="coordinates" value=""> <!-- value is updated in tweetagg.js each time a region is drawn -->
           	<button>Launch</button>
           }
