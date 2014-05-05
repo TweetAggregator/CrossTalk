@@ -51,8 +51,10 @@ function reload(viewCenter, mapZoom, regionList) {
 	console.log("reload:")
 	console.log(viewCenter) //JSON.toJSON does NOT work!
 	console.log("zoom:"+mapZoom)
-	map.zoom(mapZoom).center(viewCenter);
-	//load rectangles?
+	console.log("to be added:"+regionList)
+	addNewRegions(regionList)
+	map.zoom(mapZoom)
+	map.center(viewCenter);
 }
 /*
  *  calculates and stores the geographical information corresponding to the current view of the map
@@ -60,6 +62,8 @@ function reload(viewCenter, mapZoom, regionList) {
 var topCorner;
 var bottomCorner;
 function update() {
+	//console.log(map.center())
+	//console.log(map.zoom())
 	if (!map || !document.getElementById("viewCenter") || !document.getElementById("zoomLevel")) {
 		console.log("update() busy wait loop")
 		setTimeout(function() {update() }, 10) //busy wait while map is not yet loaded
@@ -144,7 +148,6 @@ div.addEventListener("mouseup", function(){
      // var topRight = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+end.y+'}'))
       var bottomRight = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+end.y+'}'))
      // var bottomLeft = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+start.y+'}'))
-      coordinates_array.push([topLeft,bottomRight]);
       
       var jCoordinates = JSON.stringify(coordinates_array)
       //coordinates.value = jCoordinates
@@ -168,6 +171,16 @@ function addNewRegion(topLeft, bottomRight) {
   container.setAttribute("class", container.getAttribute("class")+" region id"+idcount);
   container.setAttribute("onClick", "removeThis(e)"); //does not work so far
   
+  coordinates_array.push([topLeft,bottomRight]);
+}
+
+function addNewRegions(regionList) {
+	var i = 0;
+	while (i < regionList.length) {
+		addNewRegion(regionList[i][0], regionList[i][1])
+		i++;
+	}
+	console.log("done")
 }
 
 /*
