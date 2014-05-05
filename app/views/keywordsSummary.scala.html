@@ -15,30 +15,76 @@
     }
 }
 
-@languageBlock(field: Field, className: String = "language") = {
-    <div class="clearfix @className">
-        <a class="removeLanguage btn">Remove everything related to this keyword</a>
+@keywordFieldHidden(field: Field, className: String = "keyword") = {
+    @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
+           <input type="hidden" name="@name" value="@value"> 
+   }
+}
 
-        @field("language").value
+@languageBlock(field: Field, className: String = "language") = {
+
+@** Display the translations **@
+@if(field("targetLanguage").value!=Some("Ignore")){
+    <div class="clearfix @className">
+        Results for the translation of @field("originalKeyword").value
+        to @field("targetLanguage").value
+
+
+        <a class="removeLanguage btn">Remove everything related to this translation</a>
+
         @inputText(
-            field("language"), 
+            field("targetLanguage"), 
+            'style -> "display: none",
+            '_label -> ""
+        )
+
+
+        @inputText(
+            field("originalKeyword"), 
             'style -> "display: none",
             '_label -> ""
         )
          <div class="keywords">
+         @println()
             @repeat(field("keywords"), min = 0) { keyword => @keywordField(keyword) }
             
             @** Hidden block that will be used as template for Javascript copy code **@
             @keywordField(field("keywords[x]"), className = "templ_keyword")
             
-            <div class="clearfix">
-                <div class="input">
-                    <a class="addKeyword btn">Add keyword</a>
-                </div>
-            </div>
             
         </div>
-    </div>
+</div>
+        }
+    
+@** Display original keyword in a special manner **@
+
+            @if(field("targetLanguage").value==Some("Ignore")){
+                <div class="clearfix @className">
+        Original Keyword : @field("originalKeyword").value
+              @inputText(
+            field("targetLanguage"), 
+            'style -> "display: none",
+            '_label -> ""
+        )
+
+
+        @inputText(
+            field("originalKeyword"), 
+            'style -> "display: none",
+            '_label -> ""
+        )
+         <div class="keywords">
+            @repeat(field("keywords"), min = 0) { keyword => @keywordFieldHidden(keyword) }
+            
+            @** Hidden block that will be used as template for Javascript copy code **@
+            @keywordFieldHidden(field("keywords[x]"), className = "templ_keyword")
+            
+            
+        </div>
+
+
+        </div>
+        }
 }
 
 @** *********************************************************************** **@
@@ -54,12 +100,7 @@
                 @languageBlock(language)
             }
          
-         @** An hidden block for language that will be used as template for Javascript copy code **@
-         @languageBlock(
-             keywordsForm("translations[x]"),
-             className = "templ_language"
-         )
-      
+  
     <div class="actions">
         <input type="submit" value="Start the search with those keywords!">
         <a href="@routes.Application.index" class="btn">Cancel</a>

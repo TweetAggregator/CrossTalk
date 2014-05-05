@@ -2,9 +2,11 @@
 
 .templ_keyword {
   display: none;
+  background-color: red;
 }
 .templ_language {
-  display: none;
+  display: none
+  background-color: red;
 }
 .language {
   margin: 7px 7px 7px 7px;

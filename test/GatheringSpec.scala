@@ -21,6 +21,7 @@ object GatheringControllerSpec extends Specification {
       Cache.set("startLanguage", "en")
       Cache.set("targetLanguages", List("fr", "de"))
       Cache.set("squares", List((-129.4, 20.0, -79.0, 50.6)))
+      Cache.set("fromTimoToJorisAndLewis", List( ("Beer", List("biere", "pression"))) )
 
       controller.start() must not beNull
     }
