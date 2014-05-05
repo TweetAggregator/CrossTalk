@@ -45,22 +45,30 @@ function pxToGeo(json) {
  */
 var VC;
 var MZ;
-function reload(viewCenter, mapZoom, regionList) {
-	console.log("reload")
+function init(viewCenter, mapZoom) {
+	console.log("function init")
 	if (!map) {
-		console.log("update() busy wait loop")
+		setTimeout(function() {
+			init(viewCenter, mapZoom)
+		}, 10) //busy wait while map is not yet loaded
+	}
+	map.center(viewCenter);
+	map.zoom(mapZoom);
+}
+
+function showRegionIntesity(viewCenter, mapZoom, regionList) {
+	console.log("function showRegionIntesity")
+	if (!map) {
 		setTimeout(function() {
 			reload(viewCenter, zoom, regionList)
 		}, 10) //busy wait while map is not yet loaded
 	}
-	console.log("after reload check")
-	console.log("regionList: "+JSON.stringify(regionList))
 	for (index = 0; index < regionList.length; ++index) {
 		var elem = regionList[index]
 		addNewSubRegion(elem[0], elem[1], Math.random()) //save the regions
 	}
 	map.center(viewCenter);
-	map.zoom(mapZoom); //TODO: this line is not executed as the previous line triggers an eventlistener
+	map.zoom(mapZoom);
 }
 
 /**
@@ -69,8 +77,8 @@ function reload(viewCenter, mapZoom, regionList) {
 var topCorner;
 var bottomCorner;
 function update() {
-	if  (!map || !document.getElementById("viewCenter") || !document.getElementById("zoomLevel")) {
-		console.log("update() busy wait loop")
+	console.log("function update")
+	if  (!map) {
 		setTimeout(function() {update() }, 100) //busy wait while map is not yet loaded
 	}
 	var elem;
@@ -84,7 +92,7 @@ function update() {
 		elem.value = JSON.stringify(map.center())
 	elem = document.getElementById("zoomLevel")
 	if (elem)
-		elem.value = map.zoom()	
+		elem.value = map.zoom()
 }
 
 /*
