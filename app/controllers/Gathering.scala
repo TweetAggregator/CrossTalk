@@ -36,7 +36,7 @@ trait GatheringController { this: Controller =>
 
   type Square = (Double, Double, Double, Double)
   // For each square, three geoparts: keyword1, keyword2 and keywor1&2
-  val geoParts: Map[Square, (ActorRef, ActorRef, ActorRef)] = Map()
+  val geoParts: Map[Square, ((String, ActorRef), (String, ActorRef), ActorRef)] = Map()
   val maxGranularity = 20
   val minSide = 20.0 //TODO: choose a reasonable min side
 
@@ -59,7 +59,7 @@ trait GatheringController { this: Controller =>
     //TODO: error handling
     //  - Don't start twice
 
-    val squaresOption = Cache.getAs[List[Square]]("squares")
+    val squaresOption = Cache.getAs[List[Square]]("coordinates")
     // Keywords and translations: list of tuple (initialKeyword, translations&synonyms)
     val keywordsListOption = Cache.getAs[List[(String, List[String])]]("keywords")
 
@@ -67,16 +67,20 @@ trait GatheringController { this: Controller =>
       case (Some(squares), Some((k1, trs1)::(k2, trs2)::Nil)) =>
         try {
           val finished: MutableList[Future[_]] = MutableList()
-          val keys1 = (k1::trs1).mkString(" ")
-          val keys2 = (k2::trs2).mkString(" ")
+          val keys1 = k1::trs1
+          val keys2 = k2::trs2
+          var keys3 = for(key1 <- keys1; key2 <- keys2) yield (s"${key1} ${key2}") // Space means AND, concantenation means OR
+          // val keys1 = (k1::trs1).mkString(" ")
+          // val keys2 = (k2::trs2).mkString(" ")
           for (square <- squares) {
-            val gps = (geoPart(square, List(keys1)),
-                       geoPart(square, List(keys2)),
-                       geoPart(square, List(keys1, keys2)))
+            val gps = (geoPart(square, keys1),
+                       geoPart(square, keys2),
+                       // geoPart(square, List(keys1, keys2)))
+                      geoPart(square, keys3))
             finished += gps._1.?(StartGeo)(1 seconds)
             finished += gps._2.?(StartGeo)(1 seconds)
             finished += gps._3.?(StartGeo)(1 seconds)
-            geoParts += square -> gps
+            geoParts += square -> ((k1, gps._1), (k2, gps._2), gps._3)
           }
 
           finished.foreach(Await.ready(_, 10 seconds))
@@ -102,15 +106,43 @@ trait GatheringController { this: Controller =>
 
   def computeDisplayData = {
     //TODO: clustering
-    tweetManagerRef ! Stop
 
-    //TODO: Venn diagram
+    // Venn diagram
     // nbSet: Int, sets: List[(Int, String, Int)], inters: List[(Int, Int), Int)]
-
+    // nbSet     , sets: List[(index, keyword, size)], inters: List[((index1, index2), size)]
+    var sets: List[(Int, String, Int)] = Nil
+    var inters: List[((Int, Int), Int)] = Nil
+    geoParts.foreach(x => getInfo(x._2, sets, inters))
+    val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
+    
+    Ok(views.html.venn(nbSet, sets, inters))
+    
     //TODO: opacity
     // viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String
 
-    Ok
+    
+  }
+
+  object uniqueIndex{
+    private var x = 0
+    def next = x += 1
+  }
+  
+  def getInfo(tt: ((String, ActorRef), (String, ActorRef), ActorRef), sets: List[(Int, String, Int)], inters: List[((Int, Int), Int)]) = {
+    val f1 = (tt._1._2.?(TotalTweets)(1 seconds)).mapTo[Long]
+    val t1 = Await.result(f1, 1 seconds)
+    val s1 = (uniqueIndex.next, tt._1._1, t1)
+    s1::sets
+    
+    val f2 = tt._2._2.? (TotalTweets)(1 seconds).mapTo[Long]
+    val t2 = Await.result(f2, 1 seconds)
+    val s2 = (uniqueIndex.next, tt._2._1, t2)
+    s2::sets
+    
+    val f3 = tt._3.? (TotalTweets)(1 seconds).mapTo[Long]
+    val t3 = Await.result(f3, 1 seconds)
+    ( ((s1._1, s2._1), t3) )::inters
+    
   }
 
 }
