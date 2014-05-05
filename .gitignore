@@ -1,5 +1,6 @@
 *.class
 *.log
+tweets/*
 
 # sbt specific
 dist/*
