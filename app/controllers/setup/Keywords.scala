@@ -7,7 +7,6 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 import play.api.cache.Cache
 import play.api.Play.current
-import views._
 import models._
 
 object Keywords extends Controller {
@@ -36,7 +35,7 @@ object Keywords extends Controller {
    * Display an empty form.
    */
   def form = Action {
-    Ok(html.setupViews.keywordsForm(initialInputForm));
+    Ok(views.html.setupViews.keywordsForm(initialInputForm));
   }
 
   /**
@@ -55,7 +54,7 @@ object Keywords extends Controller {
    */
   def initialSubmission = Action { implicit request =>
 
-    initialInputForm.bindFromRequest.fold({ formWithErrors => BadRequest(html.setupViews.keywordsForm(initialInputForm))},{
+    initialInputForm.bindFromRequest.fold({ formWithErrors => BadRequest(views.html.setupViews.keywordsForm(initialInputForm))},{
         resultForm =>
           println(resultForm)
 
@@ -77,7 +76,7 @@ object Keywords extends Controller {
             }
           submitThis = submitThis.++(tradsAndSyns.flatten)
           
-          Ok(html.setupViews.keywordsSummary(keywordsForm.fill(AllTranslations(submitThis))))
+          Ok(views.html.setupViews.keywordsSummary(keywordsForm.fill(AllTranslations(submitThis))))
 
       })
   }

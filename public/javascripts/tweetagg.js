@@ -115,8 +115,8 @@ div.addEventListener("mousedown", function(){
     rect.setAttribute("width", 5);
     rect.setAttribute("height", 5);
     //fix the initial position of the rectangle, drawing is only possible top-down, left-right
-    start.x =  window.event.clientX;
-    start.y = window.event.clientY;
+    start.x =  window.event.clientX - 10; // Addition of some corrector factors (due to the design)
+    start.y = window.event.clientY - 150; // Addition of some corrector factors (due to the design)
     g.setAttribute("transform", "translate(" + start.x + "," + start.y + ")"); //I don't know why we need this
     newRegionFlag = 1;
   }
@@ -158,12 +158,10 @@ div.addEventListener("mouseup", function(){
       var bottomRight = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+end.y+'}'))
      // var bottomLeft = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+start.y+'}'))
       coordinates_array.push([topLeft,bottomRight]);
-      var jCoordinates = JSON.stringify(coordinates_array)
       //coordinates.value = jCoordinates
-      document.getElementById("coordinates").value = jCoordinates
+      document.getElementById("coordinates").value = JSON.stringify(coordinates_array)
       //console.log(coordinates.value)
       //debug(coordinates.value)
-      alert(jCoordinates)
       addNewRegion(topLeft, bottomRight)
       map.add(interact) //put back move and resize focus on the map
       
@@ -246,7 +244,7 @@ function reset() {
      regions[0].parentNode.removeChild(regions[0]);
   }
   coordinates_array = [];
-  coordinates.value = "";
+  document.getElementById("coordinates").value = "";
 }
 /*var testArray = []
 /*function debug() {
