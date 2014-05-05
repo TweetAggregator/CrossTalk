@@ -60,5 +60,7 @@ object GatheringControllerSpec extends Specification with Mockito {
     }
   }
 
+  //TODO: test timeouts
   //TODO: test with too many keywords
+  //TODO: test double start
 }
