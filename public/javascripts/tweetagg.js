@@ -9,11 +9,6 @@ var interact = po.interact(); //create separate object for the focus so we can r
 map.add(interact); //enable move and zoom events
 map.on("resize", update);
 map.on("move", update);
-var center = new Object;
-center.lat = 46.5198
-center.lon = 6.6335
-//map.center(center)
-//map.zoom(21)
 
 //map tiles initialization
 map.add(po.image()
@@ -44,44 +39,48 @@ function pxToGeo(json) {
  * build the initial map with a corresponding view as well as the selected regions if any
  */
 var VC;
-var ZL; 
+var MZ;
 function reload(viewCenter, mapZoom, regionList) {
 	if (!map) {
 		console.log("update() busy wait loop")
-		setTimeout(function() {reload(viewCenter, zoom, regionList) }, 10) //busy wait while map is not yet loaded
+		setTimeout(function() {
+			reload(viewCenter, zoom, regionList)
+		}, 10) //busy wait while map is not yet loaded
 	}
-	console.log("reload:")
-	console.log(viewCenter) //JSON.toJSON does NOT work!
-	console.log("zoom:"+mapZoom)
-	console.log("to be added:"+regionList)
-	addNewRegions(regionList)
-	console.log("XXX before")
-	VC = viewCenter
-	ZL = zoomLevel
-	var x = map.center(viewCenter)
-	console.log("XXX middle")
-	var y = map.zoom(mapZoom);
-	console.log("XXX after")
+	for (index = 0; index < regionList.length; ++index) {
+		var elem = regionList[index]
+		addNewSubRegion(elem[0], elem[1], Math.random()) //save the regions
+	}
+	console.log("XXX beginnn")
+	map.center(viewCenter);
+	console.log("XXX middlee")
+	map.zoom(mapZoom); //TODO: this line is not executed as the previous line triggers an eventlistener
+	console.log("XXX afterrr")
+	return 5;
 }
+
 /*
  *  calculates and stores the geographical information corresponding to the current view of the map
  */
 var topCorner;
 var bottomCorner;
 function update() {
-	//console.log(map.center())
-	//console.log(map.zoom())
-	if (!map || !document.getElementById("viewCenter") || !document.getElementById("zoomLevel")) {
+	if  (!map || !document.getElementById("viewCenter") || !document.getElementById("zoomLevel")) {
 		console.log("update() busy wait loop")
-		setTimeout(function() {update() }, 10) //busy wait while map is not yet loaded
+		setTimeout(function() {update() }, 100) //busy wait while map is not yet loaded
 	}
-	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
+	var elem;
+	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}')); //TODO: pass to Play!
 	bottomCorner = pxToGeo(map.size());
-	console.log(topCorner)
-	console.log(bottomCorner)
-	console.log(map.center())
-	document.getElementById("viewCenter").value = JSON.stringify(map.center())
-	document.getElementById("zoomLevel").value = map.zoom()
+	elem = document.getElementById("viewBoundaries")
+	if (elem)
+		elem.value = JSON.stringify([topCorner, bottomCorner])
+	elem = document.getElementById("viewCenter")
+	if (elem)
+		elem.value = JSON.stringify(map.center())
+	elem = document.getElementById("zoomLevel")
+	if (elem)
+		elem.value = map.zoom()	
 }
 
 /*
@@ -248,8 +247,8 @@ function reset() {
   coordinates_array = [];
   coordinates.value = "";
 }
-/*var testArray = []
-/*function debug() {
+var testArray = []
+function debug() {
   testArray.push([3.33,5.22]);
   testArray.push([4.63,73.12]);
   var jsonTestArray = JSON.stringify(testArray);
@@ -281,4 +280,4 @@ function reset() {
 }
 
 
-debug(); //only used for debugging */
+//debug(); //only used for debugging

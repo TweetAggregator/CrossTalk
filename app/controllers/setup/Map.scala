@@ -20,7 +20,7 @@ object Map extends Controller {
   def index = Action {
     val dummyActor = ActorSystem().actorOf(Props(new DummyActor()))
     dummyActor ! "Hello World !"
-    Ok(views.html.map("{lat: 46.5198, lon: 6.6335}", 12, "[]", "[]"))
+    Ok(views.html.map("""{"lon": 6.6335, "lat": 46.5198}""", 12, "[]", "[]"))
   }
 
   /**
