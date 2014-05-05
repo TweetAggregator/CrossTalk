@@ -7,7 +7,7 @@ GET    /                  controllers.Application.index
 
 # Map selection
 GET    /map               controllers.setup.Map.index
-POST   /map               controllers.setup.Map.submit
+POST   /mapresult               controllers.setup.Map.submit
 
 # General setup 
 GET    /viewParams        controllers.setup.General.viewParams
