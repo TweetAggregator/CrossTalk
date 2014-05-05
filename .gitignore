@@ -1,6 +1,6 @@
 *.class
 *.log
-tweets/*
+tweets/counter*
 
 # sbt specific
 dist/*
