@@ -1,4 +1,4 @@
-@(viewCenter: String, mapZoom: Double, regionList: String)
+@(viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String)
 
 <!DOCTYPE html>
 <html>
@@ -33,7 +33,7 @@
         <span>
           <button onclick="drawRegion()">new region</button>
           <button onclick="reset()">reset</button>
-          @helper.form(action = routes.Application.submit){
+          @helper.form(action = setup.routes.Map.submit){
           	<input type="hidden" name="viewCenter" id="viewCenter" value="">
           	<input type="hidden" name="zoomLevel" id="zoomLevel" value="">
           	<input type="hidden" name="coordinates" id="coordinates" value=""> <!-- value is updated in tweetagg.js each time a region is drawn -->

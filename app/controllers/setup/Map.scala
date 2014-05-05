@@ -20,7 +20,7 @@ object Map extends Controller {
   def index = Action {
     val dummyActor = ActorSystem().actorOf(Props(new DummyActor()))
     dummyActor ! "Hello World !"
-    Ok(views.html.map("{lat: 46.5198, lon: 6.6335}", 12, "[]")) //TODO: how to pass a list
+    Ok(views.html.map("{lat: 46.5198, lon: 6.6335}", 12, "[]", "[]"))
   }
 
   /**
@@ -40,16 +40,12 @@ object Map extends Controller {
     val regions = Json.parse(reqData.get("coordinates").head).as[List[List[JsValue]]].map(_.map(x => ((x \ "lat").toString.toDouble, (x \ "lon").toString.toDouble)))
     println(regions)
     regions.foreach(x => println("hi there: "+x))
-    println(JsObject("lat" -> JsNumber(viewCenter._1) :: "lon" -> JsNumber(viewCenter._2) :: Nil).toString)
-    println(Json.stringify(JsObject("lat" -> JsNumber(viewCenter._1) :: "lon" -> JsNumber(viewCenter._2) :: Nil)))
-    println(JsNumber(zoomLevel))
-    println(Json.stringify(JsNumber(zoomLevel)))
-    println(JsArray(regions.map(region => JsArray(region.map(corner => JsObject("lat" -> JsNumber(corner._1) :: "lon" -> JsNumber(corner._2) :: Nil))))).toString)
-    println(Json.stringify(JsArray(regions.map(region => JsArray(region.map(corner => JsObject("lat" -> JsNumber(corner._1) :: "lon" -> JsNumber(corner._2) :: Nil)))))))
+    val mapCorners = (-122.62740484283447, 37.83336855193153) :: (-122.21155515716552, 37.696307947895036) :: Nil
     Ok(views.html.map(
         Json.stringify(JsObject("lat" -> JsNumber(viewCenter._1) :: "lon" -> JsNumber(viewCenter._2) :: Nil)),
         zoomLevel,
-        Json.stringify(JsArray(regions.map(region => JsArray(region.map(corner => JsObject("lat" -> JsNumber(corner._1) :: "lon" -> JsNumber(corner._2) :: Nil))))))
+        Json.stringify(JsArray(regions.map(region => JsArray(region.map(corner => JsObject("lat" -> JsNumber(corner._1) :: "lon" -> JsNumber(corner._2) :: Nil)))))),
+        Json.stringify(JsArray(Nil))
     ))
   }
 }

@@ -43,6 +43,8 @@ function pxToGeo(json) {
 /*
  * build the initial map with a corresponding view as well as the selected regions if any
  */
+var VC;
+var ZL; 
 function reload(viewCenter, mapZoom, regionList) {
 	if (!map) {
 		console.log("update() busy wait loop")
@@ -53,8 +55,13 @@ function reload(viewCenter, mapZoom, regionList) {
 	console.log("zoom:"+mapZoom)
 	console.log("to be added:"+regionList)
 	addNewRegions(regionList)
-	map.zoom(mapZoom)
-	map.center(viewCenter);
+	console.log("XXX before")
+	VC = viewCenter
+	ZL = zoomLevel
+	var x = map.center(viewCenter)
+	console.log("XXX middle")
+	var y = map.zoom(mapZoom);
+	console.log("XXX after")
 }
 /*
  *  calculates and stores the geographical information corresponding to the current view of the map
@@ -70,6 +77,8 @@ function update() {
 	}
 	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
 	bottomCorner = pxToGeo(map.size());
+	console.log(topCorner)
+	console.log(bottomCorner)
 	console.log(map.center())
 	document.getElementById("viewCenter").value = JSON.stringify(map.center())
 	document.getElementById("zoomLevel").value = map.zoom()

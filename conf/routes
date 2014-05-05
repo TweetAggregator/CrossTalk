@@ -4,7 +4,7 @@
 
 # Home page
 #TODO
-#GET    /                  controllers.Application.index 
+GET    /                  controllers.Application.index 
 
 # Map selection
 GET     /map               controllers.setup.Map.index

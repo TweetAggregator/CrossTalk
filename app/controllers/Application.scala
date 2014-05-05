@@ -13,6 +13,8 @@ import play.api.data.Forms._
  * Main controller (about / welcome page)
  */
 object Application extends Controller {
+  def index = designExample
+  
   def designExample = Action {
     Ok(views.html.test())
   }
