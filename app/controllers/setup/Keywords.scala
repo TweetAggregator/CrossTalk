@@ -87,7 +87,7 @@ verifying("Please add at least one keyword!",x => !x.keywords.isEmpty )
       for (keyword <- keywords) yield {
         for (language <- translationLanguages) yield {
         val (trads, syns) = jobs.Translator(startLanguage, List(targetLanguages.apply(language.toInt)._1), keyword)()
-          Translation( targetLanguages.apply(language.toInt)._2,keyword,(trads.flatten).map(_.as[String]) )
+          Translation( targetLanguages.apply(language.toInt)._2,keyword,(trads.flatten).map(_.as[String]).take(10) )
         }
       }
       submitThis= submitThis.++(tradsAndSyns.flatten)
