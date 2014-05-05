@@ -46,18 +46,19 @@ function pxToGeo(json) {
 var VC;
 var ZL; 
 function reload(viewCenter, mapZoom, regionList) {
-	if (!map) {
-		console.log("update() busy wait loop")
-		setTimeout(function() {reload(viewCenter, zoom, regionList) }, 10) //busy wait while map is not yet loaded
-	}
+
+
 	console.log("reload:")
 	console.log(viewCenter) //JSON.toJSON does NOT work!
 	console.log("zoom:"+mapZoom)
 	console.log("to be added:"+regionList)
+
+  var regionList = [];
 	addNewRegions(regionList)
 	console.log("XXX before")
+  console.log("vc :"+viewCenter)
 	VC = viewCenter
-	ZL = zoomLevel
+	ZL = mapZoom
 	var x = map.center(viewCenter)
 	console.log("XXX middle")
 	var y = map.zoom(mapZoom);
@@ -71,17 +72,15 @@ var bottomCorner;
 function update() {
 	//console.log(map.center())
 	//console.log(map.zoom())
-	if (!map || !document.getElementById("viewCenter") || !document.getElementById("zoomLevel")) {
-		console.log("update() busy wait loop")
-		setTimeout(function() {update() }, 10) //busy wait while map is not yet loaded
-	}
+
 	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
 	bottomCorner = pxToGeo(map.size());
 	console.log(topCorner)
 	console.log(bottomCorner)
 	console.log(map.center())
-	document.getElementById("viewCenter").value = JSON.stringify(map.center())
-	document.getElementById("zoomLevel").value = map.zoom()
+
+	//document.getElementById("viewCenter").value = JSON.stringify(map.center())
+	//document.getElementById("zoomLevel").value = map.zoom()
 }
 
 /*

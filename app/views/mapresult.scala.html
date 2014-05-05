@@ -15,10 +15,14 @@
   <body>
     <div>
       <div id="map" style="height:85%;float:left;width:85%;">
-        <script type="text/javascript" src="@routes.Assets.at("javascripts/mapresult.js")"></script>
+        <script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
         
         <script>
+        console.log("MR: "+@Html(viewCenter))
+        console.log("MR: "+@mapZoom)
+		console.log("MR: "+@Html(regions))
         reload(@Html(viewCenter), @mapZoom, @Html(regions))
+
         </script>
         
         <span id="copy">

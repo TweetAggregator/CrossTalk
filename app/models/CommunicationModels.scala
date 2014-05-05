@@ -15,6 +15,7 @@ case object ReportCount
 case object StartGeo
 case object Collect
 case object Opacities
+case object Done
 
 /* Messages for communication with the TweetManager, the TweetSearcher and TweetStreamer */
 

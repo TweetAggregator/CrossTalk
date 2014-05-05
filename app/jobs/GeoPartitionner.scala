@@ -1,6 +1,10 @@
 package jobs
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.pattern.ask
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 import models.GeoSquare
 import TweetManager._
 import models._
@@ -28,7 +32,8 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
 
   def receive = {  
     case StartGeo =>
-      TweetManagerRef ! AddQueries(queries zip listeners)
+      val resp = TweetManagerRef.?(AddQueries(queries zip listeners))(8 seconds)
+      resp.onComplete(_ => sender ! Done)
     case Winner => 
       println("winner is: "+results.maxBy(_._2))  
     case Collect => 

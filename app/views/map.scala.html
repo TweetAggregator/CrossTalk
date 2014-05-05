@@ -36,6 +36,7 @@
           @helper.form(action = setup.routes.Map.submit){
           	<input type="hidden" name="viewCenter" id="viewCenter" value="">
           	<input type="hidden" name="zoomLevel" id="zoomLevel" value="">
+          	<input type="hidden" name="viewBoundaries" id="viewBoundaries" value="">
           	<input type="hidden" name="coordinates" id="coordinates" value=""> <!-- value is updated in tweetagg.js each time a region is drawn -->
           	<button>Launch</button>
           }

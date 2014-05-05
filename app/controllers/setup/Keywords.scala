@@ -56,7 +56,6 @@ object Keywords extends Controller {
 
     initialInputForm.bindFromRequest.fold({ formWithErrors => BadRequest(views.html.setupViews.keywordsForm(initialInputForm))},{
         resultForm =>
-          println(resultForm)
 
           val keywords = resultForm.keywords
           val translationLanguages = resultForm.languages

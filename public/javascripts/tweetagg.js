@@ -9,11 +9,10 @@ var interact = po.interact(); //create separate object for the focus so we can r
 map.add(interact); //enable move and zoom events
 map.on("resize", update);
 map.on("move", update);
+
 var center = new Object;
 center.lat = -122.5198
 center.lon = 37.6335
-//map.center(center)
-//map.zoom(21)
 
 //map tiles initialization
 map.add(po.image()
@@ -24,7 +23,8 @@ map.add(po.image()
 
 // +/- zoom buttons on map
 map.add(po.compass()
-    .pan("none"));
+    .pan("none")
+);
 
 function debug(object) {
 	console.log(JSON.stringify(object));//, null, 4));
@@ -32,10 +32,10 @@ function debug(object) {
 
 var coordinates_array = [];
 
-/* 
-  converts {"x": screenCoordX, "y": screenCoordY}
-  to {"lat": geoLatitude, "lon": geoLongitude}
-*/
+/**
+ * converts {"x": screenCoordX, "y": screenCoordY}
+ * to {"lat": geoLatitude, "lon": geoLongitude}
+ */
 function pxToGeo(json) {
   return map.pointLocation(json);
 }
@@ -44,44 +44,47 @@ function pxToGeo(json) {
  * build the initial map with a corresponding view as well as the selected regions if any
  */
 var VC;
-var ZL; 
+var MZ;
 function reload(viewCenter, mapZoom, regionList) {
+	console.log("reload")
 	if (!map) {
 		console.log("update() busy wait loop")
-		setTimeout(function() {reload(viewCenter, zoom, regionList) }, 10) //busy wait while map is not yet loaded
+		setTimeout(function() {
+			reload(viewCenter, zoom, regionList)
+		}, 10) //busy wait while map is not yet loaded
 	}
-	console.log("reload:")
-	console.log(viewCenter) //JSON.toJSON does NOT work!
-	console.log("zoom:"+mapZoom)
-	console.log("to be added:"+regionList)
-	addNewRegions(regionList)
-	console.log("XXX before")
-	VC = viewCenter
-	ZL = mapZoom
-	var x = map.center(viewCenter)
-	console.log("XXX middle")
-	var y = map.zoom(mapZoom);
-	console.log("XXX after")
+	console.log("after reload check")
+	console.log("regionList: "+JSON.stringify(regionList))
+	for (index = 0; index < regionList.length; ++index) {
+		var elem = regionList[index]
+		addNewSubRegion(elem[0], elem[1], Math.random()) //save the regions
+	}
+	map.center(viewCenter);
+	map.zoom(mapZoom); //TODO: this line is not executed as the previous line triggers an eventlistener
 }
-/*
+
+/**
  *  calculates and stores the geographical information corresponding to the current view of the map
  */
 var topCorner;
 var bottomCorner;
 function update() {
-	//console.log(map.center())
-	//console.log(map.zoom())
-	if (!map || !document.getElementById("viewCenter") || !document.getElementById("zoomLevel")) {
+	if  (!map || !document.getElementById("viewCenter") || !document.getElementById("zoomLevel")) {
 		console.log("update() busy wait loop")
-		setTimeout(function() {update() }, 10) //busy wait while map is not yet loaded
+		setTimeout(function() {update() }, 100) //busy wait while map is not yet loaded
 	}
-	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
+	var elem;
+	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}')); //TODO: pass to Play!
 	bottomCorner = pxToGeo(map.size());
-	console.log(topCorner)
-	console.log(bottomCorner)
-	console.log(map.center())
-	document.getElementById("viewCenter").value = JSON.stringify(map.center())
-	document.getElementById("zoomLevel").value = map.zoom()
+	elem = document.getElementById("viewBoundaries")
+	if (elem)
+		elem.value = JSON.stringify([topCorner, bottomCorner])
+	elem = document.getElementById("viewCenter")
+	if (elem)
+		elem.value = JSON.stringify(map.center())
+	elem = document.getElementById("zoomLevel")
+	if (elem)
+		elem.value = map.zoom()	
 }
 
 /*
@@ -154,9 +157,7 @@ div.addEventListener("mouseup", function(){
       end.x = start.x+parseInt(rect.getAttribute("width"));
       end.y = start.y+parseInt(rect.getAttribute("height"));
       var topLeft = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+start.y+'}'))
-     // var topRight = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+end.y+'}'))
       var bottomRight = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+end.y+'}'))
-     // var bottomLeft = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+start.y+'}'))
       coordinates_array.push([topLeft,bottomRight]);
       //coordinates.value = jCoordinates
       document.getElementById("coordinates").value = JSON.stringify(coordinates_array)
@@ -183,6 +184,7 @@ function addNewRegion(topLeft, bottomRight) {
 
 function addNewRegions(regionList) {
 	var i = 0;
+  //alert(regionList.length)
 	while (i < regionList.length) {
 		addNewRegion(regionList[i][0], regionList[i][1])
 		i++;
@@ -223,10 +225,11 @@ function showCircles(listOfList) {
  * still have to figure out how to do this is needed
  */ 
 function addCircle(geoCenter, radius) {
+	
 }
 
 /*
- * NOT FUNCTIONING YET -> IS IT NEEDED
+ * NOT FUNCTIONING YET -> IS IT NEEDED?
  * function to remove a region when it is clicked
  * I think the map layer intercept all clicks...
  */
@@ -246,8 +249,9 @@ function reset() {
   coordinates_array = [];
   document.getElementById("coordinates").value = "";
 }
+
 /*var testArray = []
-/*function debug() {
+function debug() {
   testArray.push([3.33,5.22]);
   testArray.push([4.63,73.12]);
   var jsonTestArray = JSON.stringify(testArray);
@@ -276,7 +280,5 @@ function reset() {
   addNewRegion(x, y);
   // Generate a form
         $("#myform").dform(jsonTestArray);
-}
-
-
-debug(); //only used for debugging */
+}*/
+//debug(); //only used for debugging
