@@ -10,8 +10,8 @@ map.add(interact); //enable move and zoom events
 map.on("resize", update);
 map.on("move", update);
 var center = new Object;
-center.lat = -122.5198
-center.lon = 37.6335
+center.lat = 55.9351
+center.lon = 6.6335
 //map.center(center)
 //map.zoom(21)
 
@@ -57,7 +57,7 @@ function reload(viewCenter, mapZoom, regionList) {
 	addNewRegions(regionList)
 	console.log("XXX before")
 	VC = viewCenter
-	ZL = mapZoom
+	ZL = zoomLevel
 	var x = map.center(viewCenter)
 	console.log("XXX middle")
 	var y = map.zoom(mapZoom);
