@@ -27,8 +27,9 @@ object Map extends Controller {
     val reqData = request.body.asFormUrlEncoded
     println("Data "+reqData)
      val scalaCoordinatesList = List[(Double,Double, Double, Double)]();
-    val jsonCenter = reqData.get("viewCenter").head
-    val viewCenter =  Some(Json.parse(reqData.get("viewCenter").head)).map(x => ((x \ "lat").toString.toDouble, (x \ "lon").toString.toDouble)).head
+    //val jsonCenter = reqData.get("viewCenter").head
+    //val viewCenter =  Some(Json.parse(reqData.get("viewCenter").head)).map(x => ((x \ "lat").toString.toDouble, (x \ "lon").toString.toDouble)).head
+    val viewCenter = reqData.get("viewCenter").head;
     println("View Center " + viewCenter)
     
     val zoomLevel = reqData.get("zoomLevel").head.toDouble

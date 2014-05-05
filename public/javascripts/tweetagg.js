@@ -54,6 +54,7 @@ function reload(viewCenter, mapZoom, regionList) {
 	console.log(viewCenter) //JSON.toJSON does NOT work!
 	console.log("zoom:"+mapZoom)
 	console.log("to be added:"+regionList)
+  var regionList = [];
 	addNewRegions(regionList)
 	console.log("XXX before")
 	VC = viewCenter
@@ -185,6 +186,7 @@ function addNewRegion(topLeft, bottomRight) {
 
 function addNewRegions(regionList) {
 	var i = 0;
+  alert(regionList.length)
 	while (i < regionList.length) {
 		addNewRegion(regionList[i][0], regionList[i][1])
 		i++;
