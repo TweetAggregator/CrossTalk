@@ -39,7 +39,8 @@ trait GatheringController { this: Controller =>
 
   type Square = (Double, Double, Double, Double)
   // For each square, three geoparts: keyword1, keyword2 and keywor1&2
-  val geoParts: Map[Square, ((String, ActorRef), (String, ActorRef), ActorRef)] = Map()
+  val geoParts: Map[Square, (ActorRef, ActorRef, ActorRef)] = Map()
+  var keys: Option[(String, String)] = None
   val maxGranularity = 20
   val minSide = 20.0 //TODO: choose a reasonable min side
 
@@ -65,15 +66,14 @@ trait GatheringController { this: Controller =>
     // Keywords and translations: list of tuple (initialKeyword, translations&synonyms)
     val keywordsListOption = Cache.getAs[List[(String, List[String])]]("keywords")
 
-    (squaresOption, keywordsListOption) match {
-      case (Some(squares), Some((k1, trs1)::(k2, trs2)::Nil)) =>
+    (squaresOption, keywordsListOption, keys) match {
+      case (Some(squares), Some((k1, trs1)::(k2, trs2)::Nil), None) =>
         try {
+          keys = Some((k1, k2))
           val finished: MutableList[Future[_]] = MutableList()
           val keys1 = k1::trs1
           val keys2 = k2::trs2
           var keys3 = for(key1 <- keys1; key2 <- keys2) yield (s"${key1} ${key2}") // Space means AND, concantenation means OR
-          // val keys1 = (k1::trs1).mkString(" ")
-          // val keys2 = (k2::trs2).mkString(" ")
           for (square <- squares) {
             val gps = (geoPart(square, keys1),
                        geoPart(square, keys2),
@@ -82,7 +82,7 @@ trait GatheringController { this: Controller =>
             finished += gps._1 ? StartGeo
             finished += gps._2 ? StartGeo
             finished += gps._3 ? StartGeo
-            geoParts += square -> ((k1, gps._1), (k2, gps._2), gps._3)
+            geoParts += square -> (gps._1, gps._2, gps._3)
           }
 
           finished.foreach(Await.ready(_, 10 seconds))
@@ -113,47 +113,41 @@ trait GatheringController { this: Controller =>
 
     val focussedOption = Cache.getAs[Square]("focussed")
 
-    focussedOption match {
-      case Some(focussed) =>
-        //TODO: clustering
+    (focussedOption, keys) match {
+      case (Some(focussed), Some((key1, key2))) =>
+        try {
+          //TODO: clustering
 
-        // Venn diagram
-        // nbSet: Int, sets: List[(Int, String, Int)], inters: List[(Int, Int), Int)]
-        // nbSet     , sets: List[(index, keyword, size)], inters: List[((index1, index2), size)]
-        val geoFocussed = GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4)
-        var sets: List[(Int, String, Int)] = Nil
-        var inters: List[((Int, Int), Int)] = Nil
-        geoParts.values.foreach(x => getInfo(x, sets, inters, geoFocussed))
-        val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
-        
-        Ok(views.html.venn(nbSet, sets, inters))
-        
-        //TODO: opacity
-        // viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String
-      case None => BadRequest
+          val geoFocussed = GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4)
+          
+          val geos1 = geoParts.values.map(_._1)
+          val geos2 = geoParts.values.map(_._2)
+          val geos3 = geoParts.values.map(_._3)
+
+          val fTweets1 =
+            geos1.map(a => (a ? TweetsFromSquare(geoFocussed)).mapTo[Long])
+          val fTweets2 =
+            geos2.map(a => (a ? TweetsFromSquare(geoFocussed)).mapTo[Long])
+          val fInterTweets =
+            geos3.map(a => (a ? TweetsFromSquare(geoFocussed)).mapTo[Long])
+
+          val counts1 = fTweets1.map(Await.result(_, 4 seconds))
+          val counts2 = fTweets2.map(Await.result(_, 4 seconds))
+          val interCounts = fInterTweets.map(Await.result(_, 4 seconds))
+
+          val sets =
+            List((0, key1, counts1.sum.toInt), (1, key2, counts2.sum.toInt))
+          val inters = List(((0, 1), interCounts.sum.toInt))
+          val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
+
+          Ok(views.html.venn(nbSet, sets, inters))
+          //TODO: opacity
+          // viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String
+        } catch {
+          case e: TimeoutException => InternalServerError
+        }
+      case _ => BadRequest
     }
-  }
-
-  object uniqueIndex{
-    private var x = 0
-    def next = x += 1
-  }
-  
-  def getInfo(tt: ((String, ActorRef), (String, ActorRef), ActorRef), sets: List[(Int, String, Int)], inters: List[((Int, Int), Int)], focussed: GeoSquare) = {
-    val f1 = (tt._1._2 ? TweetsFromSquare(focussed)).mapTo[Long]
-    val t1 = Await.result(f1, 4 seconds)
-    val s1 = (uniqueIndex.next, tt._1._1, t1)
-    s1::sets
-    
-    val f2 = (tt._2._2 ? TweetsFromSquare(focussed)).mapTo[Long]
-    val t2 = Await.result(f2, 4 seconds)
-    val s2 = (uniqueIndex.next, tt._2._1, t2)
-    s2::sets
-    
-    val f3 = (tt._3 ? TweetsFromSquare(focussed)).mapTo[Long]
-    val t3 = Await.result(f3, 4 seconds)
-    ( ((s1._1, s2._1), t3) )::inters
-    
   }
 
 }
