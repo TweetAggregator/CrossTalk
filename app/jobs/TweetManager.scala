@@ -74,12 +74,12 @@ object TweetManager {
         val twitterKeyCounter = MultiCounter(Math.ceil(queriesToStart.size.toDouble / nbTwitterKeys).toInt)
         
         /* Let's shuffle the list of query and split it for the searchers */
-        /*queriesToStart.flatten.shuffle.split(nbSearcher) foreach { qurs =>
+        queriesToStart.flatten.shuffle.split(nbSearcher) foreach { qurs =>
           val searcherRef = context.actorOf(Props(new TweetSearcher(qurs, checkerRef, searchRate, twitterKeyCounter.incr)))
           searcherRef.scheduleOnce(startTime, TimeUnit.SECONDS, Ping) /* Schedule it once. It will then schedule itself. */
           actorRefs :+= searcherRef
           startTime += period
-        }*/
+        }
         
         /* We start an instance of the streamer for each of the squares of search*/
         queriesToStart foreach { qurs =>
