@@ -14,6 +14,7 @@ import akka.actor.Actor
 import akka.actor.Props
 import akka.actor.ActorSystem
 import akka.pattern.ask
+import akka.util.Timeout
 import play.libs.Akka
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
@@ -33,6 +34,8 @@ import TweetManager._
 trait GatheringController { this: Controller =>
   val actors: GatheringActors
   import actors._
+
+  implicit def defaultTimeout: Timeout = 4 seconds
 
   type Square = (Double, Double, Double, Double)
   // For each square, three geoparts: keyword1, keyword2 and keywor1&2
@@ -55,7 +58,6 @@ trait GatheringController { this: Controller =>
   }
   
   def start() = {
-    //TODO: choose grid size
     //TODO: error handling
     //  - Don't start twice
 
@@ -77,9 +79,9 @@ trait GatheringController { this: Controller =>
                        geoPart(square, keys2),
                        // geoPart(square, List(keys1, keys2)))
                       geoPart(square, keys3))
-            finished += gps._1.?(StartGeo)(1 seconds)
-            finished += gps._2.?(StartGeo)(1 seconds)
-            finished += gps._3.?(StartGeo)(1 seconds)
+            finished += gps._1 ? StartGeo
+            finished += gps._2 ? StartGeo
+            finished += gps._3 ? StartGeo
             geoParts += square -> ((k1, gps._1), (k2, gps._2), gps._3)
           }
 
@@ -105,22 +107,31 @@ trait GatheringController { this: Controller =>
   }
 
   def computeDisplayData = {
-    //TODO: clustering
+    //TODO: get focussed square from Cache
+    //  - get Square from Cache
+    //  - filtrer les tweets
 
-    // Venn diagram
-    // nbSet: Int, sets: List[(Int, String, Int)], inters: List[(Int, Int), Int)]
-    // nbSet     , sets: List[(index, keyword, size)], inters: List[((index1, index2), size)]
-    var sets: List[(Int, String, Int)] = Nil
-    var inters: List[((Int, Int), Int)] = Nil
-    geoParts.foreach(x => getInfo(x._2, sets, inters))
-    val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
-    
-    Ok(views.html.venn(nbSet, sets, inters))
-    
-    //TODO: opacity
-    // viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String
+    val focussedOption = Cache.getAs[Square]("focussed")
 
-    
+    focussedOption match {
+      case Some(focussed) =>
+        //TODO: clustering
+
+        // Venn diagram
+        // nbSet: Int, sets: List[(Int, String, Int)], inters: List[(Int, Int), Int)]
+        // nbSet     , sets: List[(index, keyword, size)], inters: List[((index1, index2), size)]
+        val geoFocussed = GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4)
+        var sets: List[(Int, String, Int)] = Nil
+        var inters: List[((Int, Int), Int)] = Nil
+        geoParts.values.foreach(x => getInfo(x, sets, inters, geoFocussed))
+        val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
+        
+        Ok(views.html.venn(nbSet, sets, inters))
+        
+        //TODO: opacity
+        // viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String
+      case None => BadRequest
+    }
   }
 
   object uniqueIndex{
@@ -128,19 +139,19 @@ trait GatheringController { this: Controller =>
     def next = x += 1
   }
   
-  def getInfo(tt: ((String, ActorRef), (String, ActorRef), ActorRef), sets: List[(Int, String, Int)], inters: List[((Int, Int), Int)]) = {
-    val f1 = (tt._1._2.?(TotalTweets)(1 seconds)).mapTo[Long]
-    val t1 = Await.result(f1, 1 seconds)
+  def getInfo(tt: ((String, ActorRef), (String, ActorRef), ActorRef), sets: List[(Int, String, Int)], inters: List[((Int, Int), Int)], focussed: GeoSquare) = {
+    val f1 = (tt._1._2 ? TweetsFromSquare(focussed)).mapTo[Long]
+    val t1 = Await.result(f1, 4 seconds)
     val s1 = (uniqueIndex.next, tt._1._1, t1)
     s1::sets
     
-    val f2 = tt._2._2.? (TotalTweets)(1 seconds).mapTo[Long]
-    val t2 = Await.result(f2, 1 seconds)
+    val f2 = (tt._2._2 ? TweetsFromSquare(focussed)).mapTo[Long]
+    val t2 = Await.result(f2, 4 seconds)
     val s2 = (uniqueIndex.next, tt._2._1, t2)
     s2::sets
     
-    val f3 = tt._3.? (TotalTweets)(1 seconds).mapTo[Long]
-    val t3 = Await.result(f3, 1 seconds)
+    val f3 = (tt._3 ? TweetsFromSquare(focussed)).mapTo[Long]
+    val t3 = Await.result(f3, 4 seconds)
     ( ((s1._1, s2._1), t3) )::inters
     
   }
