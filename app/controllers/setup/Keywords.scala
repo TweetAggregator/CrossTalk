@@ -43,7 +43,8 @@ object Keywords extends Controller {
    */
   def finalSubmission = Action { implicit request =>
     val resultForm = keywordsForm.bindFromRequest.get
-
+    println("What we got" + resultForm)
+    println(resultForm.output)
     Cache.set("keywords", resultForm.output)
 
     Redirect(routes.General.viewParams)
@@ -66,13 +67,19 @@ object Keywords extends Controller {
           var submitThis = for (keyword <- keywords) yield {
             Translation("Ignore", keyword, List("Ignore"))
           }
-          val tradsAndSyns =
+
+          val tradsAndSyns = (
             for (keyword <- keywords) yield {
               for (language <- translationLanguages) yield {
                 val (trads, syns) = jobs.Translator(startLanguage, List(targetLanguages.apply(language.toInt)._1), keyword)()
                 Translation(targetLanguages.apply(language.toInt)._2, keyword, (trads.flatten).map(_.as[String]).take(10))
-              }
-            }
+             }
+            }).filter(x => x!= List())
+
+          if(tradsAndSyns.size > 0){
+             submitThis = submitThis.++(List(Translation("Seperator","",List(""))))
+          }
+          
           submitThis = submitThis.++(tradsAndSyns.flatten)
           
           Ok(views.html.setupViews.keywordsSummary(keywordsForm.fill(AllTranslations(submitThis))))

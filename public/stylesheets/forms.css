@@ -16,8 +16,21 @@
   padding: 10px;
   border: 1px solid #CFCFCF !important;
 }
+
+.initbtn {
+  padding: 10px;
+  border: 1px solid #CFCFCF !important;
+  display: inline-flex;
+  
+}
 .keyword {
   float: left;
   width:200px;
 }
-.
+.keyword2 {
+  float: center;
+  width: 100px;
+}
+.btnList {
+  display: inline-flex;
+}
