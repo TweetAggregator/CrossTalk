@@ -8,8 +8,9 @@
 
 @keywordField(field: Field, className: String = "keyword") = {
     @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
+    	KAKAKAKAKA
         <input type="text" name="@name" value="@value"> 
-        <a class="removeKeyword btn">Remove</a>
+        <a class="removeKeyword initbtn" align="center">Remove</a>
     }
 }
 
@@ -23,8 +24,8 @@
             @keywordField(initialInputForm("keywords[x]"), className = "templ_keyword")
             
             <div class="clearfix">
-                <div class="input">
-                    <a class="addKeyword btn" id="addKeyword">Add keyword</a>
+                <div class="input" align="left">
+                    <a class="addKeyword initbtn" id="addKeyword">Add keyword</a>
                 </div>
             </div>
             
@@ -72,7 +73,7 @@
 						var keywords = $(this).parents('.keywords')
 						$(this).parents('.keyword').remove()
 						renumber(keywords)
-						document.getElementById("addKeyword").style.display="initial";
+						document.getElementById("addKeyword").style.display="run-in";
 					})
 
 					$('.addKeyword').live('click', function(e) {
@@ -82,7 +83,7 @@
 								renumber(keywords)
 								keyCount++;
 								if(keyCount > 1) {
-									document.getElementById("addKeyword").style.display="none";
+									document.getElementById("addKeyword").style.display="run-in";
 								}
 							})
 
