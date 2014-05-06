@@ -60,6 +60,8 @@ object GatheringControllerSpec extends Specification with Mockito {
 
       controller.start() must be (controller.Ok)
 
+      Thread.sleep(20000)
+
       controller.computeDisplayData must be (controller.Ok)
 
       Thread.sleep(8000)

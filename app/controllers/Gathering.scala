@@ -20,6 +20,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import scala.concurrent.Future
+import scala.reflect.ClassTag
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
@@ -56,6 +57,11 @@ trait GatheringController { this: Controller =>
     val rows = granularity(square._4, square._2)
     val cols = granularity(square._3, square._1)
     Props(geoPartitioner(keys, geoSquare, rows, cols))
+  }
+
+  def squareFromGeoMap[T](geoMaps: List[Map[GeoSquare, T]]) = {
+    val flattenedMap = geoMaps.foldLeft(Map[GeoSquare, T]())(_ ++ _)
+    for ((k, v) <- flattenedMap) yield ((k.long1, k.lat1, k.long2, k.lat2), v)
   }
   
   def start() = {
@@ -124,25 +130,28 @@ trait GatheringController { this: Controller =>
           val geos2 = geoParts.values.map(_._2)
           val geos3 = geoParts.values.map(_._3)
 
-          val fTweets1 =
-            geos1.map(a => (a ? TweetsFromSquare(geoFocussed)).mapTo[Long])
-          val fTweets2 =
-            geos2.map(a => (a ? TweetsFromSquare(geoFocussed)).mapTo[Long])
+          askGeos(geos1, Collect)
+          askGeos(geos2, Collect)
+          askGeos(geos3, Collect)
+
           val fInterTweets =
             geos3.map(a => (a ? TweetsFromSquare(geoFocussed)).mapTo[Long])
 
-          val counts1 = fTweets1.map(Await.result(_, 4 seconds))
-          val counts2 = fTweets2.map(Await.result(_, 4 seconds))
-          val interCounts = fInterTweets.map(Await.result(_, 4 seconds))
+          val counts1 = askGeos[Long](geos1, TweetsFromSquare(geoFocussed))
+          val counts2 = askGeos[Long](geos2, TweetsFromSquare(geoFocussed))
+          val interCounts = askGeos[Long](geos3, TweetsFromSquare(geoFocussed))
 
           val sets =
             List((0, key1, counts1.sum.toInt), (1, key2, counts2.sum.toInt))
           val inters = List(((0, 1), interCounts.sum.toInt))
           val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
 
+          val opac1 = squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos1, Opacities))
+          val opac2 = squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos2, Opacities))
+          val interOpac =
+            squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos3, Opacities))
+
           Ok(views.html.venn(nbSet, sets, inters))
-          //TODO: opacity
-          // viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String
         } catch {
           case e: TimeoutException => InternalServerError
         }
@@ -150,6 +159,10 @@ trait GatheringController { this: Controller =>
     }
   }
 
+  def askGeos[T:ClassTag](geos: Iterable[ActorRef], msg: Any): List[T] = {
+   val futures: List[Future[T]] = geos.map(a => (a ? msg).mapTo[T]).toList
+   futures.map(Await.result(_, 4 seconds))
+  }
 }
 
 abstract class GatheringActors {
