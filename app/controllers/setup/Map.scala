@@ -63,24 +63,24 @@ object Map extends Controller {
   def submit = Action { implicit request =>
     val reqData = request.body.asFormUrlEncoded
     println("Data " + reqData)
-    val scalaCoordinatesList = List[(Double, Double, Double, Double)]();
+    //val scalaCoordinatesList = List[(Double, Double, Double, Double)]();
     val jsonCenter = reqData.get("viewCenter").head
-    val viewCenter =  Some(Json.parse(reqData.get("viewCenter").head)).map(x => ((x \ "lat").toString.toDouble, (x \ "lon").toString.toDouble)).head
-    //val viewCenter = reqData.get("viewCenter").head;
-    println("View Center " + viewCenter)
-
+    val viewCenter =  Some(Json.parse(reqData.get("viewCenter").head)).map(x => ((x \ "lon").toString.toDouble, (x \ "lat").toString.toDouble)).head
     val zoomLevel = reqData.get("zoomLevel").head.toDouble
-    println("zoooooom: " + zoomLevel)
-    val regions = Json.parse(reqData.get("coordinates").head).as[List[List[JsValue]]].map(_.map(x => ((x \ "lat").toString.toDouble, (x \ "lon").toString.toDouble)))
-    println("regions: "+regions)
+    val testRegions = Json.parse(reqData.get("coordinates").head).as[List[List[JsValue]]]
+    	.map(_.map(x => ((x \ "lon").toString.toDouble, (x \ "lat").toString.toDouble)))
+    		.map(x => ((x(0)._1, x(0)._2, x(1)._1, x(1)._2), scala.util.Random.nextFloat))
     //TODO: il faut ces vauleurs Scala pour le passer à l'autre controlleur!!
     
     //val mapCorners = (-122.62740484283447, 37.83336855193153) :: (-122.21155515716552, 37.696307947895036) :: Nil
     Ok(views.html.mapresult(
-        Json.stringify(JsObject("lat" -> JsNumber(viewCenter._1) :: "lon" -> JsNumber(viewCenter._2) :: Nil)),
+        viewCenter,
         zoomLevel,
-        Json.stringify(JsArray(regions.map(region => JsArray(region.map(corner => JsObject("lat" -> JsNumber(corner._1) :: "lon" -> JsNumber(corner._2) :: Nil)))))),
-        Json.stringify(JsArray(Nil))
+        testRegions,
+        
+        0,
+        Nil,
+        Nil
     ))
   }
 }

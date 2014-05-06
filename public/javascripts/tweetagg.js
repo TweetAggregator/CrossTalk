@@ -63,9 +63,12 @@ function showRegionIntesity(viewCenter, mapZoom, regionList) {
 			reload(viewCenter, zoom, regionList)
 		}, 10) //busy wait while map is not yet loaded
 	}
+	console.log("length:"+regionList.length)
 	for (index = 0; index < regionList.length; ++index) {
 		var elem = regionList[index]
-		addNewSubRegion(elem[0], elem[1], Math.random()) //save the regions
+		console.log("iter:"+JSON.stringify(elem))
+		if (elem)
+			addNewSubRegion(elem[0], elem[1], Math.random()) //save the regions
 	}
 	map.center(viewCenter);
 	map.zoom(mapZoom);
