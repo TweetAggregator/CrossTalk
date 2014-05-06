@@ -29,11 +29,8 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
   def containsGeo(long: Double, lat: Double): Boolean = (long >= long1 && long <= long2 && lat >= lat1 && lat <= lat2)
 
   def intersects(that: GeoSquare): Boolean = {
-    this.containsGeo(that.long1, that.lat1)
-    val thisPts = List((long1, lat1), (long1, lat2), (long2, lat1), (lat2, long2))
-    val thatPts = List((that.long1, that.lat1), (that.long1, that.lat2),
-                       (that.long2, that.lat1), (that.lat2, that.long2))
-    thatPts.exists(p => containsGeo(p._1, p._2)) || thisPts.exists(p => that.containsGeo(p._1, p._2)) 
+    !(this.long2 < that.long1 && this.long1 > that.long2
+      && this.lat2 > that.lat1 && this.lat1 < that.lat2)
   }
     
 }
