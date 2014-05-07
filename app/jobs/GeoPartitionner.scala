@@ -5,15 +5,12 @@ import akka.pattern.ask
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import models.GeoSquare
 import TweetManager._
 import models._
 
 class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: Int) extends Actor {
   /*Total Number of tweets*/
   var total = 0L
-  /*TODO play around with this to correct the threshold*/
-  val CORRECTOR: Double = 4
   /*Map holding the results*/
   var results: Map[GeoSquare, Long] = Map()
   /*List of all the queries to send*/
