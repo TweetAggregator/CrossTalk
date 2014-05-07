@@ -64,9 +64,17 @@ trait GatheringController { this: Controller =>
     for ((k, v) <- flattenedMap) yield ((k.long1, k.lat1, k.long2, k.lat2), v)
   }
   
-  def start() = {
+  def start() = Action {
     //TODO: error handling
     //  - Don't start twice
+    println("Gathering_Start_Action")
+
+      //TODO remove those cache writes
+      Cache.set("coordinates", List((-129.4, 20.0, -79.0, 50.6)))
+      Cache.set("keywords",
+                List(("Obama", List[String]()),
+                     ("Beer", List("biere", "pression"))))
+      Cache.set("focussed", (-109.4, 40.0, -79.0, 50.6))
 
     val squaresOption = Cache.getAs[List[Square]]("coordinates")
     // Keywords and translations: list of tuple (initialKeyword, translations&synonyms)
@@ -94,25 +102,29 @@ trait GatheringController { this: Controller =>
           finished.foreach(Await.ready(_, 10 seconds))
 
           tweetManagerRef ! Start
-          Ok
+          // Ok
+          println("Gathering_Start_View")
+          Ok(views.html.gathering())
         } catch {
-          case e: TimeoutException => InternalServerError
+          case e: TimeoutException => println("Gathering_Start_InternalServerError"); InternalServerError
         }
-      case _ => BadRequest
+      case _ => println("Gathering_Start_BadRequest"); BadRequest
     }
   }
 
-  def pause = {
+  def pause = Action {
     tweetManagerRef ! Pause
-    Ok
+    // Ok
+    Ok(views.html.gathering())
   }
 
-  def resume = {
+  def resume = Action {
     tweetManagerRef ! Resume
-    Ok
+    // Ok
+    Ok(views.html.gathering())
   }
 
-  def computeDisplayData = {
+  def computeDisplayData = Action {
     //TODO: get focussed square from Cache
     //  - get Square from Cache
     //  - filtrer les tweets
@@ -151,7 +163,11 @@ trait GatheringController { this: Controller =>
           val interOpac =
             squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos3, Opacities))
 
-          Ok(views.html.venn(nbSet, sets, inters))
+            // @(viewCenter: (Double, Double), mapZoom: Double, regionDensityList: List[((Double, Double, Double, Double), Float)], nbSet:Int, sets:List[(Int, String, Int)], inters:List[((Int, Int), Int)])
+          val viewCenter = (37.0, -122.0)
+          Ok(views.html.mapresult(viewCenter, 12, interOpac.toList, nbSet, sets, inters))
+
+          // Ok(views.html.venn(nbSet, sets, inters))
         } catch {
           case e: TimeoutException => InternalServerError
         }
