@@ -138,7 +138,6 @@ function showRegionIntesity(viewCenter, mapZoom, regionList) {
 var topCorner;
 var bottomCorner;
 function update() {
-	console.log("function update")
 	if  (!map) {
 		setTimeout(function() {update() }, 100) //busy wait while map is not yet loaded
 	}
