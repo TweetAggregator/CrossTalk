@@ -40,6 +40,64 @@ function pxToGeo(json) {
   return map.pointLocation(json);
 }
 
+/**
+  * Code Adrien
+  *
+  */
+ 
+ //Graphical environnement
+var graph = document.getElementById("map").getElementsByTagName("svg")[0].appendChild(po.svg("g"));
+
+//Translating function 
+  /*@brief: Transforms the raw data in pixels
+    @expects: [{x, y, r}, {x,y,r}...]
+  */
+function generateData(centers){
+  var res = [];
+  for(var i = 0; i < centers.length; i++) {
+    var e = centers[i], copy = e;
+    copy.y = copy.y + copy.r;
+    var toPix = geoToPx(e), nR = Math.abs(geoToPx(copy).y - toPix.y);
+    res.push(JSON.parse('{"x":'+toPix.x+', "y":'+toPix.y+', "r": '+nR+'}'));
+  }
+  return res;
+}
+
+//Functions to draw
+  //Expects input of the form {"x": _, "y": _, "r": _}
+function drawCircle(entry) {
+  var point = graph.appendChild(po.svg("circle")); 
+  point.setAttribute("cx", entry.x);
+  point.setAttribute("cy", entry.y);
+  point.setAttribute("r", entry.r);
+}
+
+  //Goes through the list of centers at one level
+function drawCenters(clusts){
+  for(var i = 0; i < clusts.length; i++) {
+    drawCircle(clusts[i]);
+  }
+}
+
+
+//Helper functions
+  //Translates pixels {"x": _, "y":_, "r":_ } into geolocation 
+  //using only the x and y attribute; Returns {"lat":_, "lon":_}
+function pxToGeo2(pt){
+  return map.pointLocation(JSON.parse('{"x":'+ pt.x+', "y": '+pt.y+'}'));
+}
+
+  //Translates geolocation {"lat": _, "lon":_} into pixel {"x":_, "y": _}
+function geoToPx(pt){
+  //Trouble parsing here
+  return map.locationPoint(JSON.parse('{ "lat":'+pt.x+', "lon": '+pt.y+'}'));
+}
+
+/**
+  * END Code Adrien
+  *
+  */
+
 /*
  * build the initial map with a corresponding view as well as the selected regions if any
  */
@@ -118,7 +176,7 @@ var idcount = 0; //if counter
 var newRegionFlag = 0; // enables to resize the rectangle 
 var start = new Object(); //x, y in pixles
 /*
- * When we start a click-and-drag action and the user slected to create a new region (i.e. flag)
+ * When we start a click-and-drag action and the user selected to create a new region (i.e. flag)
  * we start by creating a container on top of the map such that the user can see what he is doing 
  */
 div.addEventListener("mousedown", function(){
