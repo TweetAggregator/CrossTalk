@@ -260,36 +260,3 @@ function reset() {
   coordinates_array = [];
   document.getElementById("coordinates").value = "";
 }
-
-/*var testArray = []
-function debug() {
-  testArray.push([3.33,5.22]);
-  testArray.push([4.63,73.12]);
-  var jsonTestArray = JSON.stringify(testArray);
-  var x = pxToGeo(JSON.parse('{"x":'+100+', "y": '+100+'}'));
-  var y = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+500+'}'));
-  addNewRegion(x, y);
-  var middle = JSON.parse('{"lat":'+(x.lat+y.lat)/2+', "lon": '+(x.lon+y.lon)/2+'}');
-  var topmiddle = JSON.parse('{"lat":'+x.lat+', "lon": '+(x.lon+y.lon)/2+'}');
-  var bottommiddle = JSON.parse('{"lat":'+y.lat+', "lon": '+(x.lon+y.lon)/2+'}');
-  var leftmiddle = JSON.parse('{"lat":'+(x.lat+y.lat)/2+', "lon": '+x.lon+'}');
-  var rightmiddle = JSON.parse('{"lat":'+(x.lat+y.lat)/2+', "lon": '+y.lon+'}');
-  addNewSubRegion(x, middle, Math.random()/4+0.2);
-  addNewSubRegion(topmiddle, rightmiddle, Math.random()/4+0.2);
-  addNewSubRegion(middle, y, Math.random());
-  addNewSubRegion(leftmiddle, bottommiddle, Math.random()/4+0.2);
-  var z = JSON.parse('{"lat":'+(x.lat+y.lat)/2+', "lon": '+x.lon+'}');
-  addNewSubRegion(z, y, Math.random()/4+0.2);
-  x = pxToGeo(JSON.parse('{"x":'+200+', "y": '+50+'}'));
-  y = pxToGeo(JSON.parse('{"x":'+800+', "y": '+400+'}'));
-  addNewRegion(x, y);
-  x = pxToGeo(JSON.parse('{"x":'+900+', "y": '+20+'}'));
-  y = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+40+'}'));
-  addNewRegion(x, y);
-  x = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+40+'}'));
-  y = pxToGeo(JSON.parse('{"x":'+1100+', "y": '+60+'}'));
-  addNewRegion(x, y);
-  // Generate a form
-        $("#myform").dform(jsonTestArray);
-}*/
-//debug(); //only used for debugging
