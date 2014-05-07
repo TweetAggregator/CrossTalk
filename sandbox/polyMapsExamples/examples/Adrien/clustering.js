@@ -64,6 +64,7 @@ function pxToGeo(pt){
 
   //Translates geolocation {"lat": _, "lon":_} into pixel {"x":_, "y": _}
 function geoToPix(pt){
+  //Trouble parsing here
   return map.locationPoint(JSON.parse('{ "lat":'+pt.x+', "lon": '+pt.y+'}'));
 }
 
@@ -80,8 +81,8 @@ function geoToPix(pt){
   //Tests drawCenters
 drawCenters(data.clusters[2].centers);
   
-  //Tests geoToPix
-var res = geoToPix('{"x": 37.787, "y": -122.228}');
+  //Tests
+var res = geoToPix(JSON.parse('{"x": 37.787, "y": -122.228}'));
 console.log("The x: "+res.x+" the y: "+res.y);
 console.log("I'm here, I'm clear");
 
