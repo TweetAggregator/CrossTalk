@@ -1,4 +1,4 @@
-@(viewCenter: String, mapZoom: Double, regions: String, regionDensityList: String)
+@(viewCenter: (Double, Double) , mapZoom: Double, regionDensityList: List[((Double, Double, Double, Double), Float)], nbSet:Int, sets:List[(Int, String, Int)], inters:List[((Int, Int), Int)])
 
 <!DOCTYPE html>
 <html>
@@ -18,8 +18,14 @@
         <script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
         
         <script>
-        
-        showRegionIntesity(@Html(viewCenter), @mapZoom, @Html(regions))
+        //use "at HTML()" for escaping html code!
+        var viewCenter = {lon: @viewCenter._1, lat: @viewCenter._2}
+        @println(viewCenter)
+        console.log(JSON.stringify(viewCenter))
+        var regions = [ @for(region <- regionDensityList){ [{lon: @region._1._1, lat: @region._1._2}, {lon: @region._1._3, lat: @region._1._4}, @region._2], } ]
+        @println(regionDensityList)
+        console.log(JSON.stringify(regions))
+        showRegionIntesity(viewCenter, @mapZoom, regions)
         </script>
         
         <span id="copy">

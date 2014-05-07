@@ -6,10 +6,10 @@
 @** *********************************************************************** **@
 @** Helper for the view **@
 
-@keywordField(field: Field, className: String = "keyword") = {
+@keywordField(field: Field, className: String = "keyword2") = {
     @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
-        <input type="text" name="@name" value="@value"> 
-        <a class="removeKeyword btn">Remove</a>
+    	<input type="text" name="@name" value="@value"> 
+        <a class="removeKeyword initbtn">Remove</a>
     }
 }
 
@@ -23,8 +23,8 @@
             @keywordField(initialInputForm("keywords[x]"), className = "templ_keyword")
             
             <div class="clearfix">
-                <div class="input">
-                    <a class="addKeyword btn">Add keyword</a>
+                <div class="input" align="left">
+                    <a class="addKeyword initbtn" id="addKeyword">Add keyword</a>
                 </div>
             </div>
             
@@ -51,8 +51,8 @@
 			
 	     
     <div class="actions">
-        <input type="submit" value="Find synonyms and translations!">
-        <a href="@setup.routes.General.viewParams" class="btn">Cancel</a>
+      <font size="4"> <b> <input type="submit" value="Find synonyms and translations!"> </b>
+        <a href="@setup.routes.General.viewParams" class="btn">Cancel</a> </font>
     </div>
       
   }
@@ -61,22 +61,26 @@
 @** Now we need to add some scripts **@
     
     <script type="text/javascript" charset="utf-8">
+    			var keyCount = 0;
 					$('.removeLanguage').live('click', function(e) {
 						$(this).parents('.language').remove()
+						keyCount--;
 						renumber()
 					})
 
 					$('.removeKeyword').live('click', function(e) {
 						var keywords = $(this).parents('.keywords')
-						$(this).parents('.keyword').remove()
+						$(this).parents('.keyword2').remove()
 						renumber(keywords)
 					})
 
 					$('.addKeyword').live('click', function(e) {
 								var keywords = $(this).parents('.keywords')
 								var template = $('.templ_keyword', keywords)
-								template.before('<div class="clearfix keyword">' + template.html() + '</div>')
+								template.before('<div class="clearfix keyword2">' + template.html() + '</div>')
 								renumber(keywords)
+								keyCount++;
+
 							})
 
 					$('.addLanguage').live('click', function(e) {
@@ -90,7 +94,7 @@
         	$('input', this).each(function() {
         		$(this).attr('name', $(this).attr('name').replace(/translations\[.+?\]/g, 'translations[' + i + ']'))
          	})
-          $('.keyword input', this).each(function(i) {
+          $('.keyword2 input', this).each(function(i) {
           	$(this).attr('name', $(this).attr('name').replace(/keywords\[.+\]/g, 'keywords[' + i + ']'))
           })
           })

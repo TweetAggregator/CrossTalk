@@ -77,7 +77,7 @@ function geoToPix(pt){
 }*/
 
   //Tests drawCenters
-//drawCenters(data.clusters[2].centers);
+drawCenters(data.clusters[2].centers);
   
   //Tests geoToPix
 var res = geoToPix('{"lat": 37.787, "lon": -122.228}');

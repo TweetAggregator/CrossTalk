@@ -43,6 +43,9 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
       results += (id -> count)
     case TotalTweets => 
       sender ! total
+    case TweetsFromSquare(square) =>
+      val counts = for ((s, c) <- results if square.intersects(s)) yield c
+      sender ! counts.sum
     case Opacities =>
       sender ! computeOpacity(results)
   }

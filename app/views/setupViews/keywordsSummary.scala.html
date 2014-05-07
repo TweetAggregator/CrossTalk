@@ -8,44 +8,51 @@
 
 @keywordField(field: Field, className: String = "keyword") = {
     @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
+           <span class="clearfix btnList">
            <input type="hidden" name="@name" value="@value"> 
-               <li> @field.value
-        <a class="removeKeyword btn">Remove</a>
-        </li>
+                &bull; 
+                @field.value &nbsp&nbsp
+        <a class="removeKeyword btn">Remove</a> &nbsp&nbsp
+        </span>
+        
     }
 }
 
 @keywordFieldHidden(field: Field, className: String = "keyword") = {
-    @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
-           <input type="hidden" name="@name" value="@value"> 
-   }
+@defining(field) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
 }
 
 @languageBlock(field: Field, className: String = "language") = {
 
+@** Display the translations-Title **@
+
+@if(field("targetLanguage").value==Some("Seperator")){
+	<br> <font size="5">Translation Results</font> </br>
+	
+}else {
 @** Display the translations **@
+
 @if(field("targetLanguage").value!=Some("Ignore")){
+	
+	
+	
     <div class="clearfix @className">
-        Results for the translation of @field("originalKeyword").value
-        to @field("targetLanguage").value
+       <font size="4"> Results for the translation of <em>@field("originalKeyword").value </em>
+        to <em>@field("targetLanguage").value  </em> </font>
 
 
         <a class="removeLanguage btn">Remove everything related to this translation</a>
+@defining(field("targetLanguage")) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
 
-        @inputText(
-            field("targetLanguage"), 
-            'style -> "display: none",
-            '_label -> ""
-        )
-
-
-        @inputText(
-            field("originalKeyword"), 
-            'style -> "display: none",
-            '_label -> ""
-        )
+@defining(field("originalKeyword")) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
          <div class="keywords">
-         @println()
+
             @repeat(field("keywords"), min = 0) { keyword => @keywordField(keyword) }
             
             @** Hidden block that will be used as template for Javascript copy code **@
@@ -54,25 +61,21 @@
             
         </div>
 </div>
-        }
+}  else{
+
     
 @** Display original keyword in a special manner **@
 
-            @if(field("targetLanguage").value==Some("Ignore")){
-                <div class="clearfix @className">
-        Original Keyword : @field("originalKeyword").value
-              @inputText(
-            field("targetLanguage"), 
-            'style -> "display: none",
-            '_label -> ""
-        )
+                 <div class="clearfix @className">
+        <font size="4"> @field("originalKeyword").value </font>
+@defining(field("targetLanguage")) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
 
+@defining(field("originalKeyword")) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
 
-        @inputText(
-            field("originalKeyword"), 
-            'style -> "display: none",
-            '_label -> ""
-        )
          <div class="keywords">
             @repeat(field("keywords"), min = 0) { keyword => @keywordFieldHidden(keyword) }
             
@@ -86,6 +89,7 @@
         </div>
         }
 }
+}
 
 @** *********************************************************************** **@
 @** Actual display **@
@@ -93,6 +97,8 @@
 @header("Tweet Aggregator")
 
     <h1>Remove inacurate translations</h1>
+    
+   <font size="5">Keywords entered by the user</font> 
     @helper.form(action = setup.routes.Keywords.finalSubmission) {
         <div id="keywords">
         
@@ -102,7 +108,7 @@
          
   
     <div class="actions">
-        <input type="submit" value="Start the search with those keywords!">
+       <font size="4"> <input type="submit" value="Start the search with those keywords!"> </font>
         <a href="@setup.routes.General.viewParams" class="btn">Cancel</a>
     </div>
       
