@@ -15,21 +15,25 @@
 .btn {
   padding: 10px;
   border: 1px solid #CFCFCF !important;
+ 
 }
 
 .initbtn {
   padding: 10px;
   border: 1px solid #CFCFCF !important;
-  display: inline-flex;
+  display: inline-block;
+   cursor:pointer;  
   
 }
 .keyword {
   float: left;
   width:200px;
+  cursor:pointer;
 }
 .keyword2 {
   float: center;
   width: 100px;
+  cursor:pointer;
 }
 .btnList {
   display: inline-flex;

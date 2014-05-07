@@ -6,11 +6,10 @@
 @** *********************************************************************** **@
 @** Helper for the view **@
 
-@keywordField(field: Field, className: String = "keyword") = {
+@keywordField(field: Field, className: String = "keyword2") = {
     @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
-    	KAKAKAKAKA
-        <input type="text" name="@name" value="@value"> 
-        <a class="removeKeyword initbtn" align="center">Remove</a>
+    	<input type="text" name="@name" value="@value"> 
+        <a class="removeKeyword initbtn">Remove</a>
     }
 }
 
@@ -52,8 +51,8 @@
 			
 	     
     <div class="actions">
-        <input type="submit" value="Find synonyms and translations!">
-        <a href="@setup.routes.General.viewParams" class="btn">Cancel</a>
+      <font size="4"> <b> <input type="submit" value="Find synonyms and translations!"> </b>
+        <a href="@setup.routes.General.viewParams" class="btn">Cancel</a> </font>
     </div>
       
   }
@@ -71,20 +70,17 @@
 
 					$('.removeKeyword').live('click', function(e) {
 						var keywords = $(this).parents('.keywords')
-						$(this).parents('.keyword').remove()
+						$(this).parents('.keyword2').remove()
 						renumber(keywords)
-						document.getElementById("addKeyword").style.display="run-in";
 					})
 
 					$('.addKeyword').live('click', function(e) {
 								var keywords = $(this).parents('.keywords')
 								var template = $('.templ_keyword', keywords)
-								template.before('<div class="clearfix keyword">' + template.html() + '</div>')
+								template.before('<div class="clearfix keyword2">' + template.html() + '</div>')
 								renumber(keywords)
 								keyCount++;
-								if(keyCount > 1) {
-									document.getElementById("addKeyword").style.display="run-in";
-								}
+
 							})
 
 					$('.addLanguage').live('click', function(e) {
@@ -98,7 +94,7 @@
         	$('input', this).each(function() {
         		$(this).attr('name', $(this).attr('name').replace(/translations\[.+?\]/g, 'translations[' + i + ']'))
          	})
-          $('.keyword input', this).each(function(i) {
+          $('.keyword2 input', this).each(function(i) {
           	$(this).attr('name', $(this).attr('name').replace(/keywords\[.+\]/g, 'keywords[' + i + ']'))
           })
           })
