@@ -24,3 +24,9 @@ GET    /assets/*file      controllers.Assets.at(path="/public", file)
 GET    /enterKeywords     controllers.setup.Keywords.form
 POST   /finalKeywords     controllers.setup.Keywords.finalSubmission
 POST   /initialKeywords   controllers.setup.Keywords.initialSubmission
+
+# Gathering
+GET /gatheringStart		controllers.Gathering.start
+GET /gatheringPause		controllers.Gathering.pause
+GET /gatheringResume	controllers.Gathering.resume
+# GET /gatheringStop		controllers.Gathering.stop
