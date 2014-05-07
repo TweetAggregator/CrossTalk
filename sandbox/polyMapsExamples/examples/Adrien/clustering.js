@@ -83,6 +83,8 @@ drawCenters(data.clusters[2].centers);
   
   //Tests
 var res = geoToPix(JSON.parse('{"x": 37.787, "y": -122.228}'));
+var res2 = pxToGeo(JSON.parse('{"x": 758.9, "y": 160}'));
 console.log("The x: "+res.x+" the y: "+res.y);
+console.log("The x2:"+res2.lat+" the y2 "+res2.lon);
 console.log("I'm here, I'm clear");
 
