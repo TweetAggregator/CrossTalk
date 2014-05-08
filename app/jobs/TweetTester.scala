@@ -35,14 +35,12 @@ import scala.util.Random
  * Max #request/15minutes: 450, Max #keywords=10
  */
 class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
-  /* We set up the HTTP client and the oauth module */
-  val client = new DefaultHttpClient()
 
   var running = true
   var scheduled: Option[Cancellable] = None
 
   /* Time the Streamer has to wait before exploring the stream again once a matching tweet found. */
-  val waitToExplore = getConfInt("tweetTester.waitToExplore", "TweetStreamer: key waitToExplore not defined in conf.")
+  val waitToExplore = getConfInt("tweetTester.waitToExplore", "TweetTester: key waitToExplore not defined in conf.")
 
   val listenersOfAWord = new HashMap[String, List[(TweetQuery, ActorRef)] ]()
   val probaOfAWord = new HashMap[String, Int]()
@@ -101,7 +99,7 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
   }
   
   def createRandomNewTweet(): String  = {
-    "{\"text\":\"" + newRandom.nextInt() + "\"}"
+    "{\"text\":\"" + newRandom.nextLong() + "\", \"id\":"+ newRandom.nextLong +"}"
   }
   
   def feedListeners(){
