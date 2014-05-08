@@ -42,7 +42,7 @@ object Map extends Controller {
         val viewCenter = Some(Json.parse(map("viewCenter").head)).map(x => ((x \ "lat").toString.toDouble, (x \ "lon").toString.toDouble)).head
         
         Cache.set("zoomLevel", zoomLevel)
-        Cache.set("viewCenter", viewCenter)
+        Cache.set("focussed", viewCenter)
         Cache.set("coordinates", coordinates)
         
         Redirect(routes.General.viewParams)

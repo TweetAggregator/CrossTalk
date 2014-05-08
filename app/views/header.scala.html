@@ -61,8 +61,9 @@
 							@if(!Cache.get("keywords").isDefined){ <li><a href="/enterKeywords">Select keywords</a></li>  }
 							@if(!Cache.get("isStarted").isDefined){ <li><a href="/viewParams">View parameters</a></li> }
 							@if(!Cache.get("isStarted").isDefined && Cache.get("keywords").isDefined && Cache.get("coordinates").isDefined){ <li><a href="/gatheringStart">Start</a></li> }
-							@if(Cache.get("isStarted").isDefined){ <li><a href="#">Controls</a></li> }
+							@if(Cache.get("isStarted").isDefined){ <li><a href="/controlDisplay">Controls</a></li> }
 							@if(Cache.get("isStarted").isDefined){ <li><a href="#">Results</a></li> }
+							@if(Cache.get("isStarted").isDefined){ <li><a href="#">Clustered results</a></li> }
 							<!--<li><a class="show-5 templatemo_page5" href="#">Contact Us</a></li>-->
 						</ul>
 					</div> <!-- /.col-md-12 -->
