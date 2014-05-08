@@ -70,8 +70,7 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
 
   def createRandomNewTweet(): String  = {
     val newRandom = new Random()
-    println("e")
-    "{\"text\":\"" + newRandom.nextString(50) + "\"}"
+    "{\"text\":\"" + newRandom.nextInt() + "\"}"
   }
   
   def feedListeners(){
