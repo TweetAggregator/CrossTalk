@@ -46,7 +46,7 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
 
   val listenersOfAWord = new HashMap[String, List[(TweetQuery, ActorRef)] ]()
   val probaOfAWord = new HashMap[String, Int]()
-  val newRandom = new Random()
+  val newRandom = new Random(System.currentTimeMillis)
   /**
    * Number of maximum number of tweets 
    */
@@ -107,13 +107,14 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
   def feedListeners(){
     for (currentWord: (String, List[(TweetQuery, ActorRef)]) <- listenersOfAWord){
       var i = probaOfAWord(currentWord._1)
-      var next = newRandom.nextInt( (currentWord._2.size / 2) )
+      var next = (newRandom.nextInt( (currentWord._2.size) ) + 2) / 2 
+      
       while (i > 0){
         for (currentListener: (TweetQuery, ActorRef) <- currentWord._2){
           if (next == 0){
         	currentListener._2 ! (new Tweet(Json.parse(createRandomNewTweet()), currentListener._1))
           	i -= 1
-          	next = newRandom.nextInt(currentWord._2.size / 2)
+          	next = (newRandom.nextInt(currentWord._2.size) + 2) / 2
           }
           next -= 1
         }
