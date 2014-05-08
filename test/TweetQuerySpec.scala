@@ -25,7 +25,11 @@ class TweetQuerySpec extends Specification {
     
     "return valid radius and center" in new WithApplication {
       query1.area.center should equalTo ((0.0,0.0))
-      query1.area.radius should equalTo (401.31168373453505)
+      query1.area.radius should equalTo (378.3602839174411)
+    }
+    
+    "properly subdivide and select the indices" in new WithApplication {
+      query1.computeIndices foreach (println(_))
     }
   }
 }

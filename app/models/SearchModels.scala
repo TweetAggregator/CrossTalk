@@ -29,8 +29,8 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
   def containsGeo(long: Double, lat: Double): Boolean = (long >= long1 && long <= long2 && lat >= lat1 && lat <= lat2)
 
   def intersects(that: GeoSquare): Boolean = {
-    !(this.long2 <= that.long1 && this.long1 >= that.long2
-      && this.lat2 >= that.lat1 && this.lat1 <= that.lat2)
+    !(this.long2 < that.long1 && this.long1 > that.long2
+      && this.lat2 > that.lat1 && this.lat1 < that.lat2)
   }
     
 }
@@ -77,6 +77,14 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
       /* Actual execution */
       listOuter()
     case _ => sys.error("Not a valid pair of rows / cols for subqueries.")
+  }
+  
+  /**
+   * @return geoSquare of subqueries zipped with (row, cols)
+   */
+  def computeIndices: List[(Int, Int, GeoSquare)] = {
+    val subs = subqueries.map(s => s.area)
+    (for (i <- 0 until rows; j <- 0 until cols) yield (i, j, subs(i*cols+ j))).toList
   }
 }
 
