@@ -47,11 +47,11 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
 
   def receive = {
     case Start => 
-      if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
+      if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.MILLISECONDS, Ping)) /* Auto schedule once more */
 
     case Ping => /* Callback execution (query update) */
        feedListeners()
-       if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
+       if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.MILLISECONDS, Ping)) /* Auto schedule once more */
 
     case Stop =>
       running = false
@@ -70,6 +70,7 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
 
   def createRandomNewTweet(): String  = {
     val newRandom = new Random()
+    println("e")
     "{\"text\":\"" + newRandom.nextString(50) + "\"}"
   }
   
