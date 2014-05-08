@@ -44,11 +44,20 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
   /* Time the Streamer has to wait before exploring the stream again once a matching tweet found. */
   val waitToExplore = getConfInt("tweetTester.waitToExplore", "TweetStreamer: key waitToExplore not defined in conf.")
 
-
+  val listenersOfAWord = new HashMap[String, List[(TweetQuery, ActorRef)] ]()
+  val probaOfAWord = new HashMap[String, Int]()
+  val newRandom = new Random()
+  /**
+   * Number of maximum number of tweets 
+   */
+  val maxValue = query.size
+  
   def receive = {
     case Start => 
-      if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.MILLISECONDS, Ping)) /* Auto schedule once more */
-
+      computeKeyWordRandomImportance(query)
+      running = true
+      scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.MILLISECONDS, Ping)) /* Auto schedule once more */
+      
     case Ping => /* Callback execution (query update) */
        feedListeners()
        if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.MILLISECONDS, Ping)) /* Auto schedule once more */
@@ -67,14 +76,56 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
 
     case _ => sys.error("Not a valid input for the Tweet Streamer!")
   }
-
+  /**
+   * This function computes the listener of each st of words and the associated frequency for ach of them. 
+   * This fequency is random at the begining but constant over time
+   */
+  def computeKeyWordRandomImportance(queries: List[(TweetQuery, ActorRef)]) = {
+    var nextCouple: (TweetQuery, ActorRef) = null
+    var bottomList: List[(TweetQuery, ActorRef)] = queries
+    
+    while (bottomList != Nil) {
+      nextCouple = bottomList.head
+      val currentHashKeywords = hashKeyWords(nextCouple._1.keywords)
+      if (listenersOfAWord.contains(currentHashKeywords)){
+        listenersOfAWord(currentHashKeywords) :+= (nextCouple._1, nextCouple._2)
+      }
+      else{
+        var newList: List[(TweetQuery, ActorRef)] = Nil
+        newList :+= (nextCouple._1, nextCouple._2)
+        listenersOfAWord.put(currentHashKeywords, newList)
+        probaOfAWord.put(currentHashKeywords, newRandom.nextInt(maxValue) + 1)
+      }
+      bottomList = bottomList.tail
+    }
+  }
+  
   def createRandomNewTweet(): String  = {
-    val newRandom = new Random()
     "{\"text\":\"" + newRandom.nextInt() + "\"}"
   }
   
   def feedListeners(){
-    for (currentTuple: (TweetQuery, ActorRef) <- query)
-      currentTuple._2 ! (new Tweet(Json.parse(createRandomNewTweet()), currentTuple._1))
+    for (currentWord: (String, List[(TweetQuery, ActorRef)]) <- listenersOfAWord){
+      var i = probaOfAWord(currentWord._1)
+      var next = newRandom.nextInt( (currentWord._2.size / 2) )
+      while (i > 0){
+        for (currentListener: (TweetQuery, ActorRef) <- currentWord._2){
+          if (next == 0){
+        	currentListener._2 ! (new Tweet(Json.parse(createRandomNewTweet()), currentListener._1))
+          	i -= 1
+          	next = newRandom.nextInt(currentWord._2.size / 2)
+          }
+          next -= 1
+        }
+      }
+    }
   }
+  
+  def hashKeyWords(listOfWords: List[String]): String = listOfWords match {
+    case string :: Nil => string
+    case string :: bottom => string + "," + hashKeyWords(bottom)
+
+    case Nil => ""
+  }
+  
 } 
