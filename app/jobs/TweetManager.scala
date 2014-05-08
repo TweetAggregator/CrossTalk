@@ -37,11 +37,14 @@ object TweetManager {
 
   /* Nested class to enforce singleton */
   class TweetManager extends Actor {
-    
+
     /** Period between two ping to the Twitter API for the tweet/search API. */
     val period = getConfInt("tweetManager.period", "TweetManager: no period specified for the connection with Twitter.")
     /** limit on the number of Akka Actor allowed for the research of the tweet/search API. Queries will be split among them. */
     val searcherBound = getConfInt("tweetManager.searcherBound", "TweetManager: no bound specified on the number of searchers.")
+
+    /** If true, then the Manager will launch simulator rather than real tweetSearchers */
+    val asSimulator = getConfBoolean("tweetManager.asSimulator", "TweetManager: not specify if it should use the simulator or real searches.")
 
     /** A list of actors launched by the Manager. */
     var actorRefs: List[ActorRef] = Nil
@@ -58,42 +61,50 @@ object TweetManager {
       case Start =>
         assert(actorRefs.isEmpty, "TweetManager: Cannot restart queries again without cancelling the ones running.")
         assert(!queriesToStart.isEmpty, "TweetManager: Cannot start no query at all.")
-        
-        /* Calculate the number of searcher and the rate of research */
-        val nbSearcher = Math.min(searcherBound, queriesToStart.size)
-        val searchRate = period * nbSearcher
-        var startTime = 0
-        
-        /* Let's create the duplicate checker */
-        val keysSet = queriesToStart.flatten.map(qu => qu._1.keywords).toSet
-        val checkerRef = context.actorOf(Props(new TweetDuplicateChecker(queriesToStart.size, keysSet, period)))
-        checkerRef.scheduleOnce(searchRate,TimeUnit.SECONDS, Cleanup) /* Schedule the duplicate checker once. It will then schedule itself. */
-        actorRefs :+= checkerRef
 
-        /* Create a counter to evenly use the available keys for the Twitter API */
-        val twitterKeyCounter = MultiCounter(Math.ceil(queriesToStart.size.toDouble / nbTwitterKeys).toInt)
-        
-        /* Let's shuffle the list of query and split it for the searchers */
-        queriesToStart.flatten.shuffle.split(nbSearcher) foreach { qurs =>
-          val searcherRef = context.actorOf(Props(new TweetSearcher(qurs, checkerRef, searchRate, twitterKeyCounter.incr)))
-          searcherRef.scheduleOnce(startTime, TimeUnit.SECONDS, Ping) /* Schedule it once. It will then schedule itself. */
-          actorRefs :+= searcherRef
-          startTime += period
-        }
-        
-        /* We start an instance of the streamer for each of the squares of search*/
-        queriesToStart foreach { qurs =>
-         val streamerRef = context.actorOf(Props(new TweetStreamer(qurs)))
-         streamerRef.scheduleOnce(startTime, TimeUnit.SECONDS, Ping)
-         actorRefs :+= streamerRef
-         startTime += period
+        if (!asSimulator) {
+          /* Calculate the number of searcher and the rate of research */
+          val nbSearcher = Math.min(searcherBound, queriesToStart.size)
+          val searchRate = period * nbSearcher
+          var startTime = 0
+
+          /* Let's create the duplicate checker */
+          val keysSet = queriesToStart.flatten.map(qu => qu._1.keywords).toSet
+          val checkerRef = context.actorOf(Props(new TweetDuplicateChecker(queriesToStart.size, keysSet, period)))
+          checkerRef.scheduleOnce(searchRate, TimeUnit.SECONDS, Cleanup) /* Schedule the duplicate checker once. It will then schedule itself. */
+          actorRefs :+= checkerRef
+
+          /* Create a counter to evenly use the available keys for the Twitter API */
+          val twitterKeyCounter = MultiCounter(Math.ceil(queriesToStart.size.toDouble / nbTwitterKeys).toInt)
+
+          /* Let's shuffle the list of query and split it for the searchers */
+          queriesToStart.flatten.shuffle.split(nbSearcher) foreach { qurs =>
+            val searcherRef = context.actorOf(Props(new TweetSearcher(qurs, checkerRef, searchRate, twitterKeyCounter.incr)))
+            searcherRef.scheduleOnce(startTime, TimeUnit.SECONDS, Ping) /* Schedule it once. It will then schedule itself. */
+            actorRefs :+= searcherRef
+            startTime += period
+          }
+
+          /* We start an instance of the streamer for each of the squares of search*/
+          queriesToStart foreach { qurs =>
+            val streamerRef = context.actorOf(Props(new TweetStreamer(qurs)))
+            streamerRef.scheduleOnce(startTime, TimeUnit.SECONDS, Ping)
+            actorRefs :+= streamerRef
+            startTime += period
+          }
+        } else {
+          /* The testing uses only one tweetTester for all the researches */
+          val testerRef = context.actorOf(Props(new TweetTester(queriesToStart.flatten)))
+          testerRef.scheduleOnce(period, TimeUnit.SECONDS, Start)
+          actorRefs :+= testerRef
+          
         }
         queriesToStart = Nil /* Reset the queries to start; all are started! */
 
-      case Refused => 
+      case Refused =>
         /* Activated when a TweetSearcher notify the manager that its request has been refused by the API.
          * The manager will then say to all the Searcher to wait a bit before resuming the research, to 
-         * avoid cascading refusal from the API. */ 
+         * avoid cascading refusal from the API. */
         actorRefs.tail foreach (_ ! Wait)
 
       case Stop =>
@@ -103,11 +114,11 @@ object TweetManager {
 
       case Pause =>
         assert(!actorRefs.isEmpty, "TweetManager: Cannot pause if nothing is scheduled.")
-        actorRefs foreach (_! Stop)
+        actorRefs foreach (_ ! Stop)
 
       case Resume =>
         assert(!actorRefs.isEmpty, "TweetManager: Cannot resume if nothing is scheduled.")
-        actorRefs foreach( _! Resume)
+        actorRefs foreach (_ ! Resume)
 
       case _ => sys.error("TweetManager: Wrong message.")
     }
@@ -117,7 +128,7 @@ object TweetManager {
 
   /* Reference to the singleton Manager */
   val TweetManagerRef = toRef(Props(new TweetManager()))
-  
+
   /* Number of keys available for the Twitter API */
   val nbTwitterKeys = getConfInt("twitter.nbKeys", "No consumer key found in conf.")
 

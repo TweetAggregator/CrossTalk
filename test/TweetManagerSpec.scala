@@ -174,7 +174,7 @@ class TweetManagerSpec extends Specification {
   }
   /* NB: Those test might fail depending of the network congestion */
   "Tweet Manager" should {
-    "start queries, and stop them" in {
+    "start queries, and stop them" in new WithApplication {
       nbReceived = 0
       val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       val qurs2 = TweetQuery("Ukraine" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
