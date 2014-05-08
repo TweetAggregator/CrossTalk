@@ -22,7 +22,7 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
     x => (x._1, (x._2 % row, x._2 / col))
   }.toMap
 
-  def computeOpacity(tweetCounts: Map[GeoSquare, Long]) = {
+  def computeOpacity(tweetCounts: Map[GeoSquare, Long]): Map[GeoSquare, Double] = {
     val maxTweets = tweetCounts.values.max
     tweetCounts.mapValues(0.5 * _ / maxTweets)
   }

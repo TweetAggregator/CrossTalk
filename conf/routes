@@ -30,3 +30,4 @@ GET /gatheringStart		controllers.Gathering.start
 GET /gatheringPause		controllers.Gathering.pause
 GET /gatheringResume	controllers.Gathering.resume
 # GET /gatheringStop		controllers.Gathering.stop
+GET /gatheringDisplay controllers.Gathering.computeDisplayData

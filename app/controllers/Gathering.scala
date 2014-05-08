@@ -1,6 +1,6 @@
 package controllers
 
-import scala.collection.mutable.Map
+import scala.collection.mutable.{ Map => MutableMap }
 import scala.collection.mutable.MutableList
 
 import play.api._
@@ -16,6 +16,7 @@ import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
 import play.libs.Akka
+import play.Logger
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -40,7 +41,7 @@ trait GatheringController { this: Controller =>
 
   type Square = (Double, Double, Double, Double)
   // For each square, three geoparts: keyword1, keyword2 and keywor1&2
-  val geoParts: Map[Square, (ActorRef, ActorRef, ActorRef)] = Map()
+  val geoParts: MutableMap[Square, (ActorRef, ActorRef, ActorRef)] = MutableMap()
   var keys: Option[(String, String)] = None
   val maxGranularity = 20
   val minSide = 20.0 //TODO: choose a reasonable min side
@@ -124,6 +125,8 @@ trait GatheringController { this: Controller =>
     Ok(views.html.gathering())
   }
 
+  //TODO: stop
+
   def computeDisplayData = Action {
     //TODO: get focussed square from Cache
     //  - get Square from Cache
@@ -135,6 +138,7 @@ trait GatheringController { this: Controller =>
       case (Some(focussed), Some((key1, key2))) =>
         try {
           //TODO: clustering
+          Logger.info("Gathering: Computing display data")
 
           val geoFocussed = GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4)
           
@@ -142,10 +146,12 @@ trait GatheringController { this: Controller =>
           val geos2 = geoParts.values.map(_._2)
           val geos3 = geoParts.values.map(_._3)
 
-          askGeos(geos1, Collect)
-          askGeos(geos2, Collect)
-          askGeos(geos3, Collect)
+          Logger.info("Gathering: Finalizing Tweet counts")
+          geos1 foreach (_ ! Collect)
+          geos2 foreach (_ ! Collect)
+          geos3 foreach (_ ! Collect)
 
+          Logger.info("Gathering: Getting Tweet counts")
           val fInterTweets =
             geos3.map(a => (a ? TweetsFromSquare(geoFocussed)).mapTo[Long])
 
@@ -158,8 +164,9 @@ trait GatheringController { this: Controller =>
           val inters = List(((0, 1), interCounts.sum.toInt))
           val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
 
-          val opac1 = squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos1, Opacities))
-          val opac2 = squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos2, Opacities))
+          Logger.info("Gathering: Computing square opacities")
+          val opac1 = squareFromGeoMap(askGeos[Map[GeoSquare, Double]](geos1, Opacities))
+          val opac2 = squareFromGeoMap(askGeos[Map[GeoSquare, Double]](geos2, Opacities))
           val interOpac =
             squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos3, Opacities))
 
@@ -169,7 +176,9 @@ trait GatheringController { this: Controller =>
 
           // Ok(views.html.venn(nbSet, sets, inters))
         } catch {
-          case e: TimeoutException => InternalServerError
+          case e: TimeoutException =>
+            Logger.info("Gathering: Timed out")
+            InternalServerError
         }
       case _ => BadRequest
     }
