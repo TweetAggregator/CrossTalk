@@ -20,7 +20,7 @@ map.add(po.geoJson()
         + "&format=json"
         + "&bbox={B}"
         + "&dstart=2010-04-01"
-        + "&dend=2010-05-01"))
+        + "&dend=2010-04-01"))
     .on("load", load)
     .clip(false)
     .zoom(14));
@@ -45,6 +45,7 @@ function load(e) {
   for (var i = 0; i < means.length; i++) {
     var mean = means[i], point = g.appendChild(po.svg("circle"));
     point.setAttribute("cx", mean.x);
+    console.log("mean x "+mean.x+" and the mean y "+mean.y);
     point.setAttribute("cy", mean.y);
     point.setAttribute("r", Math.pow(2, tile.zoom - 11) * Math.sqrt(mean.size));
   }

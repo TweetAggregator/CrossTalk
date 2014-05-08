@@ -6,8 +6,12 @@
 GET    /                  controllers.Application.index 
 
 # Map selection
+GET    /selectAreas       controllers.setup.Map.selectAreas
+POST   /finalAreas        controllers.setup.Map.finalSubmission
+
+# Map various //TODO:clean
 GET    /map               controllers.setup.Map.index
-POST   /mapresult               controllers.setup.Map.submit
+POST   /mapresult         controllers.setup.Map.submit
 
 # General setup 
 GET    /viewParams        controllers.setup.General.viewParams
@@ -20,3 +24,9 @@ GET    /assets/*file      controllers.Assets.at(path="/public", file)
 GET    /enterKeywords     controllers.setup.Keywords.form
 POST   /finalKeywords     controllers.setup.Keywords.finalSubmission
 POST   /initialKeywords   controllers.setup.Keywords.initialSubmission
+
+# Gathering
+GET /gatheringStart		controllers.Gathering.start
+GET /gatheringPause		controllers.Gathering.pause
+GET /gatheringResume	controllers.Gathering.resume
+# GET /gatheringStop		controllers.Gathering.stop

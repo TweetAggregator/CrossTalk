@@ -7,7 +7,6 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 import play.api.cache.Cache
 import play.api.Play.current
-import views._
 import models._
 
 object Keywords extends Controller {
@@ -36,7 +35,7 @@ object Keywords extends Controller {
    * Display an empty form.
    */
   def form = Action {
-    Ok(html.setupViews.keywordsForm(initialInputForm));
+    Ok(views.html.setupViews.keywordsForm(initialInputForm));
   }
 
   /**
@@ -44,7 +43,8 @@ object Keywords extends Controller {
    */
   def finalSubmission = Action { implicit request =>
     val resultForm = keywordsForm.bindFromRequest.get
-
+    println("What we got" + resultForm)
+    println(resultForm.output)
     Cache.set("keywords", resultForm.output)
 
     Redirect(routes.General.viewParams)
@@ -55,9 +55,8 @@ object Keywords extends Controller {
    */
   def initialSubmission = Action { implicit request =>
 
-    initialInputForm.bindFromRequest.fold({ formWithErrors => BadRequest(html.setupViews.keywordsForm(initialInputForm))},{
+    initialInputForm.bindFromRequest.fold({ formWithErrors => BadRequest(views.html.setupViews.keywordsForm(initialInputForm))},{
         resultForm =>
-          println(resultForm)
 
           val keywords = resultForm.keywords
           val translationLanguages = resultForm.languages
@@ -68,16 +67,22 @@ object Keywords extends Controller {
           var submitThis = for (keyword <- keywords) yield {
             Translation("Ignore", keyword, List("Ignore"))
           }
-          val tradsAndSyns =
+
+          val tradsAndSyns = (
             for (keyword <- keywords) yield {
               for (language <- translationLanguages) yield {
                 val (trads, syns) = jobs.Translator(startLanguage, List(targetLanguages.apply(language.toInt)._1), keyword)()
                 Translation(targetLanguages.apply(language.toInt)._2, keyword, (trads.flatten).map(_.as[String]).take(10))
-              }
-            }
+             }
+            }).filter(x => x!= List())
+
+          if(tradsAndSyns.size > 0){
+             submitThis = submitThis.++(List(Translation("Seperator","",List(""))))
+          }
+          
           submitThis = submitThis.++(tradsAndSyns.flatten)
           
-          Ok(html.setupViews.keywordsSummary(keywordsForm.fill(AllTranslations(submitThis))))
+          Ok(views.html.setupViews.keywordsSummary(keywordsForm.fill(AllTranslations(submitThis))))
 
       })
   }

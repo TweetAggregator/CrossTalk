@@ -9,7 +9,7 @@
 @if(keywords.isDefined) {
 	<ul>
 	@for(keySet <- keywords.get){
-		<li><b>@keySet._1: </b> @for(word <- keySet._2) {@word }</li>
+		<li><b>@keySet._1: </b> @keySet._2.mkString(", ")</li>
 	}
 	</ul>
 } else {

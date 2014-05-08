@@ -1,4 +1,4 @@
-@(viewCenter: (Double, Double) , mapZoom: Double, regionDensityList: List[((Double, Double, Double, Double), Float)], nbSet:Int, sets:List[(Int, String, Int)], inters:List[((Int, Int), Int)])
+@(viewCenter: (Double, Double), mapZoom: Double, rawClusters:String)
 
 <!DOCTYPE html>
 <html>
@@ -14,20 +14,15 @@
   
   <body>
     <div>
+    <div id="top">
+    <button onclick="nothing()">hi</button>
+    </div>
       <div id="map" style="height:85%;float:left;width:85%;">
-        <script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
-        
-        <script>
-        //use "at HTML()" for escaping html code!
-        var viewCenter = {lon: @viewCenter._1, lat: @viewCenter._2}
-        @println(viewCenter)
-        console.log(JSON.stringify(viewCenter))
-        var regions = [ @for(region <- regionDensityList){ [{lon: @region._1._1, lat: @region._1._2}, {lon: @region._1._3, lat: @region._1._4}, @region._2], } ]
-        @println(regionDensityList)
-        console.log(JSON.stringify(regions))
-        showRegionIntesity(viewCenter, @mapZoom, regions)
-        </script>
-        
+    	<script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
+      	<script>
+          var viewCenter = {lon: @viewCenter._1, lat: @viewCenter._2};
+      		//cluster(viewCenter, @mapZoom, @Html(rawClusters));
+      	</script>
         <span id="copy">
           &copy; 2010
           <a href="http://www.cloudmade.com/">CloudMade</a>,
@@ -37,9 +32,17 @@
       </div>
       <div id="venns" class="venns" style="float:right;height:85%;width:14.5%;padding-left:5px;">
         <span>
-
+          <button onclick="drawRegion()">new region</button>
+          <button onclick="reset()">reset</button>
+          @helper.form(action = setup.routes.Map.submit){
+          	<input type="hidden" name="viewCenter" id="viewCenter" value="">
+          	<input type="hidden" name="zoomLevel" id="zoomLevel" value="">
+          	<input type="hidden" name="viewBoundaries" id="viewBoundaries" value="">
+          	<input type="hidden" name="coordinates" id="coordinates" value=""> <!-- value is updated in tweetagg.js each time a region is drawn -->
+          	<button>Launch</button>
+          }
           <p id="myDiv">
-           hallo
+           
           </p>
         </span>
       </div>
