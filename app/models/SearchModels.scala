@@ -82,9 +82,9 @@ case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: 
   /**
    * @return geoSquare of subqueries zipped with (row, cols)
    */
-  def computeIndices: List[(Int, Int, GeoSquare)] = {
+  def computeIndices: List[(List[String], GeoSquare, Int, Int)] = {
     val subs = subqueries.map(s => s.area)
-    (for (i <- 0 until rows; j <- 0 until cols) yield (i, j, subs(i*cols+ j))).toList
+    (for (i <- 0 until rows; j <- 0 until cols) yield (keywords, subs(i*cols+ j), i, j)).toList
   }
 }
 
