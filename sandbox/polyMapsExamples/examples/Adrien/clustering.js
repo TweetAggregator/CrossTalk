@@ -2,8 +2,8 @@
 
 //var map = po.map()
     //.container(document.getElementById("map").appendChild(po.svg("svg")))
-    map.zoom(3)
-    .zoomRange([3, 13]);
+map.zoom(3)
+   .zoomRange([3, 13]); //limit zoom level
 map.on("move", update2)
 
 var testData = JSON.parse('{"centers": [{"x": 37.787, "y": -122.228, "r": 37.60}]}')
@@ -85,15 +85,20 @@ function update2() {
   while(graph.firstChild){
     graph.removeChild(graph.firstChild);
   }
- 
-  drawCenters(generateData(rawData1.clusters[0].centers), 1);
-  console.log(Math.floor(map.zoom()));
-  drawCenters(generateData(rawData2.clusters[9].centers), 2);
-  drawCenters(generateData(rawData3.clusters[10 - (Math.floor(map.zoom()) - 3)].centers), 3);
+  var selectedZoom = document.getElementById("zoomSlider").value;
+  drawCenters(generateData(rawData1.clusters[selectedZoom].centers), 1);
 
 }
 
-update2();
+window.onload = function() {
+  var slider = document.getElementById("zoomSlider");
+  if (window.addEventListener){
+    slider.addEventListener('change', update2);
+  } else if (window.attachEvent){
+    slider.attachEvent('onchange', update2);
+  }
+  update2(); //initi rendering
+}
   //Tests drawCenters
 //drawCenters(generateData(rawData1.clusters[0].centers), 1);
 /*drawCenters(generateDate(rawData2.clusters[0].centers), 2);
@@ -103,7 +108,4 @@ drawCenters(generateDate(rawData3.clusters[0].centers), 3);  */
 //var res2 = geoToPx(JSON.parse('{"x": 37.787, "y": -132.228}'));
 //var res2 = pxToGeo(JSON.parse('{"x": 758.9, "y": 160}'));
 
-
-
 //drawCircle(JSON.parse('{"x": 0, "y": 300, "r": 30}'))
-

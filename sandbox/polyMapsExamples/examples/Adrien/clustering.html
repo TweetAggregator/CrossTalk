@@ -5,14 +5,23 @@
     <style type="text/css">
     </style>
   </head>
-  <body id="map">
-    <script type="text/javascript" src="../../../../public/javascripts/tweetagg.js"></script>
-    <script type="text/javascript" src="clustering.js"></script>
-    <span id="copy">
-      &copy; 2014
-      <a href="http://www.cloudmade.com/">CloudMade</a>,
-      <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors,
-      <a href="http://creativecommons.org/licenses/by-sa/2.0/">CCBYSA</a>.
-    </span>
+  <body>
+    <div id="map" style="height:100%;float:left;width:85%;">
+      <script type="text/javascript" src="../../../../public/javascripts/tweetagg.js"></script>
+      <script type="text/javascript" src="clustering.js"></script>
+      <span id="copy">
+        &copy; 2014
+        <a href="http://www.cloudmade.com/">CloudMade</a>,
+        <a href="http://www.openstreetmap.org/">OpenStreetMap</a> contributors,
+        <a href="http://creativecommons.org/licenses/by-sa/2.0/">CCBYSA</a>.
+      </span>
+    </div>
+    <div id="venns" class="venns" style="float:right;height:100%;width:14.5%;padding-left:5px;">
+      <span>
+        <form id="myid">
+          <input id="zoomSlider" type="range" min="3" max="10" value="6" step="1" selectionDirection="none">
+        </form>
+      </span>
+    </div>
   </body>
 </html>
