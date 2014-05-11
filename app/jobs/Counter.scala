@@ -6,6 +6,7 @@ import java.io.{PrintWriter, File}
 
 import models._
 
+/** Simple counter of tweets (for one request only) */
 class Counter(pos: GeoSquare, listener: ActorRef) extends Actor {
   var count = 0L
   val file = new PrintWriter(new File("tweets/counter" + pos.##.toString + ".txt"))

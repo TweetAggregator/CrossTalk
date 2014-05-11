@@ -36,22 +36,29 @@ import TweetManager._
 trait GatheringController { this: Controller =>
   val actors: GatheringActors
   import actors._
+  import utils.Enrichments._
 
   type Square = (Double, Double, Double, Double)
-  
-  /* For each square, three geoparts: keyword1, keyword2 and keywor1&2 */
-  val geoParts: MutableMap[Square, (ActorRef, ActorRef, ActorRef)] = MutableMap()
-  var keys: Option[(String, String)] = None
-  val maxGranularity = 20
-  val minSide = 0.5 //TODO: choose a reasonable min side
 
+  /** For each square, three geoparts: keyword1, keyword2 and keywor1&2 */
+  val geoParts: MutableMap[Square, (ActorRef, ActorRef, ActorRef)] = MutableMap()
+
+  /** Default keys of the research */
+  var keys: Option[(String, String)] = None
+
+  /* General configurations */
+  val maxGranularity = getConfInt("gathering.maxGranularity", "Gathering: no granularity found in conf.")
+  val minSide = getConfDouble("gathering.minSideGeo", "Gathering: no minSide") // Minumum side in degree
+
+  /** Compute the number of rows / cols  for a research based on geocoordinates */ 
   def granularity(top: Double, bottom: Double): Int = {
     require(top > bottom)
-    val highest: Int = ((top - bottom) / minSide).toInt + 1
+    val highest: Int = (Math.ceil(top - bottom) / minSide).toInt
     if (highest > maxGranularity) maxGranularity
     else highest
   }
 
+  /** From a square and a list of keywords, generate a GeoPartitioner. Compute the number of rows / cols to use */
   def geoPart(square: Square, keys: List[String]): ActorRef = {
     val geoSquare = GeoSquare(square._1, square._2, square._3, square._4)
     val rows = granularity(square._4, square._2)
@@ -71,31 +78,28 @@ trait GatheringController { this: Controller =>
       /*Cache.set("coordinates", List((-129.4, 20.0, -79.0, 50.6)))
       Cache.set("keywords",
         List(("Obama", List[String]()),
-          ("Beer", List("biere", "pression"))))
-      Cache.set("focussed", (-109.4, 40.0, -79.0, 50.6))*/
+          ("Beer", List("biere", "pression"))))*/
+      Cache.set("focussed", (-109.4, 40.0, -79.0, 50.6))
 
       val squaresOption = Cache.getAs[List[Square]]("coordinates")
-      // Keywords and translations: list of tuple (initialKeyword, translations&synonyms)
       val keywordsListOption = Cache.getAs[List[(String, List[String])]]("keywords")
 
       (squaresOption, keywordsListOption, keys) match {
         case (Some(squares), Some((k1, trs1) :: (k2, trs2) :: Nil), None) =>
           try {
             keys = Some((k1, k2))
-            var finished: List[Future[_]] = List()
             val keys1 = k1 :: trs1
             val keys2 = k2 :: trs2
             val keys3 = for (key1 <- keys1; key2 <- keys2) yield (s"${key1} ${key2}") // Space means AND, concantenation means OR
+
+            var finished: List[Future[_]] = List()
             for (square <- squares) {
-              val gps = (geoPart(square, keys1),
-                geoPart(square, keys2),
-                geoPart(square, keys3))
+              val gps = (geoPart(square, keys1), geoPart(square, keys2), geoPart(square, keys3))
               finished :+= gps._1 ? StartGeo
               finished :+= gps._2 ? StartGeo
               finished :+= gps._3 ? StartGeo
               geoParts += square -> (gps._1, gps._2, gps._3)
             }
-            
             finished.foreach(Await.ready(_, defaultDuration))
 
             tweetManagerRef ! Start
@@ -103,9 +107,13 @@ trait GatheringController { this: Controller =>
             Cache.set("isRunning", true)
             Redirect(routes.Gathering.controlDisplay)
           } catch {
-            case e: TimeoutException => println("Gathering_Start_InternalServerError"); InternalServerError
+            case e: TimeoutException => 
+              Logger.error("Gathering:_Start_InternalServerError, due to timeout.")
+              InternalServerError
           }
-        case t => println("Gathering_Start_BadRequest\n" + t); BadRequest
+        case t => 
+          Logger.error("Gathering:_Start_BadRequest")
+          BadRequest
       }
     } else Redirect(routes.Application.index)
   }
@@ -178,8 +186,7 @@ trait GatheringController { this: Controller =>
           val counts2 = askGeos[Long](geos2, TweetsFromSquare(geoFocussed))
           val interCounts = askGeos[Long](geos3, TweetsFromSquare(geoFocussed))
 
-          val sets =
-            List((0, key1, counts1.sum.toInt), (1, key2, counts2.sum.toInt))
+          val sets = List((0, key1, counts1.sum.toInt), (1, key2, counts2.sum.toInt))
           val inters = List(((0, 1), interCounts.sum.toInt))
           val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
 
@@ -203,6 +210,7 @@ trait GatheringController { this: Controller =>
     }
   }
 
+  /** Send a message to all the GeoPartitioners and return the answers as a list */
   def askGeos[T: ClassTag](geos: Iterable[ActorRef], msg: Any): List[T] = {
     val futures: List[Future[T]] = geos.map(a => (a ? msg).mapTo[T]).toList
     futures.map(Await.result(_, defaultDuration))
