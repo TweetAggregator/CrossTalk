@@ -8,10 +8,8 @@
         <script>
         //use "at HTML()" for escaping html code!
         var viewCenter = {lon: @viewCenter._1, lat: @viewCenter._2}
-        @println(viewCenter)
         console.log(JSON.stringify(viewCenter))
         var regions = [ @for(region <- regionDensityList){ [{lon: @region._1._1, lat: @region._1._2}, {lon: @region._1._3, lat: @region._1._4}, @region._2], } ]
-        @println(regionDensityList)
         console.log(JSON.stringify(regions))
         showRegionIntesity(viewCenter, @mapZoom, regions)
         </script>

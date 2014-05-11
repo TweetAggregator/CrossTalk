@@ -186,7 +186,26 @@ trait GatheringController { this: Controller =>
     }
   }
 
-  def computeDisplayClustering = ???
+  def computeDisplayClustering = Action {
+
+    val focussedOption = Cache.getAs[Square]("focussed")
+
+    (focussedOption, keys) match {
+      case (Some(focussed), Some((key1, key2))) =>
+        try {
+    	
+          val (nbSet, sets, inters) = computeVenn(GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4), key1, key2)
+          
+          Ok(views.html.mapClustering(Cache.getAs[(Double, Double)]("viewCenter").get, Cache.getAs[Double]("zoomLevel").get, ("", "", ""))(nbSet, sets, inters))
+        } catch {
+          case e: TimeoutException =>
+            Logger.info("Gathering: Timed out")
+            InternalServerError
+        }
+      case _ => BadRequest
+    }
+
+  }
 
   /** Compute the Venn diagram based on a GeoSquare. Return the required format for the venn.scala.html view. */
   def computeVenn(geoFocussed: GeoSquare, key1: String, key2: String) = {

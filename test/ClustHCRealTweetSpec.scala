@@ -72,7 +72,7 @@ class ClustHCRealTweetSpec extends Specification {
       for (gl <- geoIndices) {
         var leaves: List[LeafCluster] = Nil
         for (g <- gl._1) {
-          val fut: Future[Long] = (gl._2 ? TweetsFromSquare(g._2)).mapTo[Long]
+          val fut: Future[Long] = (gl._2.?(TweetsFromSquare(g._2))(defaultTimeout)).mapTo[Long]
           val res: Long = Await.result(fut, Duration(5, "seconds"))
 
           leaves :+= LeafCluster((g._3, g._4), res, g._2)

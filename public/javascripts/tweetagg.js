@@ -284,18 +284,6 @@ function divToGeoJson(topLeft, bottomRight) {
   return region.container()
 }
 
-//zoom level -> cluster
-function showCircles(listOfList) {
-
-}
-
-/*
- * still have to figure out how to do this is needed
- */ 
-function addCircle(geoCenter, radius) {
-	
-}
-
 /*
  * NOT FUNCTIONING YET -> IS IT NEEDED?
  * function to remove a region when it is clicked
