@@ -105,6 +105,7 @@ trait GatheringController { this: Controller =>
             }
             finished.foreach(Await.ready(_, defaultDuration))
 
+            Logger.info("Gathering: Starting TweetManager")
             tweetManagerRef ! Start
             Cache.set("isStarted", true)
             Cache.set("isRunning", true)
@@ -114,7 +115,7 @@ trait GatheringController { this: Controller =>
               Logger.error("Gathering:_Start_InternalServerError, due to timeout.")
               InternalServerError
           }
-        case t =>
+        case _ =>
           Logger.error("Gathering:_Start_BadRequest")
           BadRequest
       }
@@ -163,9 +164,11 @@ trait GatheringController { this: Controller =>
     //  - filtrer les tweets
 
     val focussedOption = Cache.getAs[Square]("focussed")
+    val viewCenterOption = Cache.getAs[(Double, Double)]("viewCenter")
+    val zoomLevelOption = Cache.getAs[Double]("zoomLevel")
 
-    (focussedOption, keys) match {
-      case (Some(focussed), Some((key1, key2))) =>
+    (viewCenterOption, zoomLevelOption, focussedOption, keys) match {
+      case (Some(viewCenter), Some(zoomLevel), Some(focussed), Some((key1, key2))) =>
         try {
           Logger.info("Gathering: compute Venn.")
           val (nbSet, sets, inters) = computeVenn(GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4), key1, key2)
@@ -175,34 +178,40 @@ trait GatheringController { this: Controller =>
           val opac2 = squareFromGeoMap(askGeos[Map[GeoSquare, Double]](geos2, Opacities))
           val interOpac = squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos3, Opacities))
 
-          Ok(views.html.mapresult(Cache.getAs[(Double, Double)]("viewCenter").get, Cache.getAs[Double]("zoomLevel").get, interOpac.toList)(nbSet, sets, inters))
+          Ok(views.html.mapresult(viewCenter, zoomLevel, interOpac.toList)(nbSet, sets, inters))
 
         } catch {
           case e: TimeoutException =>
             Logger.info("Gathering: Timed out")
             InternalServerError
         }
-      case _ => BadRequest
+      case _ =>
+        Logger.error("Gathering: Computing display data BadRequest")
+        BadRequest
     }
   }
 
   def computeDisplayClustering = Action {
 
     val focussedOption = Cache.getAs[Square]("focussed")
+    val viewCenterOption = Cache.getAs[(Double, Double)]("viewCenter")
+    val zoomLevelOption = Cache.getAs[Double]("zoomLevel")
 
-    (focussedOption, keys) match {
-      case (Some(focussed), Some((key1, key2))) =>
+    (viewCenterOption, zoomLevelOption, focussedOption, keys) match {
+      case (Some(viewCenter), Some(zoomLevel), Some(focussed), Some((key1, key2))) =>
         try {
     	
           val (nbSet, sets, inters) = computeVenn(GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4), key1, key2)
           
-          Ok(views.html.mapClustering(Cache.getAs[(Double, Double)]("viewCenter").get, Cache.getAs[Double]("zoomLevel").get, ("", "", ""))(nbSet, sets, inters))
+          Ok(views.html.mapClustering(viewCenter, zoomLevel, ("", "", ""))(nbSet, sets, inters))
         } catch {
           case e: TimeoutException =>
             Logger.info("Gathering: Timed out")
             InternalServerError
         }
-      case _ => BadRequest
+      case _ =>
+        Logger.error("Gathering: Computing clusters BadRequest")
+        BadRequest
     }
 
   }
