@@ -10,8 +10,9 @@ GET    /selectAreas        controllers.setup.Map.selectAreas
 POST   /finalAreas         controllers.setup.Map.finalSubmission
 
 # Map various //TODO:clean
-GET    /map                controllers.setup.Map.index
-POST   /mapresult          controllers.setup.Map.submit
+#GET    /map                controllers.setup.Map.index
+#POST   /mapresult          controllers.setup.Map.submit
+#GET    /vennEx				controllers.Results.computeVenn
 
 # General setup 
 GET    /viewParams         controllers.setup.General.viewParams

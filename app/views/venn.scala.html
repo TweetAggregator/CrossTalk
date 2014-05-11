@@ -1,18 +1,16 @@
 @(nbSet:Int, sets: List[(Int, String, Int)], inters: List[((Int, Int), Int)])
 
+<div class="Venn"></div>
+
 <script src="http://d3js.org/d3.v2.min.js"></script>
 <script src="@routes.Assets.at("javascripts/venn.js")"></script>
 <script>
-
 var sets = [@for(set <- sets) { {label: "@set._2", size: @set._3}, }],
-	overlaps = [@for(inter <- inters) { {sets: [@inter._1._1,@inter._1._2], size: @inter._2},}]
+overlaps = [@for(inter <- inters) { {sets: [@inter._1._1,@inter._1._2], size: @inter._2},}]
 
 // get positions for each set
 sets = venn.venn(sets, overlaps);
 
 // draw the diagram in the 'Venn' div
-venn.drawD3Diagram(d3.select(".Venn"), sets, 300, 300);
-
+venn.drawD3Diagram(d3.select(".Venn"), sets, 170, 170);
 </script>
-
-<div class="Venn"></div>

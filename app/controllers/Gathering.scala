@@ -42,6 +42,9 @@ trait GatheringController { this: Controller =>
 
   /** For each square, three geoparts: keyword1, keyword2 and keywor1&2 */
   val geoParts: MutableMap[Square, (ActorRef, ActorRef, ActorRef)] = MutableMap()
+  def geos1 = geoParts.values.map(_._1)
+  def geos2 = geoParts.values.map(_._2)
+  def geos3 = geoParts.values.map(_._3)
 
   /** Default keys of the research */
   var keys: Option[(String, String)] = None
@@ -50,7 +53,7 @@ trait GatheringController { this: Controller =>
   val maxGranularity = getConfInt("gathering.maxGranularity", "Gathering: no granularity found in conf.")
   val minSide = getConfDouble("gathering.minSideGeo", "Gathering: no minSide") // Minumum side in degree
 
-  /** Compute the number of rows / cols  for a research based on geocoordinates */ 
+  /** Compute the number of rows / cols  for a research based on geocoordinates */
   def granularity(top: Double, bottom: Double): Int = {
     require(top > bottom)
     val highest: Int = (Math.ceil(top - bottom) / minSide).toInt
@@ -107,11 +110,11 @@ trait GatheringController { this: Controller =>
             Cache.set("isRunning", true)
             Redirect(routes.Gathering.controlDisplay)
           } catch {
-            case e: TimeoutException => 
+            case e: TimeoutException =>
               Logger.error("Gathering:_Start_InternalServerError, due to timeout.")
               InternalServerError
           }
-        case t => 
+        case t =>
           Logger.error("Gathering:_Start_BadRequest")
           BadRequest
       }
@@ -164,43 +167,16 @@ trait GatheringController { this: Controller =>
     (focussedOption, keys) match {
       case (Some(focussed), Some((key1, key2))) =>
         try {
-          //TODO: clustering
-          Logger.info("Gathering: Computing display data")
-
-          val geoFocussed = GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4)
-
-          val geos1 = geoParts.values.map(_._1)
-          val geos2 = geoParts.values.map(_._2)
-          val geos3 = geoParts.values.map(_._3)
-
-          Logger.info("Gathering: Finalizing Tweet counts")
-          geos1 foreach (_ ! Collect)
-          geos2 foreach (_ ! Collect)
-          geos3 foreach (_ ! Collect)
-
-          Logger.info("Gathering: Getting Tweet counts")
-          val fInterTweets =
-            geos3.map(a => (a ? TweetsFromSquare(geoFocussed)).mapTo[Long])
-
-          val counts1 = askGeos[Long](geos1, TweetsFromSquare(geoFocussed))
-          val counts2 = askGeos[Long](geos2, TweetsFromSquare(geoFocussed))
-          val interCounts = askGeos[Long](geos3, TweetsFromSquare(geoFocussed))
-
-          val sets = List((0, key1, counts1.sum.toInt), (1, key2, counts2.sum.toInt))
-          val inters = List(((0, 1), interCounts.sum.toInt))
-          val nbSet = sets.size //TODO nbSeet = size(sets) or size(inters + sets)?
+          Logger.info("Gathering: compute Venn.")
+          val (nbSet, sets, inters) = computeVenn(GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4), key1, key2)
 
           Logger.info("Gathering: Computing square opacities")
           val opac1 = squareFromGeoMap(askGeos[Map[GeoSquare, Double]](geos1, Opacities))
           val opac2 = squareFromGeoMap(askGeos[Map[GeoSquare, Double]](geos2, Opacities))
-          val interOpac =
-            squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos3, Opacities))
+          val interOpac = squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos3, Opacities))
 
-          // @(viewCenter: (Double, Double), mapZoom: Double, regionDensityList: List[((Double, Double, Double, Double), Float)], nbSet:Int, sets:List[(Int, String, Int)], inters:List[((Int, Int), Int)])
-          val viewCenter = (37.0, -122.0)
-          Ok(views.html.mapresult(viewCenter, 12, interOpac.toList, nbSet, sets, inters))
+          Ok(views.html.mapresult(Cache.getAs[(Double, Double)]("viewCenter").get, Cache.getAs[Double]("zoomLevel").get, interOpac.toList)(nbSet, sets, inters))
 
-          // Ok(views.html.venn(nbSet, sets, inters))
         } catch {
           case e: TimeoutException =>
             Logger.info("Gathering: Timed out")
@@ -208,6 +184,26 @@ trait GatheringController { this: Controller =>
         }
       case _ => BadRequest
     }
+  }
+
+  def computeDisplayClustering = ???
+
+  /** Compute the Venn diagram based on a GeoSquare. Return the required format for the venn.scala.html view. */
+  def computeVenn(geoFocussed: GeoSquare, key1: String, key2: String) = {
+
+    geos1 foreach (_ ! Collect)
+    geos2 foreach (_ ! Collect)
+    geos3 foreach (_ ! Collect)
+
+    val counts1 = askGeos[Long](geos1, TweetsFromSquare(geoFocussed))
+    val counts2 = askGeos[Long](geos2, TweetsFromSquare(geoFocussed))
+    val interCounts = askGeos[Long](geos3, TweetsFromSquare(geoFocussed))
+
+    val sets = List((0, key1, counts1.sum.toInt), (1, key2, counts2.sum.toInt))
+    val inters = List(((0, 1), interCounts.sum.toInt))
+    val nbSet = sets.size
+
+    (nbSet, sets, inters)
   }
 
   /** Send a message to all the GeoPartitioners and return the answers as a list */
