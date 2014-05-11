@@ -43,8 +43,6 @@ object Keywords extends Controller {
    */
   def finalSubmission = Action { implicit request =>
     val resultForm = keywordsForm.bindFromRequest.get
-    println("What we got" + resultForm)
-    println(resultForm.output)
     Cache.set("keywords", resultForm.output)
 
     Redirect(routes.General.viewParams)

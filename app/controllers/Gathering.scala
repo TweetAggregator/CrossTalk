@@ -37,8 +37,6 @@ trait GatheringController { this: Controller =>
   val actors: GatheringActors
   import actors._
 
-  implicit def defaultTimeout: Timeout = 4 seconds
-
   type Square = (Double, Double, Double, Double)
   
   /* For each square, three geoparts: keyword1, keyword2 and keywor1&2 */
@@ -84,21 +82,21 @@ trait GatheringController { this: Controller =>
         case (Some(squares), Some((k1, trs1) :: (k2, trs2) :: Nil), None) =>
           try {
             keys = Some((k1, k2))
-            val finished: MutableList[Future[_]] = MutableList()
+            var finished: List[Future[_]] = List()
             val keys1 = k1 :: trs1
             val keys2 = k2 :: trs2
-            var keys3 = for (key1 <- keys1; key2 <- keys2) yield (s"${key1} ${key2}") // Space means AND, concantenation means OR
+            val keys3 = for (key1 <- keys1; key2 <- keys2) yield (s"${key1} ${key2}") // Space means AND, concantenation means OR
             for (square <- squares) {
               val gps = (geoPart(square, keys1),
                 geoPart(square, keys2),
                 geoPart(square, keys3))
-              finished += gps._1 ? StartGeo
-              finished += gps._2 ? StartGeo
-              finished += gps._3 ? StartGeo
+              finished :+= gps._1 ? StartGeo
+              finished :+= gps._2 ? StartGeo
+              finished :+= gps._3 ? StartGeo
               geoParts += square -> (gps._1, gps._2, gps._3)
             }
-
-            finished.foreach(Await.ready(_, 10 seconds))
+            
+            finished.foreach(Await.ready(_, defaultDuration))
 
             tweetManagerRef ! Start
             Cache.set("isStarted", true)
@@ -207,7 +205,7 @@ trait GatheringController { this: Controller =>
 
   def askGeos[T: ClassTag](geos: Iterable[ActorRef], msg: Any): List[T] = {
     val futures: List[Future[T]] = geos.map(a => (a ? msg).mapTo[T]).toList
-    futures.map(Await.result(_, 10 seconds))
+    futures.map(Await.result(_, defaultDuration))
   }
 }
 

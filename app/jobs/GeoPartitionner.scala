@@ -7,6 +7,8 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import TweetManager._
 import models._
+import scala.concurrent.Await
+import utils.AkkaImplicits._
 
 class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: Int) extends Actor {
   /*Total Number of tweets*/
@@ -29,8 +31,9 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: 
 
   def receive = {
     case StartGeo =>
-      val resp = TweetManagerRef.?(AddQueries(queries zip listeners))(8 seconds)
-      resp.onComplete(_ => sender ! Done)
+      val resp = TweetManagerRef.?(AddQueries(queries zip listeners))
+      Await.ready(resp, defaultDuration)
+      sender ! Done
     case Winner =>
       println("winner is: " + results.maxBy(_._2))
     case Collect =>
