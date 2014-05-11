@@ -37,9 +37,10 @@ object Map extends Controller {
         
         val coordinates = Json.parse(map("coordinates").head).as[Array[Array[JsValue]]]
           .map(_.flatMap(coo => ((coo \ "lon").toString.toDouble) :: (coo \ "lat").toString.toDouble :: Nil))
-          .map(e => (e(3), e(0), e(1), e(2))).toList
+          .map(e => (e(0), e(3), e(2), e(1))).toList
+          // .map(e => (e(3), e(0), e(1), e(2))).toList
         val zoomLevel = map("zoomLevel").head.toDouble
-        val viewCenter = Some(Json.parse(map("viewCenter").head)).map(x => ((x \ "lat").toString.toDouble, (x \ "lon").toString.toDouble)).head
+        val viewCenter = Some(Json.parse(map("viewCenter").head)).map(x => ((x \ "lon").toString.toDouble, (x \ "lat").toString.toDouble)).head
         
         Cache.set("zoomLevel", zoomLevel)
         Cache.set("viewCenter", viewCenter)
