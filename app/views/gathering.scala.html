@@ -10,7 +10,7 @@
 
 @if(Cache.get("isRunning").isDefined){ <a href="gatheringPause"><h2>Pause</h2></a> }
 @if(!Cache.get("isRunning").isDefined){<a href="gatheringResume"><h2>Resume</h2></a> } 
-@if(Cache.get("isStarted").isDefined){<a href="gatheringStop"><h2>Stop</h2></a> }
+@if(Cache.get("isStarted").isDefined){<a href="gatheringStop"><h2>Stop and delete research</h2></a> }
 
 <p>Total amount of tweets aggregated: @nbTweets</p>
 
