@@ -27,7 +27,8 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols
 
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]): Map[GeoSquare, Double] = {
     val maxTweets = tweetCounts.values.max
-    tweetCounts.mapValues(0.5 * _ / maxTweets)
+    if (maxTweets == 0) tweetCounts.mapValues(_ => 0)
+    else tweetCounts.mapValues(0.5 * _ / maxTweets)
   }
 
   def receive = {
@@ -42,7 +43,8 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols
 
     case Report(id, count) =>
       total += count
-      results += (id -> count)
+      val prev: Long = results.getOrElse(id, 0)
+      results += (id -> (prev + count))
 
     case TotalTweets => sender ! total
 
