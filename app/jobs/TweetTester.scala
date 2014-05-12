@@ -16,9 +16,12 @@ import play.api.libs.json.JsArray
 import play.api.libs.json.JsValue
 import play.api.Play
 import play.api.libs.json.JsString
+import java.io.BufferedWriter
 import akka.actor.ActorRef
 import TweetManager._
 import java.io.InputStream
+import java.io.File
+import java.io.FileWriter
 import models.GeoSquare
 import play.api.libs.json.JsResultException
 import collection.mutable.HashMap
@@ -36,6 +39,8 @@ import scala.util.Random
  */
 class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
 
+  
+  
   var running = true
   var scheduled: Option[Cancellable] = None
 
@@ -49,6 +54,10 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
    * Number of maximum number of tweets 
    */
   val maxValue = query.size
+  
+  val fileTweetTesters = new File("tweets/tweetstester")
+  fileTweetTesters.createNewFile()
+  val writer = new BufferedWriter(new FileWriter(new File("tweets/tweetstester"), true))
   
   def receive = {
     case Start => 
@@ -99,7 +108,9 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
   }
   
   def createRandomNewTweet(): String  = {
-    "{\"text\":\"" + newRandom.nextLong() + "\", \"id\":"+ newRandom.nextLong +"}"
+    val tweet = "{\"text\":\"" + newRandom.nextLong() + "\", \"id\":"+ newRandom.nextLong +"}"
+    writer.write(tweet)
+    tweet
   }
   
   def feedListeners(){
