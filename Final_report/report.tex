@@ -1,0 +1,134 @@
+\documentclass[a4paper, 11pt]{report}
+
+
+\usepackage{subfigure}
+\usepackage{float}
+\usepackage{epsfig,fancyhdr}
+\usepackage{amsmath,amssymb}
+\usepackage[british]{babel}
+%\usepackage{natbib}
+\usepackage{subfig}
+\usepackage{colortbl}
+\usepackage{url,graphicx,tabularx,array,geometry}
+\usepackage{epstopdf}
+\usepackage{cite}
+
+\usepackage{amssymb}
+
+%\usepackage[top=0.1cm,bottom=0.1cm,scale=0.91]{geometry}
+
+\oddsidemargin  0in
+\evensidemargin  0in
+\textwidth   6.3in
+\textheight  9.5in
+\topmargin  -0.7in
+
+\newcommand{\racc}[1]{report/#1}
+\newcommand{\raccb}[1]{report/introduction/#1}
+\newcommand{\raccc}[1]{report/getting_data/#1}
+\newcommand{\raccd}[1]{report/localisation/#1}
+\newcommand{\racce}[1]{report/map_display/#1}
+\newcommand{\raccf}[1]{report/intersection/#1}
+\newcommand{\raccg}[1]{report/clustering/#1}
+\newcommand{\racch}[1]{report/venn/#1}
+\newcommand{\racci}[1]{report/keyword/#1}
+\newcommand{\raccj}[1]{report/conclusion/#1}
+
+\newcommand{\raccba}[1]{report/Introduction/motivation/#1}
+\newcommand{\raccbb}[1]{report/Introduction/description/#1}
+\newcommand{\raccbc}[1]{report/Introduction/design/#1}
+
+\newcommand{\raccca}[1]{report/getting_data/tweet/#1}
+\newcommand{\racccb}[1]{report/getting_data/simulator/#1}
+
+\newcommand{\raccga}[1]{report/clustering/agglomerative/#1}
+\newcommand{\raccgb}[1]{report/clustering/slic/#1}
+
+
+\renewcommand{\baselinestretch}{1.2}
+
+
+
+\begin{document}
+
+
+\title{\textbf{Tweet Aggregator}}
+
+\author{
+Kevin Serrano,
+Gianni Scarnera,
+Clement Moutet,
+Timo Babst,
+Pierre Gouedard,\\
+Adrien Ghosn,
+Joris Beau,
+Mathieu Demarne,
+Cedric Bastin,
+Lewis Brown. \\
+{\color{white} a}\\
+\textbf{Supervisor}: Mohammed El Seidy\\
+{\color{white} a}\\
+\'{E}cole polytechnique F\'{e}d\'{e}rale de Lausanne\\
+{\color{white} a}\\
+Big Data}
+\date{spring 2014}
+\maketitle
+
+\setlength{\parindent}{0pt}
+
+\begin{abstract}
+
+salut
+
+
+\end{abstract}
+
+%%%% Sommaire
+\tableofcontents
+
+%%%% Introduction et mise en problématique
+\include{\racc{introduction}}
+
+%%%% Part1
+\include{\racc{getting_data}}
+
+%%%% Part2
+\include{\racc{localisation}}
+
+%%%% Part3
+\include{\racc{map_display}}
+
+%%%% Part4
+\include{\racc{intersection}}
+
+%%%% Part5
+\include{\racc{clustering}}
+
+%%%% Part6
+\include{\racc{venn}}
+
+%%%% Part7
+\include{\racc{keyword}}
+
+%%%% Conclusion
+\include{\racc{conclusion}}
+
+%\cite{P1a} 
+
+\chapter*{Acknowledgment}
+\addcontentsline{toc}{chapter}{Acknowledgment}
+
+
+here we acknowledge
+
+
+\begin{thebibliography}{1}
+\addcontentsline{toc}{chapter}{Bibliography}
+ 
+\bibitem{P1a} %1
+
+
+\end{thebibliography}
+
+
+\end{document}
