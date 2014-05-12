@@ -55,6 +55,15 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols
         sender ! counts.sum
       }
 
+    case LeafClusters =>
+      val leafClusters: List[LeafCluster] = for {
+        geoSquare <- results.keys.toList
+      } yield {
+        val pos = squareCoords(geoSquare)
+        LeafCluster(pos, results(geoSquare), geoSquare)
+      }
+      sender ! leafClusters
+
     case Opacities =>
       sender ! computeOpacity(results)
   }
