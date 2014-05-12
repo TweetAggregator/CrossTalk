@@ -18,33 +18,29 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols
   var results: Map[GeoSquare, Long] = Map()
   /*List of all the queries to send*/
   val queries = TweetQuery(keywords, square, rows, cols).subqueries
-  /*List of listeners*/
-  val listeners: List[ActorRef] = queries.map(x => ActorSystem().actorOf(Props(new Counter(x.area, self))))
 
   def squareCoords: Map[GeoSquare, (Int, Int)] = queries.map(_.area).zipWithIndex.map {
     x => (x._1, (x._2 % rows, x._2 / cols))
   }.toMap
 
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]): Map[GeoSquare, Double] = {
-    val maxTweets = tweetCounts.values.max
+    val maxTweets = if(!tweetCounts.isEmpty) tweetCounts.values.max else 0
     if (maxTweets == 0) tweetCounts.mapValues(_ => 0)
     else tweetCounts.mapValues(0.5 * _ / maxTweets)
   }
 
   def receive = {
     case StartGeo =>
-      val resp = TweetManagerRef.?(AddQueries(queries zip listeners))
+      val resp = TweetManagerRef.?(AddQueries(queries.map((_, self))))
       Await.ready(resp, defaultDuration)
       sender ! Done
 
     case Winner => println("winner is: " + results.maxBy(_._2))
 
-    case Collect => listeners.foreach(_ ! ReportCount)
-
-    case Report(id, count) =>
-      total += count
-      val prev: Long = results.getOrElse(id, 0)
-      results += (id -> (prev + count))
+    case Tweet(value, query) =>
+      total += 1
+      val prev: Long = results.getOrElse(query.area, 0)
+      results += (query.area -> (prev + 1))
 
     case TotalTweets => sender ! total
 
@@ -64,8 +60,7 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols
       }
       sender ! leafClusters
 
-    case Opacities =>
-      sender ! computeOpacity(results)
+    case Opacities => sender ! computeOpacity(results)
   }
 
 }

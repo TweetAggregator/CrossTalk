@@ -58,7 +58,7 @@ class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
    *   TODO find a way to define significance
    */
   private def cleanClusters(clusters: Set[Cluster]): Set[Cluster] = {
-    val maxDensity = clusters.maxBy(_.tweetMeter).tweetMeter
+    val maxDensity = if(!clusters.isEmpty) clusters.maxBy(_.tweetMeter).tweetMeter else 0
     clusters.filter(c => c.tweetMeter >= (maxDensity * minDensityCorrector))
   }
 }

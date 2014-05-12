@@ -65,7 +65,6 @@ class ClustHCRealTweetSpec extends Specification {
       Thread.sleep(500 * 1000) /* Just sleep for 5 minutes */
 
       TweetManagerRef ! Stop
-      geoParts foreach (_ ! Collect)
 
       val geoIndices = queries.map(_.computeIndices) zip geoParts
 

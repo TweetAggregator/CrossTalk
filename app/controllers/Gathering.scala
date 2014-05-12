@@ -158,7 +158,6 @@ trait GatheringController { this: Controller =>
 
   def controlDisplay = Action {
     val allGeos = geoParts.flatMap(v => v._2._1 :: v._2._2 :: v._2._3 :: Nil)
-    allGeos foreach (_ ! Collect)
     Ok(views.html.gathering(askGeos[Long](allGeos, TotalTweets).sum))
   }
 
@@ -238,10 +237,6 @@ trait GatheringController { this: Controller =>
 
   /** Compute the Venn diagram based on a GeoSquare. Return the required format for the venn.scala.html view. */
   def computeVenn(geoFocussed: GeoSquare, key1: String, key2: String) = {
-
-    geos1 foreach (_ ! Collect)
-    geos2 foreach (_ ! Collect)
-    geos3 foreach (_ ! Collect)
 
     val counts1 = askGeos[Long](geos1, TweetsFromSquare(geoFocussed))
     val counts2 = askGeos[Long](geos2, TweetsFromSquare(geoFocussed))

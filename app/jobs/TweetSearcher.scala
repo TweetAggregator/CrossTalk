@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit
 import scala.util.Random
 import akka.actor.Cancellable
 import play.Logger
+import java.io.{PrintWriter, File}
 
 
 /**
@@ -51,6 +52,8 @@ class TweetSearcher(qList: List[(TweetQuery, ActorRef)], checker: ActorRef, sear
   var next = 0 /* Keep track of the next query to be launched */
   /* Map between Integers and TweetQuery, corresponding listener and potential callback URL */
   var qurs: Map[Int, (TweetQuery, ActorRef, Option[String])] = qList.zipWithIndex.map(e => (e._2, (e._1._1, e._1._2, None))) toMap
+
+  val file = new PrintWriter(new File("tweets/searcher" + this.##.toString + ".txt"))
 
   def receive = {
     
@@ -76,6 +79,13 @@ class TweetSearcher(qList: List[(TweetQuery, ActorRef)], checker: ActorRef, sear
           qurs += (qurs.size -> (query, listener, Some(clb)))
           qurs = qurs.toList.map(e => e._2).shuffle.zipWithIndex.map(_.swap).toMap
         }
+
+        /* printout all the tweets */
+        values foreach {v =>
+          file.write(v.toString + "\n")
+          file.flush()
+        }
+
         /* Ask the checker to filter duplicates and to send the good tweets to the listener */
         values foreach (v => checker ! (Tweet(v, query), listener))
 

@@ -42,7 +42,6 @@ class HierarchySpec extends Specification {
       Thread.sleep(1000)
       TweetManagerRef ! Start
       Thread.sleep(20000)
-      geoPart ! Collect
       Thread.sleep(1000)
       val totalFuture = geoPart ? TotalTweets
       val res = Await.result(totalFuture, Duration(5, "seconds"))
