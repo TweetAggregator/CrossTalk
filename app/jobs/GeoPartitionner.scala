@@ -1,45 +1,62 @@
 package jobs
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import models.GeoSquare
+import akka.actor.{ Actor, ActorRef, ActorSystem, Props }
+import akka.pattern.ask
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 import TweetManager._
 import models._
+import scala.concurrent.Await
+import utils.AkkaImplicits._
 
-class GeoPartitionner(keywords: List[String], square: GeoSquare, row: Int, col: Int) extends Actor {
+/** Takes care of the counters for an area designed by square, splitted according rows / cols */
+class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols: Int) extends Actor {
   /*Total Number of tweets*/
   var total = 0L
-  /*TODO play around with this to correct the threshold*/
-  val CORRECTOR: Double = 4
   /*Map holding the results*/
   var results: Map[GeoSquare, Long] = Map()
   /*List of all the queries to send*/
-  val queries = TweetQuery(keywords, square, row, col).subqueries
+  val queries = TweetQuery(keywords, square, rows, cols).subqueries
   /*List of listeners*/
   val listeners: List[ActorRef] = queries.map(x => ActorSystem().actorOf(Props(new Counter(x.area, self))))
-  
-  def squareCoords: Map[GeoSquare, (Int, Int)] = queries.map(_.area).zipWithIndex.map{
-    x => (x._1, (x._2 % row, x._2 / col))
+
+  def squareCoords: Map[GeoSquare, (Int, Int)] = queries.map(_.area).zipWithIndex.map {
+    x => (x._1, (x._2 % rows, x._2 / cols))
   }.toMap
 
-  def computeOpacity(tweetCounts: Map[GeoSquare, Long]) = {
+  def computeOpacity(tweetCounts: Map[GeoSquare, Long]): Map[GeoSquare, Double] = {
     val maxTweets = tweetCounts.values.max
-    tweetCounts.mapValues(0.5*_/maxTweets)
+    if (maxTweets == 0) tweetCounts.mapValues(_ => 0)
+    else tweetCounts.mapValues(0.5 * _ / maxTweets)
   }
 
-  def receive = {  
+  def receive = {
     case StartGeo =>
-      TweetManagerRef ! AddQueries(queries zip listeners)
-    case Winner => 
-      println("winner is: "+results.maxBy(_._2))  
-    case Collect => 
-      listeners.foreach(_ ! ReportCount)
+      val resp = TweetManagerRef.?(AddQueries(queries zip listeners))
+      Await.ready(resp, defaultDuration)
+      sender ! Done
+
+    case Winner => println("winner is: " + results.maxBy(_._2))
+
+    case Collect => listeners.foreach(_ ! ReportCount)
+
     case Report(id, count) =>
       total += count
-      results += (id -> count)
-    case TotalTweets => 
-      sender ! total
+      val prev: Long = results.getOrElse(id, 0)
+      results += (id -> (prev + count))
+
+    case TotalTweets => sender ! total
+
+    case TweetsFromSquare(square) =>
+      if (results.contains(square)) sender ! results(square) /* First, see if it matches a perfect geoSquare */
+      else {
+        val counts = for ((s, c) <- results if square.intersects(s)) yield c
+        sender ! counts.sum
+      }
+
     case Opacities =>
       sender ! computeOpacity(results)
   }
-  
+
 }

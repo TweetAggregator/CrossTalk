@@ -3,9 +3,34 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Application.index
-POST	/mapSubmit					controllers.Application.submit
-GET		/designExample				controllers.Application.designExample
+GET    /                             controllers.Application.index 
+
+# Map selection
+GET    /selectAreas                  controllers.setup.Map.selectAreas
+POST   /finalAreas                   controllers.setup.Map.finalSubmission
+
+# Map various //TODO:clean
+#GET    /map                controllers.setup.Map.index
+#POST   /mapresult          controllers.setup.Map.submit
+#GET    /vennEx				controllers.Results.computeVenn
+
+# General setup 
+GET    /viewParams                   controllers.setup.General.viewParams
+GET    /resetParams                  controllers.setup.General.resetParams 
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET    /assets/*file                 controllers.Assets.at(path="/public", file)
+
+# Keywords selection
+GET    /enterKeywords                controllers.setup.Keywords.form
+POST   /finalKeywords                controllers.setup.Keywords.finalSubmission
+POST   /initialKeywords              controllers.setup.Keywords.initialSubmission
+
+# Gathering
+GET    /gatheringStart               controllers.Gathering.start
+GET    /gatheringPause               controllers.Gathering.pause
+GET    /gatheringResume              controllers.Gathering.resume
+GET    /gatheringStop                controllers.Gathering.stop
+GET    /controlDisplay               controllers.Gathering.controlDisplay
+GET    /gatheringDisplay             controllers.Gathering.computeDisplayData
+GET    /gatheringDisplayClustering   controllers.Gathering.computeDisplayClustering

@@ -1,0 +1,40 @@
+/* Template for the display of the forms */
+
+.templ_keyword {
+  display: none;
+  background-color: red;
+}
+.templ_language {
+  display: none
+  background-color: red;
+}
+.language {
+  margin: 7px 7px 7px 7px;
+  border-top : 1px solid #000;
+}
+.btn {
+  padding: 10px;
+  border: 1px solid #CFCFCF !important;
+ 
+}
+
+.initbtn {
+  padding: 10px;
+  border: 1px solid #CFCFCF !important;
+  display: inline-block;
+   cursor:pointer;  
+  
+}
+.keyword {
+  float: left;
+  width:200px;
+  cursor:pointer;
+}
+.keyword2 {
+  float: center;
+  width: 100px;
+  cursor:pointer;
+}
+.btnList {
+  display: inline-flex;
+}

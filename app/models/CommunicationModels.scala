@@ -10,11 +10,13 @@ import akka.actor.ActorRef
 
 case class Report(id: GeoSquare, count: Long)
 case object TotalTweets
+case class TweetsFromSquare(square: GeoSquare)
 case object Winner
 case object ReportCount
 case object StartGeo
 case object Collect
 case object Opacities
+case object Done
 
 /* Messages for communication with the TweetManager, the TweetSearcher and TweetStreamer */
 

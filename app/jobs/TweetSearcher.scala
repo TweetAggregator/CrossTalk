@@ -55,6 +55,7 @@ class TweetSearcher(qList: List[(TweetQuery, ActorRef)], checker: ActorRef, sear
   def receive = {
     
     case Ping =>
+      Logger.info("TweetSearcher: asking for some tweets...") /* TODO: remove, there just for tests */
       /* Contact the Twitter API and ask for tweet. If the query was alread done before, just ask for updates. */
       val (query, listener, callback) = qurs(next)
       try {

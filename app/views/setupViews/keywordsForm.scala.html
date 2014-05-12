@@ -1,0 +1,108 @@
+@(initialInputForm: Form[InitialInput])
+
+@import helper._
+@import helper.twitterBootstrap._
+
+@** *********************************************************************** **@
+@** Helper for the view **@
+
+@keywordField(field: Field, className: String = "keyword2") = {
+    @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
+    	<input type="text" name="@name" value="@value"> 
+        <a class="removeKeyword initbtn">Remove</a>
+    }
+}
+
+@languageBlock(className: String = "language") = {
+    <div class="clearfix @className">
+ 
+         <div class="keywords">
+            @repeat(initialInputForm("keywords"), min = 0) { keyword => @keywordField(keyword) }
+            
+            @** Hidden block that will be used as template for Javascript copy code **@
+            @keywordField(initialInputForm("keywords[x]"), className = "templ_keyword")
+            
+            <div class="clearfix">
+                <div class="input" align="left">
+                    <a class="addKeyword initbtn" id="addKeyword">Add keyword</a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+}
+
+@** *********************************************************************** **@
+@** Actual display **@
+@header("Tweet Aggregator")
+
+
+
+	<h1>Enter your Keywords</h1>
+	@helper.form(action = setup.routes.Keywords.initialSubmission) {
+ 		<div id="keywords">
+ 				@languageBlock()
+
+
+     <h1>  Choose translation languages </h1>
+   @for((t, index) <- setup.Keywords.targetLanguages.zipWithIndex) {
+       <input type="checkbox" name="languages[@index]" value="@index">@t._2 <br>
+   }
+			
+	     
+    <div class="actions">
+      <font size="4"> <b> <input type="submit" value="Find synonyms and translations!"> </b>
+        <a href="@setup.routes.General.viewParams" class="btn">Cancel</a> </font>
+    </div>
+      
+  }
+  
+@** *********************************************************************** **@
+@** Now we need to add some scripts **@
+    
+    <script type="text/javascript" charset="utf-8">
+    			var keyCount = 0;
+					$('.removeLanguage').live('click', function(e) {
+						$(this).parents('.language').remove()
+						keyCount--;
+						renumber()
+					})
+
+					$('.removeKeyword').live('click', function(e) {
+						var keywords = $(this).parents('.keywords')
+						$(this).parents('.keyword2').remove()
+						renumber(keywords)
+						document.getElementById("addKeyword").style.display="initial";
+					})
+
+					$('.addKeyword').live('click', function(e) {
+								var keywords = $(this).parents('.keywords')
+								var template = $('.templ_keyword', keywords)
+								template.before('<div class="clearfix keyword2">' + template.html() + '</div>')
+								renumber(keywords)
+								keyCount++;
+								if(keyCount > 1) {
+									document.getElementById("addKeyword").style.display="none";
+									}
+
+							})
+
+					$('.addLanguage').live('click', function(e) {
+								var template = $('.templ_language')
+								template.before('<div class="clearfix language">' + template.html() + '</div>')
+								renumber()
+							})
+
+				var renumber = function(keywords) {
+        	$('.language').each(function(i) {
+        	$('input', this).each(function() {
+        		$(this).attr('name', $(this).attr('name').replace(/translations\[.+?\]/g, 'translations[' + i + ']'))
+         	})
+          $('.keyword2 input', this).each(function(i) {
+          	$(this).attr('name', $(this).attr('name').replace(/keywords\[.+\]/g, 'keywords[' + i + ']'))
+          })
+          })
+        }
+				</script>
+    
+@footer()

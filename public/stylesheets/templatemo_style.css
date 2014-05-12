@@ -450,3 +450,25 @@ a.menu-toggle-btn {
     margin: 0 0 0 20px;
   }
 }
+/*------------------------------------------------------
+  HEADERS 
+--------------------------------------------------------*/
+h1, h2, h3, h4, h5, h6 {
+	font-style: normal;
+	font-weight: normal;
+	margin: 10px 0 15px 0;
+	color: #333;
+	line-height: 1.3em;
+}
+h1 { font-size: 2em; }
+h2 { font-size: 1em; }
+h3 { font-size: 0.6em; }	
+h4 { font-size: 0.5em; }	
+h5 { font-size: 0.3em; }
+
+/*------------------------------------------------------
+  GENERAL DIV STYLE
+--------------------------------------------------------*/
+.main_content {
+  margin: 30px 20px 30px 20px;
+}

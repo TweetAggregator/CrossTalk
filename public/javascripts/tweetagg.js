@@ -5,11 +5,14 @@ var map = po.map()
 var div = document.getElementById("map"),
     svg = div.appendChild(po.svg("svg"));
 map.container(svg);
-
 var interact = po.interact(); //create separate object for the focus so we can remove it when drawing a rectangle
 map.add(interact); //enable move and zoom events
 map.on("resize", update);
 map.on("move", update);
+
+var center = new Object;
+center.lat = -122.5198
+center.lon = 37.6335
 
 //map tiles initialization
 map.add(po.image()
@@ -20,35 +23,136 @@ map.add(po.image()
 
 // +/- zoom buttons on map
 map.add(po.compass()
-    .pan("none"));
+    .pan("none")
+);
+
+function debug(object) {
+	console.log(JSON.stringify(object));//, null, 4));
+}
 
 var coordinates_array = [];
 
-/* 
-  converts {"x": screenCoordX, "y": screenCoordY}
-  to {"lat": geoLatitude, "lon": geoLongitude}
-*/
+/**
+ * converts {"x": screenCoordX, "y": screenCoordY}
+ * to {"lat": geoLatitude, "lon": geoLongitude}
+ */
 function pxToGeo(json) {
   return map.pointLocation(json);
 }
 
+/**
+  * Code Adrien
+  *
+  */
+ 
+ //Graphical environnement
+var graph = document.getElementById("map").getElementsByTagName("svg")[0].appendChild(po.svg("g"));
+
+//Translating function 
+  /*@brief: Transforms the raw data in pixels
+    @expects: [{x, y, r}, {x,y,r}...]
+  */
+function generateData(centers){
+  var res = [];
+  for(var i = 0; i < centers.length; i++) {
+    var e = centers[i], copy = e;
+    copy.y = copy.y + copy.r;
+    var toPix = geoToPx(e), nR = Math.abs(geoToPx(copy).y - toPix.y);
+    res.push(JSON.parse('{"x":'+toPix.x+', "y":'+toPix.y+', "r": '+nR+'}'));
+  }
+  return res;
+}
+
+//Functions to draw
+  //Expects input of the form {"x": _, "y": _, "r": _}
+function drawCircle(entry) {
+  var point = graph.appendChild(po.svg("circle")); 
+  point.setAttribute("cx", entry.x);
+  point.setAttribute("cy", entry.y);
+  point.setAttribute("r", entry.r);
+}
+
+  //Goes through the list of centers at one level
+function drawCenters(clusts){
+  for(var i = 0; i < clusts.length; i++) {
+    drawCircle(clusts[i]);
+  }
+}
+
+
+//Helper functions
+  //Translates pixels {"x": _, "y":_, "r":_ } into geolocation 
+  //using only the x and y attribute; Returns {"lat":_, "lon":_}
+function pxToGeo2(pt){
+  return map.pointLocation(JSON.parse('{"x":'+ pt.x+', "y": '+pt.y+'}'));
+}
+
+  //Translates geolocation {"lat": _, "lon":_} into pixel {"x":_, "y": _}
+function geoToPx(pt){
+  //Trouble parsing here
+  return map.locationPoint(JSON.parse('{ "lat":'+pt.x+', "lon": '+pt.y+'}'));
+}
+
+/**
+  * END Code Adrien
+  *
+  */
+
 /*
-  calculates and stores the geographical information corresponding to the current view of the map
-*/
+ * build the initial map with a corresponding view as well as the selected regions if any
+ */
+var VC;
+var MZ;
+function init(viewCenter, mapZoom) {
+	console.log("function init")
+	if (!map) {
+		setTimeout(function() {
+			init(viewCenter, mapZoom)
+		}, 10) //busy wait while map is not yet loaded
+	}
+	map.center(viewCenter);
+	map.zoom(mapZoom);
+}
+
+function showRegionIntesity(viewCenter, mapZoom, regionList) {
+	console.log("function showRegionIntesity")
+	if (!map) {
+		setTimeout(function() {
+			reload(viewCenter, zoom, regionList)
+		}, 10) //busy wait while map is not yet loaded
+	}
+	console.log("length:"+regionList.length)
+	for (index = 0; index < regionList.length; ++index) {
+		var elem = regionList[index]
+		console.log("iter:"+JSON.stringify(elem))
+		if (elem)
+			addNewSubRegion(elem[0], elem[1], elem[2]) //save the regions
+	}
+	map.center(viewCenter);
+	map.zoom(mapZoom);
+}
+
+/**
+ *  calculates and stores the geographical information corresponding to the current view of the map
+ */
 var topCorner;
 var bottomCorner;
 function update() {
-  topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}'));
-  bottomCorner = pxToGeo(map.size());
-  var myString = "<br/>lat 0: ".concat(topCorner.lat.toString()) +
-    "<br/>lon: ".concat(topCorner.lon) +
-    "<br/>lat".concat(bottomCorner.lat) +
-    "<br/>lon".concat(bottomCorner.lon);
-  //document.getElementById('myDiv').innerHTML = myString ; //show the information in the sidebar
-}
-
-function load(e) {
-
+	if  (!map) {
+		setTimeout(function() {update() }, 100) //busy wait while map is not yet loaded
+	}
+	var elem;
+	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}')); //TODO: pass to Play!
+	bottomCorner = pxToGeo(map.size());
+	elem = document.getElementById("viewBoundaries")
+	if (elem)
+		elem.value = JSON.stringify([topCorner, bottomCorner])
+	elem = document.getElementById("viewCenter")
+	if (elem)
+		elem.value = JSON.stringify(map.center())
+	elem = document.getElementById("zoomLevel")
+	if (elem)
+		elem.value = map.zoom()
 }
 
 /*
@@ -71,7 +175,7 @@ var idcount = 0; //if counter
 var newRegionFlag = 0; // enables to resize the rectangle 
 var start = new Object(); //x, y in pixles
 /*
- * When we start a click-and-drag action and the user slected to create a new region (i.e. flag)
+ * When we start a click-and-drag action and the user selected to create a new region (i.e. flag)
  * we start by creating a container on top of the map such that the user can see what he is doing 
  */
 div.addEventListener("mousedown", function(){
@@ -82,8 +186,8 @@ div.addEventListener("mousedown", function(){
     rect.setAttribute("width", 5);
     rect.setAttribute("height", 5);
     //fix the initial position of the rectangle, drawing is only possible top-down, left-right
-    start.x =  window.event.clientX;
-    start.y = window.event.clientY;
+    start.x =  window.event.clientX - 10; // Addition of some corrector factors (due to the design)
+    start.y = window.event.clientY - 150; // Addition of some corrector factors (due to the design)
     g.setAttribute("transform", "translate(" + start.x + "," + start.y + ")"); //I don't know why we need this
     newRegionFlag = 1;
   }
@@ -121,14 +225,12 @@ div.addEventListener("mouseup", function(){
       end.x = start.x+parseInt(rect.getAttribute("width"));
       end.y = start.y+parseInt(rect.getAttribute("height"));
       var topLeft = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+start.y+'}'))
-     // var topRight = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+end.y+'}'))
       var bottomRight = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+end.y+'}'))
-     // var bottomLeft = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+start.y+'}'))
       coordinates_array.push([topLeft,bottomRight]);
-      
-      var jCoordinates = JSON.stringify(coordinates_array)
-      coordinates.value = jCoordinates
-
+      //coordinates.value = jCoordinates
+      document.getElementById("coordinates").value = JSON.stringify(coordinates_array)
+      //console.log(coordinates.value)
+      //debug(coordinates.value)
       addNewRegion(topLeft, bottomRight)
       map.add(interact) //put back move and resize focus on the map
       
@@ -145,6 +247,17 @@ function addNewRegion(topLeft, bottomRight) {
   container.setAttribute("class", container.getAttribute("class")+" region id"+idcount);
   container.setAttribute("onClick", "removeThis(e)"); //does not work so far
   
+
+}
+
+function addNewRegions(regionList) {
+	var i = 0;
+  //alert(regionList.length)
+	while (i < regionList.length) {
+		addNewRegion(regionList[i][0], regionList[i][1])
+		i++;
+	}
+	console.log("done")
 }
 
 /*
@@ -171,19 +284,8 @@ function divToGeoJson(topLeft, bottomRight) {
   return region.container()
 }
 
-//zoom level -> cluster
-function showCircles(listOfList) {
-
-}
-
 /*
- * still have to figure out how to do this is needed
- */ 
-function addCircle(geoCenter, radius) {
-}
-
-/*
- * NOT FUNCTIONING YET -> IS IT NEEDED
+ * NOT FUNCTIONING YET -> IS IT NEEDED?
  * function to remove a region when it is clicked
  * I think the map layer intercept all clicks...
  */
@@ -201,39 +303,5 @@ function reset() {
      regions[0].parentNode.removeChild(regions[0]);
   }
   coordinates_array = [];
-  coordinates.value = "";
+  document.getElementById("coordinates").value = "";
 }
-/*var testArray = []
-/*function debug() {
-  testArray.push([3.33,5.22]);
-  testArray.push([4.63,73.12]);
-  var jsonTestArray = JSON.stringify(testArray);
-  var x = pxToGeo(JSON.parse('{"x":'+100+', "y": '+100+'}'));
-  var y = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+500+'}'));
-  addNewRegion(x, y);
-  var middle = JSON.parse('{"lat":'+(x.lat+y.lat)/2+', "lon": '+(x.lon+y.lon)/2+'}');
-  var topmiddle = JSON.parse('{"lat":'+x.lat+', "lon": '+(x.lon+y.lon)/2+'}');
-  var bottommiddle = JSON.parse('{"lat":'+y.lat+', "lon": '+(x.lon+y.lon)/2+'}');
-  var leftmiddle = JSON.parse('{"lat":'+(x.lat+y.lat)/2+', "lon": '+x.lon+'}');
-  var rightmiddle = JSON.parse('{"lat":'+(x.lat+y.lat)/2+', "lon": '+y.lon+'}');
-  addNewSubRegion(x, middle, Math.random()/4+0.2);
-  addNewSubRegion(topmiddle, rightmiddle, Math.random()/4+0.2);
-  addNewSubRegion(middle, y, Math.random());
-  addNewSubRegion(leftmiddle, bottommiddle, Math.random()/4+0.2);
-  var z = JSON.parse('{"lat":'+(x.lat+y.lat)/2+', "lon": '+x.lon+'}');
-  addNewSubRegion(z, y, Math.random()/4+0.2);
-  x = pxToGeo(JSON.parse('{"x":'+200+', "y": '+50+'}'));
-  y = pxToGeo(JSON.parse('{"x":'+800+', "y": '+400+'}'));
-  addNewRegion(x, y);
-  x = pxToGeo(JSON.parse('{"x":'+900+', "y": '+20+'}'));
-  y = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+40+'}'));
-  addNewRegion(x, y);
-  x = pxToGeo(JSON.parse('{"x":'+1000+', "y": '+40+'}'));
-  y = pxToGeo(JSON.parse('{"x":'+1100+', "y": '+60+'}'));
-  addNewRegion(x, y);
-  // Generate a form
-        $("#myform").dform(jsonTestArray);
-}
-
-
-debug(); //only used for debugging */

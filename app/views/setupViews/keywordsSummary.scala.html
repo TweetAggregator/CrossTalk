@@ -1,0 +1,157 @@
+@(keywordsForm: Form[AllTranslations])
+
+@import helper._
+@import helper.twitterBootstrap._
+
+@** *********************************************************************** **@
+@** Helper for the view **@
+
+@keywordField(field: Field, className: String = "keyword") = {
+    @input(field, '_label -> "", '_class -> className) { (id, name, value, _) =>
+           <span class="clearfix btnList">
+           <input type="hidden" name="@name" value="@value"> 
+                &bull; 
+                @field.value &nbsp&nbsp
+        <a class="removeKeyword btn">Remove</a> &nbsp&nbsp
+        </span>
+        
+    }
+}
+
+@keywordFieldHidden(field: Field, className: String = "keyword") = {
+@defining(field) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
+}
+
+@languageBlock(field: Field, className: String = "language") = {
+
+@** Display the translations-Title **@
+
+@if(field("targetLanguage").value==Some("Seperator")){
+	<br> <font size="5">Translation Results</font> </br>
+	
+}else {
+@** Display the translations **@
+
+@if(field("targetLanguage").value!=Some("Ignore")){
+	
+	
+	
+    <div class="clearfix @className">
+       <font size="4"> Results for the translation of <em>@field("originalKeyword").value </em>
+        to <em>@field("targetLanguage").value  </em> </font>
+
+
+        <a class="removeLanguage btn">Remove everything related to this translation</a>
+@defining(field("targetLanguage")) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
+
+@defining(field("originalKeyword")) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
+         <div class="keywords">
+
+            @repeat(field("keywords"), min = 0) { keyword => @keywordField(keyword) }
+            
+            @** Hidden block that will be used as template for Javascript copy code **@
+            @keywordField(field("keywords[x]"), className = "templ_keyword")
+            
+            
+        </div>
+</div>
+}  else{
+
+    
+@** Display original keyword in a special manner **@
+
+                 <div class="clearfix @className">
+        <font size="4"> @field("originalKeyword").value </font>
+@defining(field("targetLanguage")) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
+
+@defining(field("originalKeyword")) { hiddenField =>
+  <input type="hidden" name="@hiddenField.name" id="@hiddenField.id" value="@hiddenField.value">
+}
+
+         <div class="keywords">
+            @repeat(field("keywords"), min = 0) { keyword => @keywordFieldHidden(keyword) }
+            
+            @** Hidden block that will be used as template for Javascript copy code **@
+            @keywordFieldHidden(field("keywords[x]"), className = "templ_keyword")
+            
+            
+        </div>
+
+
+        </div>
+        }
+}
+}
+
+@** *********************************************************************** **@
+@** Actual display **@
+
+@header("Tweet Aggregator")
+
+    <h1>Remove inacurate translations</h1>
+    
+   <font size="5">Keywords entered by the user</font> 
+    @helper.form(action = setup.routes.Keywords.finalSubmission) {
+        <div id="keywords">
+        
+            @repeat(keywordsForm("translations")) { language =>
+                @languageBlock(language)
+            }
+         
+  
+    <div class="actions">
+       <font size="4"> <input type="submit" value="Select those keywords!"> </font>
+        <a href="@setup.routes.General.viewParams" class="btn">Cancel</a>
+    </div>
+      
+  }
+  
+@** *********************************************************************** **@
+@** Now we need to add some scripts **@
+    
+    <script type="text/javascript" charset="utf-8">
+                    $('.removeLanguage').live('click', function(e) {
+                        $(this).parents('.language').remove()
+                        renumber()
+                    })
+
+                    $('.removeKeyword').live('click', function(e) {
+                        var keywords = $(this).parents('.keywords')
+                        $(this).parents('.keyword').remove()
+                        renumber(keywords)
+                    })
+
+                    $('.addKeyword').live('click', function(e) {
+                                var keywords = $(this).parents('.keywords')
+                                var template = $('.templ_keyword', keywords)
+                                template.before('<div class="clearfix keyword">' + template.html() + '</div>')
+                                renumber(keywords)
+                            })
+
+                    $('.addLanguage').live('click', function(e) {
+                                var template = $('.templ_language')
+                                template.before('<div class="clearfix language">' + template.html() + '</div>')
+                                renumber()
+                            })
+
+                var renumber = function(keywords) {
+            $('.language').each(function(i) {
+            $('input', this).each(function() {
+                $(this).attr('name', $(this).attr('name').replace(/translations\[.+?\]/g, 'translations[' + i + ']'))
+            })
+          $('.keyword input', this).each(function(i) {
+            $(this).attr('name', $(this).attr('name').replace(/keywords\[.+\]/g, 'keywords[' + i + ']'))
+          })
+          })
+        }
+                </script>
+    
+@footer()
