@@ -9,6 +9,7 @@ import TweetManager._
 import models._
 import scala.concurrent.Await
 import utils.AkkaImplicits._
+import utils.Enrichments._
 
 /** Takes care of the counters for an area designed by square, splitted according rows / cols */
 class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols: Int) extends Actor {
@@ -23,10 +24,16 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols
     x => (x._1, (x._2 % rows, x._2 / cols))
   }.toMap
 
+  val opacityCorrector = getConfDouble("GeoPartitionner.opacityCorrector", "Geopartitionner: cannot find opacity corrector")
+  val minOpacity = getConfDouble("GeoPartitionner.minOpacity", "Geopartitionner: cannot find min opacity")
+  
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]): Map[GeoSquare, Double] = {
-    val maxTweets = if(!tweetCounts.isEmpty) tweetCounts.values.max else 0
-    if (maxTweets == 0) tweetCounts.mapValues(_ => 0)
-    else tweetCounts.mapValues(0.5 * _ / maxTweets)
+    if (tweetCounts.isEmpty) Map() /* No data for now ! */
+    else {
+      val maxTweets = tweetCounts.values.max
+      /* If we received a small amoount of tweets, we still want to see them ! */
+      tweetCounts.mapValues(v => if(v !=0) (minOpacity + opacityCorrector * v / maxTweets) else 0)
+    }
   }
 
   def receive = {
