@@ -6,9 +6,10 @@
       <div id="map" style="height:700px;float:left;width:85%;">
         <script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
         <script>
-        //use "at HTML()" for escaping html code!
+
         var viewCenter = {lon: @viewCenter._1, lat: @viewCenter._2}
         console.log(JSON.stringify(viewCenter))
+        
         var regions = [ @for(region <- regionDensityList){ [{lon: @region._1._1, lat: @region._1._2}, {lon: @region._1._3, lat: @region._1._4}, @region._2], } ]
         console.log(JSON.stringify(regions))
         showRegionIntesity(viewCenter, @mapZoom, regions)

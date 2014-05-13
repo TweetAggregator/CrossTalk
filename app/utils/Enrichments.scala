@@ -93,7 +93,8 @@ object Enrichments {
     def toJson = {
       def setToJson(set: Set[Cluster]): String = {
         def clustToJson(clust: Cluster) = s"""{"x": ${clust.center._2},"y": ${clust.center._1}, "r": ${clust.center._2 + clust.radius}, "d": ${clust.tweetMeter}}"""
-        s"""{"centers": [${set.tail.foldLeft(clustToJson(set.head))((acc, s) => acc + "," + clustToJson(s))}]}"""
+        if(!set.isEmpty) s"""{"centers": [${set.tail.foldLeft(clustToJson(set.head))((acc, s) => acc + "," + clustToJson(s))}]}"""
+        else s"""{"centers": [{}]}"""
       }
       s"""{"clusters": [${lst.tail.foldLeft(setToJson(lst.head))((acc, s) => acc + ", " + setToJson(s))}]}"""
     }

@@ -9,6 +9,7 @@ import TweetManager._
 import models._
 import scala.concurrent.Await
 import utils.AkkaImplicits._
+import utils.Enrichments._
 
 /** Takes care of the counters for an area designed by square, splitted according rows / cols */
 class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols: Int) extends Actor {
@@ -18,33 +19,35 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols
   var results: Map[GeoSquare, Long] = Map()
   /*List of all the queries to send*/
   val queries = TweetQuery(keywords, square, rows, cols).subqueries
-  /*List of listeners*/
-  val listeners: List[ActorRef] = queries.map(x => ActorSystem().actorOf(Props(new Counter(x.area, self))))
 
   def squareCoords: Map[GeoSquare, (Int, Int)] = queries.map(_.area).zipWithIndex.map {
     x => (x._1, (x._2 % rows, x._2 / cols))
   }.toMap
 
+  val opacityCorrector = getConfDouble("GeoPartitionner.opacityCorrector", "Geopartitionner: cannot find opacity corrector")
+  val minOpacity = getConfDouble("GeoPartitionner.minOpacity", "Geopartitionner: cannot find min opacity")
+  
   def computeOpacity(tweetCounts: Map[GeoSquare, Long]): Map[GeoSquare, Double] = {
-    val maxTweets = tweetCounts.values.max
-    if (maxTweets == 0) tweetCounts.mapValues(_ => 0)
-    else tweetCounts.mapValues(0.5 * _ / maxTweets)
+    if (tweetCounts.isEmpty) Map() /* No data for now ! */
+    else {
+      val maxTweets = tweetCounts.values.max
+      /* If we received a small amoount of tweets, we still want to see them ! */
+      tweetCounts.mapValues(v => if(v !=0) (minOpacity + opacityCorrector * v / maxTweets) else 0)
+    }
   }
 
   def receive = {
     case StartGeo =>
-      val resp = TweetManagerRef.?(AddQueries(queries zip listeners))
+      val resp = TweetManagerRef.?(AddQueries(queries.map((_, self))))
       Await.ready(resp, defaultDuration)
       sender ! Done
 
     case Winner => println("winner is: " + results.maxBy(_._2))
 
-    case Collect => listeners.foreach(_ ! ReportCount)
-
-    case Report(id, count) =>
-      total += count
-      val prev: Long = results.getOrElse(id, 0)
-      results += (id -> (prev + count))
+    case Tweet(value, query) =>
+      total += 1
+      val prev: Long = results.getOrElse(query.area, 0)
+      results += (query.area -> (prev + 1))
 
     case TotalTweets => sender ! total
 
@@ -55,8 +58,16 @@ class GeoPartitionner(keywords: List[String], square: GeoSquare, rows: Int, cols
         sender ! counts.sum
       }
 
-    case Opacities =>
-      sender ! computeOpacity(results)
+    case LeafClusters =>
+      val leafClusters: List[LeafCluster] = for {
+        geoSquare <- results.keys.toList
+      } yield {
+        val pos = squareCoords(geoSquare)
+        LeafCluster(pos, results(geoSquare), geoSquare)
+      }
+      sender ! leafClusters
+
+    case Opacities => sender ! computeOpacity(results)
   }
 
 }

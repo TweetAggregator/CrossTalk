@@ -7,6 +7,7 @@ import akka.actor.ActorSystem
 import akka.actor.Props
 import play.api.data._
 import play.api.data.Forms._
+import java.io.File
 
 /**
  * Main controller (about / welcome page)
@@ -14,6 +15,13 @@ import play.api.data.Forms._
 object Application extends Controller {
   
   /* Just the static index page */
-  def index = Action(Ok(views.html.index()))
+  def index = Action {
+
+  	/* Just creating the requird folder to store the data if required */
+  	val folder = new File("tweets")
+  	if(!folder.exists) folder.mkdir
+
+  	Ok(views.html.index())
+  }
   
 }

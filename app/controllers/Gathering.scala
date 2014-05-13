@@ -27,6 +27,7 @@ import java.util.concurrent.TimeoutException
 
 import jobs._
 import models._
+import clustering._
 import utils.AkkaImplicits._
 import TweetManager._
 
@@ -42,6 +43,7 @@ trait GatheringController { this: Controller =>
 
   /** For each square, three geoparts: keyword1, keyword2 and keywor1&2 */
   val geoParts: MutableMap[Square, (ActorRef, ActorRef, ActorRef)] = MutableMap()
+  val geoPartSizes: MutableMap[ActorRef, (Int, Int)] = MutableMap()
   def geos1 = geoParts.values.map(_._1)
   def geos2 = geoParts.values.map(_._2)
   def geos3 = geoParts.values.map(_._3)
@@ -66,7 +68,9 @@ trait GatheringController { this: Controller =>
     val geoSquare = GeoSquare(square._1, square._2, square._3, square._4)
     val rows = granularity(square._4, square._2)
     val cols = granularity(square._3, square._1)
-    Props(geoPartitioner(keys, geoSquare, rows, cols))
+    val geoPart: ActorRef = Props(geoPartitioner(keys, geoSquare, rows, cols))
+    geoPartSizes += (geoPart -> (rows, cols))
+    geoPart
   }
 
   def squareFromGeoMap[T](geoMaps: List[Map[GeoSquare, T]]) = {
@@ -154,7 +158,6 @@ trait GatheringController { this: Controller =>
 
   def controlDisplay = Action {
     val allGeos = geoParts.flatMap(v => v._2._1 :: v._2._2 :: v._2._3 :: Nil)
-    allGeos foreach (_ ! Collect)
     Ok(views.html.gathering(askGeos[Long](allGeos, TotalTweets).sum))
   }
 
@@ -202,8 +205,11 @@ trait GatheringController { this: Controller =>
         try {
     	
           val (nbSet, sets, inters) = computeVenn(GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4), key1, key2)
-          
-          Ok(views.html.mapClustering(viewCenter, zoomLevel, ("", "", ""))(nbSet, sets, inters))
+
+          val clusters1 = computeClusters(geos1)
+          val clusters2 = computeClusters(geos2)
+          val clusters3 = computeClusters(geos3)
+          Ok(views.html.mapClustering(viewCenter, zoomLevel, (clusters1, clusters2, clusters3))(nbSet, sets, inters))
         } catch {
           case e: TimeoutException =>
             Logger.info("Gathering: Timed out")
@@ -213,15 +219,24 @@ trait GatheringController { this: Controller =>
         Logger.error("Gathering: Computing clusters BadRequest")
         BadRequest
     }
+  }
+
+  def computeClusters(geos: Iterable[ActorRef]): List[Set[Cluster]] = {
+    val leafClusters = askGeos[List[LeafCluster]](geos, LeafClusters)
+    val clusters: Iterable[List[Set[Cluster]]] =
+      for ((geoPart, leaves) <- (geos3 zip leafClusters)) yield {
+        val (rows, cols) = geoPartSizes(geoPart)
+        val clust = new ClustHC(leaves, rows, cols)
+        clust.compute
+      }
+    (for (i <- 0 until clusters.head.size) yield {
+      clusters.flatMap(_(i)).toSet
+    }).toList
 
   }
 
   /** Compute the Venn diagram based on a GeoSquare. Return the required format for the venn.scala.html view. */
   def computeVenn(geoFocussed: GeoSquare, key1: String, key2: String) = {
-
-    geos1 foreach (_ ! Collect)
-    geos2 foreach (_ ! Collect)
-    geos3 foreach (_ ! Collect)
 
     val counts1 = askGeos[Long](geos1, TweetsFromSquare(geoFocussed))
     val counts2 = askGeos[Long](geos2, TweetsFromSquare(geoFocussed))
