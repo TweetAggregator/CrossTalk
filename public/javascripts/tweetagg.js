@@ -14,6 +14,7 @@ var center = new Object;
 center.lat = -122.5198
 center.lon = 37.6335
 
+var mapborders = [];
 //map tiles initialization
 map.add(po.image()
     .url(po.url("http://{S}tile.cloudmade.com"

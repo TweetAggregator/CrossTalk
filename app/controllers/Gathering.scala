@@ -169,7 +169,8 @@ trait GatheringController { this: Controller =>
     val focussedOption = Cache.getAs[Square]("focussed")
     val viewCenterOption = Cache.getAs[(Double, Double)]("viewCenter")
     val zoomLevelOption = Cache.getAs[Double]("zoomLevel")
-
+    val mapBoundaries = Cache.getAs[Square]("viewBoundaries");
+    
     (viewCenterOption, zoomLevelOption, focussedOption, keys) match {
       case (Some(viewCenter), Some(zoomLevel), Some(focussed), Some((key1, key2))) =>
         try {

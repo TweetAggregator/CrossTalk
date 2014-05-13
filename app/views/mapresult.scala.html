@@ -4,6 +4,8 @@
 
 	<div style="height:700px;">
       <div id="map" style="height:700px;float:left;width:85%;">
+      <input type="hidden" name="mapBorders" id="mapBorders" value="">
+      <button>Refresh</button>
         <script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
         <script>
 
@@ -14,6 +16,7 @@
         console.log(JSON.stringify(regions))
         showRegionIntesity(viewCenter, @mapZoom, regions)
         </script>
+
       </div>
       <div style="float:right;height:85%;width:14.5%;padding-left:5px;">
         @venn(nbSet, sets, inters)
