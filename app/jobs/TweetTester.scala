@@ -47,7 +47,10 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
   /* Time the Streamer has to wait before exploring the stream again once a matching tweet found. */
   val waitToExplore = getConfInt("tweetTester.waitToExplore", "TweetTester: key waitToExplore not defined in conf.")
 
-  val listenersOfAWord = new HashMap[String, List[(TweetQuery, ActorRef)] ]()
+  /**
+   * For each word, the listeners of this word, and their frequency of emiting tweets
+   */
+  val listenersOfAWord = new HashMap[String, List[(Int, (TweetQuery, ActorRef))] ]()
   val probaOfAWord = new HashMap[String, Int]()
   val newRandom = new Random(System.currentTimeMillis)
   /**
@@ -95,13 +98,15 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
       nextCouple = bottomList.head
       val currentHashKeywords = hashKeyWords(nextCouple._1.keywords)
       if (listenersOfAWord.contains(currentHashKeywords)){
-        listenersOfAWord(currentHashKeywords) :+= (nextCouple._1, nextCouple._2)
+        val newTuple = new Tuple2(this.newRandom.nextInt(probaOfAWord.get(currentHashKeywords).get), new Tuple2(nextCouple._1, nextCouple._2))
+        listenersOfAWord(currentHashKeywords) :+= newTuple
       }
       else{
-        var newList: List[(TweetQuery, ActorRef)] = Nil
-        newList :+= (nextCouple._1, nextCouple._2)
+        val randomOfThisWord = newRandom.nextInt(maxValue) + 1
+        var newList: List[(Int, (TweetQuery, ActorRef))] = Nil
+        newList :+= (this.newRandom.nextInt(randomOfThisWord), (nextCouple._1, nextCouple._2))
         listenersOfAWord.put(currentHashKeywords, newList)
-        probaOfAWord.put(currentHashKeywords, newRandom.nextInt(maxValue) + 1)
+        probaOfAWord.put(currentHashKeywords, randomOfThisWord)
       }
       bottomList = bottomList.tail
     }
@@ -114,14 +119,18 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
   }
   
   def feedListeners(){
-    for (currentWord: (String, List[(TweetQuery, ActorRef)]) <- listenersOfAWord){
+    for (currentWord: (String, List[(Int, (TweetQuery, ActorRef))]) <- listenersOfAWord){
       var i = probaOfAWord(currentWord._1)
       var next = (newRandom.nextInt( (currentWord._2.size) ) + 2) / 2 
       
       while (i > 0){
-        for (currentListener: (TweetQuery, ActorRef) <- currentWord._2){
+        for (currentListener: (Int, (TweetQuery, ActorRef)) <- currentWord._2){
           if (next == 0){
-        	currentListener._2 ! (new Tweet(Json.parse(createRandomNewTweet()), currentListener._1))
+            var sendToThisSquare = 0
+            while (sendToThisSquare < currentListener._1){
+              currentListener._2._2 ! (new Tweet(Json.parse(createRandomNewTweet()), currentListener._2._1))
+              sendToThisSquare += 1
+            }
           	i -= 1
           	next = (newRandom.nextInt(currentWord._2.size) + 2) / 2
           }
