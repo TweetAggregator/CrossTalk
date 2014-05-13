@@ -145,7 +145,7 @@ function update() {
 	var elem;
 	topCorner = pxToGeo(JSON.parse('{"x":0, "y": 0}')); //TODO: pass to Play!
 	bottomCorner = pxToGeo(map.size());
-	elem = document.getElementById("viewBoundaries")
+	elem = document.getElementById("focussed")
 	if (elem)
 		elem.value = JSON.stringify([topCorner, bottomCorner])
 	elem = document.getElementById("viewCenter")
