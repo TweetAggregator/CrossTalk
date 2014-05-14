@@ -34,6 +34,16 @@ case class Cluster(var subClusters: Set[LeafCluster]) {
 
   /* Radio for same are between a circle and the rectangle, used for the clustering. NB : approximation. */
   def radius = Math.sqrt((area.lat2 - area.lat1) * (area.long2 - area.long1) / Math.PI)
+
+  def computeArea(c2: Cluster): Int = {
+    val tops = List(this.topLeft, c2.topLeft)
+    val bots = List(this.bottomRight, c2.bottomRight)
+
+    val tx = tops.map(_._1).min; val ty = tops.map(_._2).min
+    val bx = bots.map(_._1).max; val by = bots.map(_._2).max
+
+    Math.abs(tx - bx) * Math.abs(ty - by)
+  }
 }
 
 case class LeafCluster(pos: (Int, Int), numTweets: Long, area: GeoSquare) 
