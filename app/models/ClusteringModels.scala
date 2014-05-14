@@ -44,6 +44,15 @@ case class Cluster(var subClusters: Set[LeafCluster]) {
 
     Math.abs(tx - bx) * Math.abs(ty - by)
   }
+
+  def computeAreaBounds(c2: Cluster): ((Int, Int), (Int, Int)) = {
+    val tops = List(this.topLeft, c2.topLeft)
+    val bots = List(this.bottomRight, c2.bottomRight)
+
+    val tx = tops.map(_._1).min; val ty = tops.map(_._2).min
+    val bx = bots.map(_._1).max; val by = bots.map(_._2).max
+    ((tx, ty), (bx, by))
+  }
 }
 
 case class LeafCluster(pos: (Int, Int), numTweets: Long, area: GeoSquare) 

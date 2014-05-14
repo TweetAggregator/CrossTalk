@@ -29,27 +29,27 @@ class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
       val beta = i.toDouble / 10.0
       res :+= clusterOnce(res.last, beta * totalArea.toDouble * areaCorrector, (beta  * totalTweetDensity) * thresholdCorrector)
     }
-    res.map(clst => cleanClusters(clst))
+    val cleaned = res.map(clst => cleanClusters(clst))
+    cleaned.foreach{i => println(s"a cluster size ${i.size}")}
+    println("Done")
+    cleaned
   }
 
   /** 
    *  @brief  Iterates at one granularity until no more clusters are formed 
    */
   private def clusterOnce(oldC: Set[Cluster], maxArea: Double, threshold: Double): Set[Cluster] = {
-    println(s"Cluster Once entering for ${maxArea}")
-    var lst = oldC.toList //TODO should put some order here
-    println(s"The old ${oldC}")
+    var lst = oldC.toList.sortBy(_.center) //TODO should put some order here
     val couples = (for(i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) <= maxArea))yield(i,j)).toList.groupBy(_._1)
-    val map: Map[Int, List[Int]] = couples.map(e => (e._1, e._2.map(_._2).sorted)).filter(_._2 == Nil)
+    val map: Map[Int, List[Int]] = couples.map(e => (e._1, e._2.map(_._2).sorted)).filter(_._2 != Nil)
+    println(s"The map ${map}")
     val p: Set[Cluster] = map.map(entry => findSweetSpot(entry._1, entry._2, lst,threshold)).filter(_ != None).map(_.get).toSet
 
     /*val p = (for (i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) <= maxArea))
       yield (aggregate(lst(i), lst(j)))).toSet.filter(c => c.size <= maxArea && c.tweetMeter >= threshold)*/
-    println("Before the filter")
+    println(s"Before the filter : ${p}")
     val filtered = p.filter(c1 => !p.exists(c2 => c2.intersect(c1) && c2.tweetMeter > c1.tweetMeter))
-    println("After the filter")
     val res = filtered ++ oldC.filter(l => !filtered.exists(c => c.intersect(l)))
-    println("Cluster Once end")
     if (res == oldC) oldC
     else clusterOnce(res, maxArea, threshold)
   }
@@ -59,7 +59,7 @@ class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
     val sorted = (values.sorted).reverse
     for(j <- sorted ){
       val aggr = aggregate(lst(key), lst(j))
-      if (aggr.size >= threshold)
+      if (aggr.tweetMeter >= threshold)
         return Some(aggr)
     }
     None
@@ -70,7 +70,12 @@ class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
    */
   private def aggregate(c1: Cluster, c2: Cluster): Cluster = {
     val aggreg = Cluster(c1.subClusters ++ c2.subClusters)
-    Cluster(aggreg.subClusters ++ leaves.filter(x => aggreg.contains(x.pos)))
+   /* val sorted_leaves = leaves.sortBy(_.pos)
+    val bounds = c1.computeAreaBounds(c2)
+    val index1 = bounds._1._1 * rows + bounds._1._2
+    val index2 = bounds._2._1 * rows + bounds._2._2
+    assert(index1 <= index2 && index2 < leaves.size && index1 >= 0)*/
+    Cluster(aggreg.subClusters ++ /*leaves.slice(index1, index2)*/ leaves.filter(x => aggreg.contains(x.pos)))
   }
 
   /**
