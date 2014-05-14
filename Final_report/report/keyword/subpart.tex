@@ -1,1 +1,31 @@
-\section{subpart for translation }
+\section{Keyword entering and keyword translation }
+\subsection{Translation}
+\subsubsection{Goal}
+The goal was to be able to detect more relevant tweets by automatically also looking for synonyms and translations of the keywords entered by the user.
+
+\subsubsection{Finding an API}
+
+Timo and Joris looked for an open and free API that enables us do to this task. After trying out some that finally did not meet our requirements, we found Glosbe. Timo contacted the developers of Glosbe in order to ensure that we will not be blocked by making too many requests on the API. In the meantime, Pierre looked for another synonym API because we were not entirely satisfied by the results, since sometimes Glosbe returns non-relevant results. Pierre found http://words.bighugelabs.com which returns a lot of synonyms for the English language. We finally decided to keep only Glosbe, as Pierre's library returned even more non-relevant results in the end, even though they were better classified and selectable.
+
+\subsubsection{Using Glosbe}
+
+Timo and Joris tried a number of different ways in order to make the HTTP-request for Glosbe and processing the response in the JSON-format. First, we tried to use the built-in library of the play-framework. But there was no proper documentation about it, and it's behavior was somehow unpredictable. Then we tried to use a library called Dispatch, which he had to import into our sbt-project. Unfortunately, there was not any documentation about it either, but we tried anyway. We ended up having to execute our code within a for-loop in order to get the HTTP-response, which resulted in unproper code, that did not completely work either. So we decided to use the HTTP-library from Apache, which is more a JAVA library than a Scala library, but it works.
+
+\subsubsection{Integrating it into the project}
+
+Joris reformated the code and made it compatible with the rest of the project.
+
+\subsection{Keyword entering interface}
+
+\subsubsection{Goal}
+Timo implemented an interface that enables the user to enter his keywords in english, to select the destination languages, to translate his keywords into the selected languages, and to remove inaccurate translations.
+
+\subsubsection{Details}
+I started from an existing form-template of the play-framework, and adapted it to get fields enabling the user to enter a keyword, and to remove it. There were some issues with the display of the forms and the adaptation of the java-script of the template to our purposes. Then, I needed to define a second page displaying the translation results, and I needed to design 2 different data structures for the input-form and the translation-result-form. After that, I had to integrate the existing Translator into the diplay and call it in an appropriate way for the user experience.
+
+\subsubsection{Integration into the project}
+The overall headers and footers of the project had a bad impact on the java-script-code of the interface. Therefore, it took quite some time to get the interface working within the project. Moreover, the css style-sheets of the project needed to be reconfigured to display the buttons and the forms in an elegant manner : what the template provided was not satisfactory.
+
+
+
+
