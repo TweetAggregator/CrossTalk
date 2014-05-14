@@ -36,14 +36,34 @@ class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
    *  @brief  Iterates at one granularity until no more clusters are formed 
    */
   private def clusterOnce(oldC: Set[Cluster], maxArea: Double, threshold: Double): Set[Cluster] = {
-    var lst = oldC.toList
-    val p = (for (i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) <= maxArea)) yield (aggregate(lst(i), lst(j)))).toSet.filter(c => c.size <= maxArea && c.tweetMeter >= threshold)
-    val filtered = p.filter(c1 => !p.exists(c2 => c2.intersect(c1) && c2.tweetMeter > c1.tweetMeter)) 
+    println(s"Cluster Once entering for ${maxArea}")
+    var lst = oldC.toList //TODO should put some order here
+    println(s"The old ${oldC}")
+    val couples = (for(i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) <= maxArea))yield(i,j)).toList.groupBy(_._1)
+    val map: Map[Int, List[Int]] = couples.map(e => (e._1, e._2.map(_._2).sorted)).filter(_._2 == Nil)
+    val p: Set[Cluster] = map.map(entry => findSweetSpot(entry._1, entry._2, lst,threshold)).filter(_ != None).map(_.get).toSet
+
+    /*val p = (for (i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) <= maxArea))
+      yield (aggregate(lst(i), lst(j)))).toSet.filter(c => c.size <= maxArea && c.tweetMeter >= threshold)*/
+    println("Before the filter")
+    val filtered = p.filter(c1 => !p.exists(c2 => c2.intersect(c1) && c2.tweetMeter > c1.tweetMeter))
+    println("After the filter")
     val res = filtered ++ oldC.filter(l => !filtered.exists(c => c.intersect(l)))
+    println("Cluster Once end")
     if (res == oldC) oldC
     else clusterOnce(res, maxArea, threshold)
   }
-
+ 
+  /*Finds the biggest aggregation possible*/
+  def findSweetSpot(key: Int, values: List[Int], lst: List[Cluster], threshold: Double): Option[Cluster] = {
+    val sorted = (values.sorted).reverse
+    for(j <- sorted ){
+      val aggr = aggregate(lst(key), lst(j))
+      if (aggr.size >= threshold)
+        return Some(aggr)
+    }
+    None
+  }
   /**
    * @brief  Aggregates two cluster by computing the rectangel area that joins them
    *  And adds all the LeafClusters contained in this one
