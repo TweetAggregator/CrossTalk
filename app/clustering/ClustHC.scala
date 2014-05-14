@@ -37,7 +37,7 @@ class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
    */
   private def clusterOnce(oldC: Set[Cluster], maxArea: Double, threshold: Double): Set[Cluster] = {
     var lst = oldC.toList
-    val p = (for (i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) < maxArea)) yield (aggregate(lst(i), lst(j)))).toSet.filter(c => c.size <= maxArea && c.tweetMeter >= threshold)
+    val p = (for (i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) <= maxArea)) yield (aggregate(lst(i), lst(j)))).toSet.filter(c => c.size <= maxArea && c.tweetMeter >= threshold)
     val filtered = p.filter(c1 => !p.exists(c2 => c2.intersect(c1) && c2.tweetMeter > c1.tweetMeter)) 
     val res = filtered ++ oldC.filter(l => !filtered.exists(c => c.intersect(l)))
     if (res == oldC) oldC
