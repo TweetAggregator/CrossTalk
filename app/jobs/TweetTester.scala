@@ -58,7 +58,7 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
    */
   val maxValue = query.size
   
-  val fileTweetTesters = new File("tweets/tweetstester.txt")
+  val fileTweetTesters = new File("tweets/tester.txt")
   fileTweetTesters.createNewFile
   val writer = new BufferedWriter(new FileWriter(fileTweetTesters, true))
   

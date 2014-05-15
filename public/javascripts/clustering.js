@@ -1,10 +1,4 @@
-//var po = org.polymaps;
-
-//var map = po.map()
-    //.container(document.getElementById("map").appendChild(po.svg("svg")))
-	map.zoom(3)
-   		.zoomRange([3, 13]); //limit zoom level
-	map.on("move", update2)
+	map.on("move", update2);
 
   //Graphical environnement
 var graph = document.getElementById("map").getElementsByTagName("svg")[0].appendChild(po.svg("g"));

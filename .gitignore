@@ -1,7 +1,7 @@
 *.class
 *.log
 tweets/searcher*
-tweets/tweetstester.txt
+tweets/tester*
 
 # sbt specific
 dist/*
