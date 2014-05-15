@@ -92,9 +92,10 @@ object Enrichments {
   implicit class RichClusterList(lst: List[Set[Cluster]]) {
     def toJson = {
       def setToJson(set: Set[Cluster]): String = {
-        def clustToJson(clust: Cluster) = s"""{"x": ${clust.center._2},"y": ${clust.center._1}, "r": ${clust.center._2 + clust.radius}, "d": ${clust.tweetMeter}}"""
+        val maxTweetMeter = if(!set.isEmpty) set.map(c => c.tweetMeter).max else 1 /* Let's leverage the tweet metter for opacity */
+        def clustToJson(clust: Cluster) = s"""{"x": ${clust.center._2},"y": ${clust.center._1}, "r": ${clust.center._2 + clust.radius}, "d": ${clust.tweetMeter / maxTweetMeter }}"""
         if(!set.isEmpty) s"""{"centers": [${set.tail.foldLeft(clustToJson(set.head))((acc, s) => acc + "," + clustToJson(s))}]}"""
-        else s"""{"centers": [{}]}"""
+        else s"""{"centers": []}"""
       }
       s"""{"clusters": [${lst.tail.foldLeft(setToJson(lst.head))((acc, s) => acc + ", " + setToJson(s))}]}"""
     }

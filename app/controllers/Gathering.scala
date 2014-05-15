@@ -162,14 +162,10 @@ trait GatheringController { this: Controller =>
   }
 
   def computeDisplayData = Action {
-    //TODO: get focussed square from Cache
-    //  - get Square from Cache
-    //  - filtrer les tweets
 
     val focussedOption = Cache.getAs[Square]("focussed")
     val viewCenterOption = Cache.getAs[(Double, Double)]("viewCenter")
     val zoomLevelOption = Cache.getAs[Double]("zoomLevel")
-
     
     (viewCenterOption, zoomLevelOption, focussedOption, keys) match {
       case (Some(viewCenter), Some(zoomLevel), Some(focussed), Some((key1, key2))) =>
@@ -197,20 +193,16 @@ trait GatheringController { this: Controller =>
 
   def computeDisplayClustering = Action {
 
-    val focussedOption = Cache.getAs[Square]("focussed")
     val viewCenterOption = Cache.getAs[(Double, Double)]("viewCenter")
     val zoomLevelOption = Cache.getAs[Double]("zoomLevel")
 
-    (viewCenterOption, zoomLevelOption, focussedOption, keys) match {
-      case (Some(viewCenter), Some(zoomLevel), Some(focussed), Some((key1, key2))) =>
+    (viewCenterOption, zoomLevelOption, keys) match {
+      case (Some(viewCenter), Some(zoomLevel), Some((key1, key2))) =>
         try {
-    	
-          val (nbSet, sets, inters) = computeVenn(GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4), key1, key2)
-
           val clusters1 = computeClusters(geos1)
           val clusters2 = computeClusters(geos2)
           val clusters3 = computeClusters(geos3)
-          Ok(views.html.mapClustering(viewCenter, zoomLevel, (clusters1, clusters2, clusters3))(nbSet, sets, inters))
+          Ok(views.html.mapClustering(viewCenter, zoomLevel, (clusters1, clusters2, clusters3)))
         } catch {
           case e: TimeoutException =>
             Logger.info("Gathering: Timed out")

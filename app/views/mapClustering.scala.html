@@ -1,4 +1,4 @@
-@(viewCenter: (Double, Double), mapZoom: Double, richClusters:(List[Set[Cluster]], List[Set[Cluster]], List[Set[Cluster]]))(nbSet:Int, sets:List[(Int, String, Int)], inters:List[((Int, Int), Int)])
+@(viewCenter: (Double, Double), mapZoom: Double, richClusters:(List[Set[Cluster]], List[Set[Cluster]], List[Set[Cluster]]))
 @import utils.Enrichments._
 
 @header("Crosstalk")
@@ -18,8 +18,8 @@
       </script>
     </div>
     <div style="float:right;height:85%;width:14.5%;padding-left:5px;">
-    @venn(nbSet, sets, inters)
       <span>
+        <p>Choose clustering level</p>
         <form id="slider">
           <input id="zoomSlider" type="range" min="0" max="9" value="6" step="1" selectionDirection="none">
         </form>

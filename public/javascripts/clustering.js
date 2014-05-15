@@ -44,7 +44,7 @@ var colors = ["", "LightCoral", "RoyalBlue", "Purple"]
 function drawCircle(entry, colorID) {
   var point = graph.appendChild(po.svg("circle"));
   point.setAttribute('style', 'fill:'+ colors[colorID] +"; "+point.getAttribute("fill"));
-  point.setAttribute('style', 'opacity:'+entry.d / 120+"; "+point.getAttribute("style"));
+  point.setAttribute('style', 'opacity:'+entry.d +"; "+point.getAttribute("style"));
   point.setAttribute("cx", entry.x);
   point.setAttribute("cy", entry.y);
   point.setAttribute("r", entry.r);
