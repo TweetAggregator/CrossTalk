@@ -1,1 +1,26 @@
-\section{ Subpart for intersection algorithm} 
+\section{Partitioning the map}
+
+\section{Interaction between the front and back end}
+
+Joris and Lewis designed and implemented the actions which are called by the
+front end once the user has selected the search parameters.  These were
+implemented using Play \verb+Action+s which are invoked upon HTTP requests to
+particular routes.
+
+There are a handful of these actions, the most important of which are for
+starting the data collection and computing the display data.  When the
+\verb+Start+ action is invoked the \verb+GeoPartitioner+ actors are
+instantiated and started with the desired parameters.  In order to be able to
+display intersections between the requested keywords, we spawned three
+partitioners for each user-selected area: one for each of the keywords, and
+another for their intersection.  Twitter's search API allows keywords to be
+combined with logical conjunctions and disjunctions, which we used to create
+these queries.
+
+When it comes to displaying the data, there are two requests the user can make:
+they can request either clustered data or squares with opacities.  In both
+cases, the Tweet counts for the Venn diagram are assembled and filtered to
+whatever square is currently displayed.  The desired data (either clusters or
+opacities) are collected and transformed into the format expected
+by the front end, and everything is passed to a view which is shown to the
+end-user.  There is also an action to refresh the Venn diagram to display the statistics for the area currently visible to the end-user.
