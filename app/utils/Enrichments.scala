@@ -90,10 +90,11 @@ object Enrichments {
 
   /** Enrich a list of cluster (HC) to return some JSon */
   implicit class RichClusterList(lst: List[Set[Cluster]]) {
+    val maxOpacity = getConfDouble("clustHC.opacityCorrector", "RichClusterList: not opacity corrector defind in conf for ClustHC.")
     def toJson = {
       def setToJson(set: Set[Cluster]): String = {
         val maxTweetMeter = if(!set.isEmpty) set.map(c => c.tweetMeter).max else 1 /* Let's leverage the tweet metter for opacity */
-        def clustToJson(clust: Cluster) = s"""{"x": ${clust.center._2},"y": ${clust.center._1}, "r": ${clust.center._2 + clust.radius}, "d": ${clust.tweetMeter / maxTweetMeter }}"""
+        def clustToJson(clust: Cluster) = s"""{"x": ${clust.center._2},"y": ${clust.center._1}, "r": ${clust.center._2 + clust.radius}, "d": ${clust.tweetMeter / maxTweetMeter * maxOpacity}}"""
         if(!set.isEmpty) s"""{"centers": [${set.tail.foldLeft(clustToJson(set.head))((acc, s) => acc + "," + clustToJson(s))}]}"""
         else s"""{"centers": []}"""
       }

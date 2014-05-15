@@ -1,8 +1,10 @@
 package models
 
-/* Models for the HC clustering */
+import utils.Enrichments._
 
+/* Models for the HC clustering */
 case class Cluster(var subClusters: Set[LeafCluster]) {
+  val displayAreaCorrector = getConfDouble("clustHC.displayAreaCorrector", "Cluster: no corrector for the areas")
   private def xsYs: (Set[Int], Set[Int]) = (subClusters.map(_.pos._1), subClusters.map(_.pos._2))
   def topLeft = { 
     val rs = xsYs
@@ -33,7 +35,8 @@ case class Cluster(var subClusters: Set[LeafCluster]) {
   def >(that: Cluster): Boolean = subClusters.size > that.subClusters.size
 
   /* Radio for same are between a circle and the rectangle, used for the clustering. NB : approximation. */
-  def radius = Math.sqrt((area.lat2 - area.lat1) * (area.long2 - area.long1) / Math.PI)
+
+  def radius = Math.sqrt((area.lat2 - area.lat1) * (area.long2 - area.long1) / Math.PI) * displayAreaCorrector
 
   def computeArea(c2: Cluster): Int = {
     val tops = List(this.topLeft, c2.topLeft)

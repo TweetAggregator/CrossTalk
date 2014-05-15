@@ -2,7 +2,7 @@
 
 <div class="Venn"></div>
 
-<script src="http://d3js.org/d3.v2.min.js"></script>
+<script src="@routes.Assets.at("javascripts/d3.v2.min.js")"></script>
 <script src="@routes.Assets.at("javascripts/venn.js")"></script>
 <script>
 var sets = [@for(set <- sets) { {label: "@set._2", size: @set._3}, }],

@@ -82,12 +82,7 @@ trait GatheringController { this: Controller =>
   def start() = Action {
     if (!Cache.get("isStarted").isDefined) {
 
-      //TODO remove those cache writes
-      /*Cache.set("coordinates", List((-129.4, 20.0, -79.0, 50.6)))
-      Cache.set("keywords",
-        List(("Obama", List[String]()),
-          ("Beer", List("biere", "pression"))))*/
-      Cache.set("focussed", (-180.0, -90.0,180.0,90.0))
+      Cache.set("focussed", (-180.0, -90.0, 180.0, 90.0))
 
       val squaresOption = Cache.getAs[List[Square]]("coordinates")
       val keywordsListOption = Cache.getAs[List[(String, List[String])]]("keywords")
@@ -162,46 +157,31 @@ trait GatheringController { this: Controller =>
     Ok(views.html.gathering(askGeos[Long](allGeos, TotalTweets).sum))
   }
   def refreshVenn = Action { implicit request =>
-    val e = request.body.asFormUrlEncoded match {
+    
+    request.body.asFormUrlEncoded match {
       case Some(map) if map("focussed").head != "" =>
-          Json.parse(map("focussed").head).as[Array[JsValue]]
+      /* First, let's get the boundaries of the map */
+        val bounds = Json.parse(map("focussed").head).as[Array[JsValue]]
           .flatMap(coo => ((coo \ "lon").toString.toDouble) :: (coo \ "lat").toString.toDouble :: Nil)
           .toList
+        Cache.set("focussed", (bounds(0), bounds(3), bounds(2), bounds(1)))
+        /* Now let's update the center and the zoomlevel */
+        val zoomLevel = map("zoomLevel").head.toDouble
+        val viewCenter = Some(Json.parse(map("viewCenter").head)).map(x => ((x \ "lon").toString.toDouble, (x \ "lat").toString.toDouble)).head
+        Cache.set("zoomLevel", zoomLevel)
+        Cache.set("viewCenter", viewCenter)
       case _ => Nil /* Should never happen*/
     }
-    Cache.set("focussed",(e(0), e(3), e(2), e(1)))
+    /* And redirect to the computation of the display */
     Redirect(routes.Gathering.computeDisplayData)
   }
- /* def refreshVenn : play.api.mvc.Call = Action { implicit request =>
-    request.body.asFormUrlEncoded match {
-      case Some(map) if map("focussed") != "" =>
-            val focus = Cache.getAs[Square]("focussed")
-   
-     (focus, keys) match {
-    case (Some(focussed), Some((key1, key2))) => try {
-      Logger.info("Gathering : refreshing Venn")
-       val (nbSet, sets, inters) = computeVenn(GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4), key1, key2)
-       Ok(views.html.venn(nbSet,sets,inters))
-    }  catch {
-          case e: TimeoutException =>
-            Logger.info("Gathering: Timed out")
-            InternalServerError
-        }
-      case _ =>
-        Logger.error("Gathering: Computing display data BadRequest")
-        BadRequest
-      }
-  
-      }
-      */
-
 
   def computeDisplayData = Action {
 
     val focussedOption = Cache.getAs[Square]("focussed")
     val viewCenterOption = Cache.getAs[(Double, Double)]("viewCenter")
     val zoomLevelOption = Cache.getAs[Double]("zoomLevel")
-    
+
     (viewCenterOption, zoomLevelOption, focussedOption, keys) match {
       case (Some(viewCenter), Some(zoomLevel), Some(focussed), Some((key1, key2))) =>
         try {
@@ -237,7 +217,7 @@ trait GatheringController { this: Controller =>
           val clusters1 = computeClusters(geos1)
           val clusters2 = computeClusters(geos2)
           val clusters3 = computeClusters(geos3)
-          Ok(views.html.mapClustering(viewCenter, zoomLevel, (clusters1, clusters2, clusters3)))
+          Ok(views.html.mapClustering((key1, key2), viewCenter, zoomLevel, (clusters1, clusters2, clusters3)))
         } catch {
           case e: TimeoutException =>
             Logger.info("Gathering: Timed out")
@@ -265,7 +245,6 @@ trait GatheringController { this: Controller =>
 
   /** Compute the Venn diagram based on a GeoSquare. Return the required format for the venn.scala.html view. */
   def computeVenn(geoFocussed: GeoSquare, key1: String, key2: String) = {
-
     val counts1 = askGeos[Long](geos1, TweetsFromSquare(geoFocussed))
     val counts2 = askGeos[Long](geos2, TweetsFromSquare(geoFocussed))
     val interCounts = askGeos[Long](geos3, TweetsFromSquare(geoFocussed))
