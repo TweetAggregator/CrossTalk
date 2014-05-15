@@ -2,14 +2,16 @@ package clustering
 
 import models._
 import utils.Enrichments._
+import play.Logger
 
 /**
  * Home Made clustering, based on a hiearchy of cluster of 1 to 10.
  * i.e there is up to 10 level of clustering.
  */
-class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
+class ClustHC(inLeaves: List[LeafCluster], rows: Int, cols: Int) {
+  /* Suffle the list for random start */
+  val leaves = inLeaves.shuffle
 
-  /* TODO: find the better constants, see application.conf */
   val areaCorrector = getConfDouble("clustHC.areaCorrector", "ClustHC: areaCorrector constant not defined in conf.")
   val thresholdCorrector = getConfDouble("clustHC.thresholdCorrector", "ClustHC: thresholdCorrector constant not defined in conf.")
   val minDensityCorrector = getConfDouble("clustHC.minDensityCorrector", "ClustHC: minDensityCorrector constant not defined in conf.")
@@ -30,8 +32,8 @@ class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
       res :+= clusterOnce(res.last, beta * totalArea.toDouble * areaCorrector, (beta  * totalTweetDensity) * thresholdCorrector)
     }
     val cleaned = res.map(clst => cleanClusters(clst))
-    cleaned.foreach{i => println(s"a cluster size ${i.size}")}
-    println("Done")
+    cleaned.foreach{i => Logger.info(s"ClustHC: a cluster size ${i.size}")}
+    Logger.info("ClustHC: Done")
     cleaned
   }
 

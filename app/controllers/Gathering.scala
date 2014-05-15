@@ -80,12 +80,7 @@ trait GatheringController { this: Controller =>
 
   def start() = Action {
     if (!Cache.get("isStarted").isDefined) {
-
-      //TODO remove those cache writes
-      /*Cache.set("coordinates", List((-129.4, 20.0, -79.0, 50.6)))
-      Cache.set("keywords",
-        List(("Obama", List[String]()),
-          ("Beer", List("biere", "pression"))))*/
+      
       Cache.set("focussed", (-109.4, 40.0, -79.0, 50.6))
 
       val squaresOption = Cache.getAs[List[Square]]("coordinates")
