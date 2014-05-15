@@ -4,8 +4,10 @@
 
 	<div style="height:700px;">
       <div id="map" style="height:700px;float:left;width:85%;">
+      @helper.form(action = routes.Gathering.refreshVenn){
       <input type="hidden" name="focussed" id="focussed" value="">
       <button>Refresh</button>
+      }
         <script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
         <script>
 

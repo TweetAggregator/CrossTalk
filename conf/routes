@@ -34,3 +34,4 @@ GET    /gatheringStop                controllers.Gathering.stop
 GET    /controlDisplay               controllers.Gathering.controlDisplay
 GET    /gatheringDisplay             controllers.Gathering.computeDisplayData
 GET    /gatheringDisplayClustering   controllers.Gathering.computeDisplayClustering
+POST   /gatheringDisplay             controllers.Gathering.refreshVenn

@@ -24,6 +24,7 @@ import scala.concurrent.Future
 import scala.reflect.ClassTag
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import play.api.libs.json._
 
 import jobs._
 import models._
@@ -80,8 +81,8 @@ trait GatheringController { this: Controller =>
 
   def start() = Action {
     if (!Cache.get("isStarted").isDefined) {
-      
-      Cache.set("focussed", (-109.4, 40.0, -79.0, 50.6))
+
+      Cache.set("focussed", (-180.0, -90.0,180.0,90.0))
 
       val squaresOption = Cache.getAs[List[Square]]("coordinates")
       val keywordsListOption = Cache.getAs[List[(String, List[String])]]("keywords")
@@ -155,6 +156,17 @@ trait GatheringController { this: Controller =>
     val allGeos = geoParts.flatMap(v => v._2._1 :: v._2._2 :: v._2._3 :: Nil)
     Ok(views.html.gathering(askGeos[Long](allGeos, TotalTweets).sum))
   }
+  def refreshVenn = Action { implicit request =>
+    val e = request.body.asFormUrlEncoded match {
+      case Some(map) if map("focussed").head != "" =>
+          Json.parse(map("focussed").head).as[Array[JsValue]]
+          .flatMap(coo => ((coo \ "lon").toString.toDouble) :: (coo \ "lat").toString.toDouble :: Nil)
+          .toList
+      case _ => Nil /* Should never happen*/
+    }
+    Cache.set("focussed",(e(0), e(3), e(2), e(1)))
+    Redirect(routes.Gathering.computeDisplayData)
+  }
 
   def computeDisplayData = Action {
 
@@ -225,7 +237,6 @@ trait GatheringController { this: Controller =>
 
   /** Compute the Venn diagram based on a GeoSquare. Return the required format for the venn.scala.html view. */
   def computeVenn(geoFocussed: GeoSquare, key1: String, key2: String) = {
-
     val counts1 = askGeos[Long](geos1, TweetsFromSquare(geoFocussed))
     val counts2 = askGeos[Long](geos2, TweetsFromSquare(geoFocussed))
     val interCounts = askGeos[Long](geos3, TweetsFromSquare(geoFocussed))
