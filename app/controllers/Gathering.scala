@@ -82,7 +82,7 @@ trait GatheringController { this: Controller =>
   def start() = Action {
     if (!Cache.get("isStarted").isDefined) {
 
-      Cache.set("focussed", (-180.0, -90.0,180.0,90.0))
+      Cache.set("focussed", (-180.0, -90.0, 180.0, 90.0))
 
       val squaresOption = Cache.getAs[List[Square]]("coordinates")
       val keywordsListOption = Cache.getAs[List[(String, List[String])]]("keywords")
@@ -157,14 +157,22 @@ trait GatheringController { this: Controller =>
     Ok(views.html.gathering(askGeos[Long](allGeos, TotalTweets).sum))
   }
   def refreshVenn = Action { implicit request =>
-    val e = request.body.asFormUrlEncoded match {
+    
+    request.body.asFormUrlEncoded match {
       case Some(map) if map("focussed").head != "" =>
-          Json.parse(map("focussed").head).as[Array[JsValue]]
+      /* First, let's get the boundaries of the map */
+        val bounds = Json.parse(map("focussed").head).as[Array[JsValue]]
           .flatMap(coo => ((coo \ "lon").toString.toDouble) :: (coo \ "lat").toString.toDouble :: Nil)
           .toList
+        Cache.set("focussed", (bounds(0), bounds(3), bounds(2), bounds(1)))
+        /* Now let's update the center and the zoomlevel */
+        val zoomLevel = map("zoomLevel").head.toDouble
+        val viewCenter = Some(Json.parse(map("viewCenter").head)).map(x => ((x \ "lon").toString.toDouble, (x \ "lat").toString.toDouble)).head
+        Cache.set("zoomLevel", zoomLevel)
+        Cache.set("viewCenter", viewCenter)
       case _ => Nil /* Should never happen*/
     }
-    Cache.set("focussed",(e(0), e(3), e(2), e(1)))
+    /* And redirect to the computation of the display */
     Redirect(routes.Gathering.computeDisplayData)
   }
 
@@ -173,7 +181,7 @@ trait GatheringController { this: Controller =>
     val focussedOption = Cache.getAs[Square]("focussed")
     val viewCenterOption = Cache.getAs[(Double, Double)]("viewCenter")
     val zoomLevelOption = Cache.getAs[Double]("zoomLevel")
-    
+
     (viewCenterOption, zoomLevelOption, focussedOption, keys) match {
       case (Some(viewCenter), Some(zoomLevel), Some(focussed), Some((key1, key2))) =>
         try {
