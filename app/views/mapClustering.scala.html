@@ -1,4 +1,4 @@
-@(viewCenter: (Double, Double), mapZoom: Double, richClusters:(List[Set[Cluster]], List[Set[Cluster]], List[Set[Cluster]]))
+@(keywords : (String, String), viewCenter: (Double, Double), mapZoom: Double, richClusters:(List[Set[Cluster]], List[Set[Cluster]], List[Set[Cluster]]))
 @import utils.Enrichments._
 
 @header("Crosstalk")
@@ -23,7 +23,10 @@
     </div>
     <div style="float:right;height:85%;width:14.5%;padding-left:5px;">
       <span>
-        <p>Choose clustering level</p>
+        <p style="color:#1f77b4;">@keywords._1</p>
+        <p style="color:#ff7f0e;">@keywords._2</p>
+        <p style="color:#C2AB93">Intersection</p>
+        <p>Choose clustering level:</p>
         <form id="slider">
           <input id="zoomSlider" type="range" min="0" max="9" value="6" step="1" selectionDirection="none">
         </form>

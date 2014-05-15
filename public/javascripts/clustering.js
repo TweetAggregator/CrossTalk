@@ -34,7 +34,7 @@ function generateData(centers){
 
 //Functions to draw
   //Expects input of the form {"x": _, "y": _, "r": _}
-var colors = ["", "LightCoral", "RoyalBlue", "Purple"]
+var colors = ["#1f77b4", "#ff7f0e", "#C2AB93"]
 function drawCircle(entry, colorID) {
   var point = graph.appendChild(po.svg("circle"));
   point.setAttribute('style', 'fill:'+ colors[colorID] +"; "+point.getAttribute("fill"));
@@ -72,9 +72,9 @@ function update2() {
     graph.removeChild(graph.firstChild);
   }
   var selectedZoom = document.getElementById("zoomSlider").value;
-  drawCenters(generateData(rawData1.clusters[selectedZoom].centers), 1);
-  drawCenters(generateData(rawData2.clusters[selectedZoom].centers), 2);
-  drawCenters(generateData(rawData3.clusters[selectedZoom].centers), 3);
+  drawCenters(generateData(rawData1.clusters[selectedZoom].centers), 0);
+  drawCenters(generateData(rawData2.clusters[selectedZoom].centers), 1);
+  drawCenters(generateData(rawData3.clusters[selectedZoom].centers), 2);
 
 }
 

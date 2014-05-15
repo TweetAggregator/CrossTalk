@@ -197,7 +197,7 @@ trait GatheringController { this: Controller =>
           val clusters1 = computeClusters(geos1)
           val clusters2 = computeClusters(geos2)
           val clusters3 = computeClusters(geos3)
-          Ok(views.html.mapClustering(viewCenter, zoomLevel, (clusters1, clusters2, clusters3)))
+          Ok(views.html.mapClustering((key1, key2), viewCenter, zoomLevel, (clusters1, clusters2, clusters3)))
         } catch {
           case e: TimeoutException =>
             Logger.info("Gathering: Timed out")
