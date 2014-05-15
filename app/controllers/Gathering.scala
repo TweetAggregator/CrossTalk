@@ -24,6 +24,7 @@ import scala.concurrent.Future
 import scala.reflect.ClassTag
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import play.api.libs.json._
 
 import jobs._
 import models._
@@ -86,7 +87,7 @@ trait GatheringController { this: Controller =>
       Cache.set("keywords",
         List(("Obama", List[String]()),
           ("Beer", List("biere", "pression"))))*/
-      Cache.set("focussed", (-109.4, 40.0, -79.0, 50.6))
+      Cache.set("focussed", (-180.0, -90.0,180.0,90.0))
 
       val squaresOption = Cache.getAs[List[Square]]("coordinates")
       val keywordsListOption = Cache.getAs[List[(String, List[String])]]("keywords")
@@ -160,6 +161,40 @@ trait GatheringController { this: Controller =>
     val allGeos = geoParts.flatMap(v => v._2._1 :: v._2._2 :: v._2._3 :: Nil)
     Ok(views.html.gathering(askGeos[Long](allGeos, TotalTweets).sum))
   }
+  def refreshVenn = Action { implicit request =>
+    val e = request.body.asFormUrlEncoded match {
+      case Some(map) if map("focussed").head != "" =>
+          Json.parse(map("focussed").head).as[Array[JsValue]]
+          .flatMap(coo => ((coo \ "lon").toString.toDouble) :: (coo \ "lat").toString.toDouble :: Nil)
+          .toList
+      case _ => Nil /* Should never happen*/
+    }
+    Cache.set("focussed",(e(0), e(3), e(2), e(1)))
+    Redirect(routes.Gathering.computeDisplayData)
+  }
+ /* def refreshVenn : play.api.mvc.Call = Action { implicit request =>
+    request.body.asFormUrlEncoded match {
+      case Some(map) if map("focussed") != "" =>
+            val focus = Cache.getAs[Square]("focussed")
+   
+     (focus, keys) match {
+    case (Some(focussed), Some((key1, key2))) => try {
+      Logger.info("Gathering : refreshing Venn")
+       val (nbSet, sets, inters) = computeVenn(GeoSquare(focussed._1, focussed._2, focussed._3, focussed._4), key1, key2)
+       Ok(views.html.venn(nbSet,sets,inters))
+    }  catch {
+          case e: TimeoutException =>
+            Logger.info("Gathering: Timed out")
+            InternalServerError
+        }
+      case _ =>
+        Logger.error("Gathering: Computing display data BadRequest")
+        BadRequest
+      }
+  
+      }
+      */
+
 
   def computeDisplayData = Action {
 
