@@ -23,4 +23,14 @@ cases, the Tweet counts for the Venn diagram are assembled and filtered to
 whatever square is currently displayed.  The desired data (either clusters or
 opacities) are collected and transformed into the format expected
 by the front end, and everything is passed to a view which is shown to the
-end-user.  There is also an action to refresh the Venn diagram to display the statistics for the area currently visible to the end-user.
+end-user.  There is also an action to refresh the Venn diagram to display the
+statistics for the area currently visible to the end-user.
+
+In order to test these actions, it is helpful to be able remove the dependency
+on the Twitter API.  By doing this, it is possible to write unit tests which
+only run the task controller code.  This reduces the number of reasons for which
+the tests can fail, making them more reliable and useful.  To accomplish this,
+we proceeded as is done in the Cake pattern.  All of the actors that were used
+were put into an abstract trait, \verb+actors+.  There was then a concrete
+implementation of this trait which used the real actors, contacting the Twitter
+API and so on, and a test implementation which mocked those actors instead.
