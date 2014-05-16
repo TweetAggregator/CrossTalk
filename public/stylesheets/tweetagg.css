@@ -20,6 +20,6 @@
 }
 
 .map .subregion {
-  fill: green; /* opacity depending on tweet frequency */
+   /*fill: green; opacity depending on tweet frequency */
   shape-rendering: crispEdges;
 }

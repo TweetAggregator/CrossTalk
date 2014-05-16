@@ -1,4 +1,4 @@
-@(viewCenter: String, mapZoom: Double, regionList: String, regionDensityList: String)
+@(viewCenter: String, mapZoom: Double)
 
 @header("Crosstalk")
 
@@ -8,7 +8,7 @@
       	<script>
       	window.onload = function() {
 			document.getElementsByClassName("main_content")[0].style.margin =  (0 + "px");
-			init(@Html(viewCenter), @mapZoom, @Html(regionList));
+			mapReCenter(@Html(viewCenter), @mapZoom);
 		}
       	</script>
       </div>
