@@ -23,3 +23,8 @@ project/plugins/project/
 *.swp
 *.swo
 *.DS_Store
+
+# Avoiding laText generation
+*.aux
+*.toc
+*.pdf

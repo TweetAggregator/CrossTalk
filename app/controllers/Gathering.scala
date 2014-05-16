@@ -25,6 +25,7 @@ import scala.reflect.ClassTag
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import play.api.libs.json._
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import jobs._
 import models._
@@ -33,7 +34,13 @@ import utils.AkkaImplicits._
 import TweetManager._
 
 /**
- * Gathering the tweets and processing the results
+ * Gathering the tweets and processing the results. Contains the following actions:
+ * 		1. Start a research
+ *   	2. Pause a research
+ *    	3. Stop a research
+ *     	4. Gather the results for standard display (no clustering)
+ *      5. Gather the results for clustering (asynchronously)
+ *      6. Select the areas for the Venn Diagram
  */
 trait GatheringController { this: Controller =>
   val actors: GatheringActors
@@ -45,6 +52,8 @@ trait GatheringController { this: Controller =>
   /** For each square, three geoparts: keyword1, keyword2 and keywor1&2 */
   val geoParts: MutableMap[Square, (ActorRef, ActorRef, ActorRef)] = MutableMap()
   val geoPartSizes: MutableMap[ActorRef, (Int, Int)] = MutableMap()
+  
+  /* Let's have a lists of geoPart for each keywords */
   def geos1 = geoParts.values.map(_._1)
   def geos2 = geoParts.values.map(_._2)
   def geos3 = geoParts.values.map(_._3)
@@ -138,6 +147,7 @@ trait GatheringController { this: Controller =>
     Redirect(routes.Gathering.controlDisplay)
   }
 
+  /** Stop and delete all statistics (everything to original state) */ 
   def stop = Action {
     if (Cache.get("isStarted").isDefined) {
       tweetManagerRef ! Stop
@@ -152,10 +162,13 @@ trait GatheringController { this: Controller =>
     Redirect(routes.Application.index)
   }
 
+  /** Print the various actions doable on a research and the total number of tweet found */
   def controlDisplay = Action {
     val allGeos = geoParts.flatMap(v => v._2._1 :: v._2._2 :: v._2._3 :: Nil)
     Ok(views.html.gathering(askGeos[Long](allGeos, TotalTweets).sum))
   }
+  
+  /** Refresh the Venn diagram based on the new area selection */
   def refreshVenn = Action { implicit request =>
     
     request.body.asFormUrlEncoded match {
@@ -170,12 +183,13 @@ trait GatheringController { this: Controller =>
         val viewCenter = Some(Json.parse(map("viewCenter").head)).map(x => ((x \ "lon").toString.toDouble, (x \ "lat").toString.toDouble)).head
         Cache.set("zoomLevel", zoomLevel)
         Cache.set("viewCenter", viewCenter)
-      case _ => Nil /* Should never happen*/
+      case _ => Nil /* Should never happen (would be an error in the JS of tweetagg.js) */
     }
-    /* And redirect to the computation of the display */
+    /* Redirect to the computation of the display */
     Redirect(routes.Gathering.computeDisplayData)
   }
 
+  /** Compute the non-clustered view */
   def computeDisplayData = Action {
 
     val focussedOption = Cache.getAs[Square]("focussed")
@@ -206,6 +220,7 @@ trait GatheringController { this: Controller =>
     }
   }
 
+  /** Compute the clustered view */
   def computeDisplayClustering = Action {
 
     val viewCenterOption = Cache.getAs[(Double, Double)]("viewCenter")
@@ -214,10 +229,12 @@ trait GatheringController { this: Controller =>
     (viewCenterOption, zoomLevelOption, keys) match {
       case (Some(viewCenter), Some(zoomLevel), Some((key1, key2))) =>
         try {
-          val clusters1 = computeClusters(geos1)
-          val clusters2 = computeClusters(geos2)
-          val clusters3 = computeClusters(geos3)
-          Ok(views.html.mapClustering((key1, key2), viewCenter, zoomLevel, (clusters1, clusters2, clusters3)))
+          
+          /* Let's parallelize the clustering using Futures */
+          val futuresClust = (geos1 :: geos2 :: geos3 :: Nil).map(g => scala.concurrent.Future{computeClusters(g)})
+          val clusters = futuresClust.map(f => Await.result(f, defaultDuration))
+          
+          Ok(views.html.mapClustering((key1, key2), viewCenter, zoomLevel, (clusters(0), clusters(1), clusters(2))))
         } catch {
           case e: TimeoutException =>
             Logger.info("Gathering: Timed out")
@@ -229,6 +246,7 @@ trait GatheringController { this: Controller =>
     }
   }
 
+  /** From a list of geopartitionners, compute the clustering */
   def computeClusters(geos: Iterable[ActorRef]): List[Set[Cluster]] = {
     val leafClusters = askGeos[List[LeafCluster]](geos, LeafClusters)
     val clusters: Iterable[List[Set[Cluster]]] =
