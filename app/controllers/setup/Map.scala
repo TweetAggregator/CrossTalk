@@ -24,7 +24,7 @@ object Map extends Controller {
     val startLong = getConfDouble("map.startLong", "Map: no beginning Long in Conf.")
     val startZoom = getConfInt("map.startZoom", "Map: no beginning Zoom in Conf.")
 
-    Ok(views.html.setupViews.map(s"{lat: ${startLat}, lon: ${startLong}}", startZoom, "[]", "[]"))
+    Ok(views.html.setupViews.map(s"{lat: ${startLat}, lon: ${startLong}}", startZoom))
   }
 
   /**

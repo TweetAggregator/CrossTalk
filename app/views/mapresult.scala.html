@@ -12,11 +12,12 @@
 			var viewCenter = {lon: @viewCenter._1, lat: @viewCenter._2}
 	        console.log(JSON.stringify(viewCenter))
 	        
-	        var regions = [ @for(region <- regionDensityList3){ [{lon: @region._1._1, lat: @region._1._2}, {lon: @region._1._3, lat: @region._1._4}, @region._2], } ]
+	        regions1 = [ @for(region <- regionDensityList1){ [{lon: @region._1._1, lat: @region._1._2}, {lon: @region._1._3, lat: @region._1._4}, @region._2], } ]
+	        regions2 = [ @for(region <- regionDensityList2){ [{lon: @region._1._1, lat: @region._1._2}, {lon: @region._1._3, lat: @region._1._4}, @region._2], } ]
+	        regions3 = [ @for(region <- regionDensityList3){ [{lon: @region._1._1, lat: @region._1._2}, {lon: @region._1._3, lat: @region._1._4}, @region._2], } ]
 	        
-	        console.log("in html: "+regions.length)
 	        mapReCenter(viewCenter, @mapZoom)
-	        showRegionIntesity(regions)
+	        mapResult()
 		}
         </script>
 
@@ -29,6 +30,9 @@
       	<button>Refresh</button>
       }
         @venn(nbSet, sets, inters)
+        <input id="color1" type="checkbox" onchange="regionCheckbox(1, this)">@sets(0)._2<br>
+		<input id="color2" type="checkbox" onchange="regionCheckbox(2, this)">@sets(1)._2<br>
+		<input id="color3" type="checkbox" onchange="regionCheckbox(3, this)" checked="checked">combined
       </div>
    </div>
         

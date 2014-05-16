@@ -102,38 +102,39 @@ function geoToPx(pt){
 /*
  * build the initial map with a corresponding view as well as the selected regions if any
  */
-var VC;
-var MZ;
-function init(viewCenter, mapZoom) {
-	console.log("function init")
-	if (!map) {
-		setTimeout(function() {
-			init(viewCenter, mapZoom)
-		}, 10) //busy wait while map is not yet loaded
-	}
-	map.center(viewCenter);
-	map.zoom(mapZoom);
-}
-
 function mapReCenter(viewCenter, mapZoom) {
 	map.center(viewCenter);
 	map.zoom(mapZoom);
 }
 
-function showRegionIntesity(regionList) {
+var densityRegionList = [];
+var regions1//TODO: set to []
+var regions2
+var regions3
+var regionsF1 = false;
+var regionsF2 = false;
+var regionsFCombined = true; //only show intersection by default
+function mapResult() {
+	while (densityRegionList.length != 0)
+		map.remove(densityRegionList.pop())
+	if (regionsF1)
+		showRegionIntesity(regions1, 1)
+	if (regionsF2)
+		showRegionIntesity(regions2, 2)
+	if (regionsFCombined)
+		showRegionIntesity(regions3, 3)
+}
+
+function showRegionIntesity(regionList, color) {
 	console.log("in showRegionIntesity:"+regionList.length)
 	console.log("function showRegionIntesity")
-	if (!map) {
-		setTimeout(function() {
-			reload(viewCenter, zoom, regionList)
-		}, 10) //busy wait while map is not yet loaded
-	}
+
 	console.log("length:"+regionList.length)
 	for (index = 0; index < regionList.length; ++index) {
 		var elem = regionList[index]
 		//console.log("iter:"+JSON.stringify(elem))
 		if (elem)
-			addNewSubRegion(elem[0], elem[1], elem[2]) //save the regions
+			addNewSubRegion(elem[0], elem[1], elem[2], color) //save the regions
 	}
 }
 
@@ -255,6 +256,23 @@ function addNewRegion(topLeft, bottomRight) {
 
 }
 
+function regionCheckbox(region, checkbox) {
+	switch(region) {
+		case 1:
+			regionsF1 = checkbox.checked;
+			break;
+		case 2:
+			regionsF2 = checkbox.checked;
+			break;
+		case 3:
+			regionsFCombined = checkbox.checked;
+			break;
+		//default:
+	}
+	mapResult() //redraw all regions! ->
+}
+
+
 function addNewRegions(regionList) {
 	var i = 0;
   //alert(regionList.length)
@@ -268,10 +286,25 @@ function addNewRegions(regionList) {
 /*
  * function to add a region with opacity linked to the number of tweets in this region
  */
-function addNewSubRegion(topLeft, bottomRight, opacity) {
+function addNewSubRegion(topLeft, bottomRight, opacity, color) {
   var container = divToGeoJson(topLeft, bottomRight);
   container.setAttribute("class", container.getAttribute("class")+" subregion id"+idcount);
   container.setAttribute('style', 'opacity:'+opacity+"; "+container.getAttribute("style"));
+  var myFill;
+  switch(color) {
+	case 1:
+		fill = "#1f77b4";
+		break;
+	case 2:
+		fill = "#ff7f0e";
+		break;
+	case 3:
+		fill = "#C2AB93";
+		break;
+	default:
+		fill = "red"
+  }
+  container.setAttribute('fill', fill);
 }
 
 /*
@@ -286,6 +319,7 @@ function divToGeoJson(topLeft, bottomRight) {
       [bottomRight.lon, topLeft.lat],
       [0, 0]]], type: "Polygon"}}]);
   map.add(region);//.on("load", load);
+  densityRegionList.push(region);
   return region.container()
 }
 
