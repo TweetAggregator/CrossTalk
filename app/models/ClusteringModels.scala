@@ -34,8 +34,7 @@ case class Cluster(var subClusters: Set[LeafCluster]) {
   def <(that: Cluster): Boolean = subClusters.size < that.subClusters.size
   def >(that: Cluster): Boolean = subClusters.size > that.subClusters.size
 
-  /* Radio for same are between a circle and the rectangle, used for the clustering. NB : approximation. */
-
+  /** Radius for same are between a circle and the rectangle, used for the clustering. NB : approximation. */
   def radius = Math.sqrt((area.lat2 - area.lat1) * (area.long2 - area.long1) / Math.PI) * displayAreaCorrector
 
   def computeArea(c2: Cluster): Int = {
