@@ -115,7 +115,13 @@ function init(viewCenter, mapZoom) {
 	map.zoom(mapZoom);
 }
 
-function showRegionIntesity(viewCenter, mapZoom, regionList) {
+function mapReCenter(viewCenter, mapZoom) {
+	map.center(viewCenter);
+	map.zoom(mapZoom);
+}
+
+function showRegionIntesity(regionList) {
+	console.log("in showRegionIntesity:"+regionList.length)
 	console.log("function showRegionIntesity")
 	if (!map) {
 		setTimeout(function() {
@@ -125,12 +131,10 @@ function showRegionIntesity(viewCenter, mapZoom, regionList) {
 	console.log("length:"+regionList.length)
 	for (index = 0; index < regionList.length; ++index) {
 		var elem = regionList[index]
-		console.log("iter:"+JSON.stringify(elem))
+		//console.log("iter:"+JSON.stringify(elem))
 		if (elem)
 			addNewSubRegion(elem[0], elem[1], elem[2]) //save the regions
 	}
-	map.center(viewCenter);
-	map.zoom(mapZoom);
 }
 
 /**
@@ -187,8 +191,8 @@ div.addEventListener("mousedown", function(){
     rect.setAttribute("width", 5);
     rect.setAttribute("height", 5);
     //fix the initial position of the rectangle, drawing is only possible top-down, left-right
-    start.x =  window.event.clientX - 10; // Addition of some corrector factors (due to the design)
-    start.y = window.event.clientY - 150; // Addition of some corrector factors (due to the design)
+    start.x =  window.event.clientX - 2; // Addition of some corrector factors (due to the design)
+    start.y = window.event.clientY - 125; // Addition of some corrector factors (due to the design)
     g.setAttribute("transform", "translate(" + start.x + "," + start.y + ")"); //I don't know why we need this
     newRegionFlag = 1;
   }
@@ -201,10 +205,10 @@ div.addEventListener("mousedown", function(){
 div.addEventListener("mousemove", function() {
     if (flag == 1 && newRegionFlag == 1) {
       var newPos = new Object();
-      newPos.x = window.event.clientX - start.x;
+      newPos.x = window.event.clientX - start.x - 2;
       if (newPos.x < 0)
         newPos.x = 5;
-      newPos.y = window.event.clientY - start.y;
+      newPos.y = window.event.clientY - start.y - 125;
       if (newPos.y < 0)
         newPos.y = 5;
       rect.setAttribute("width", newPos.x);

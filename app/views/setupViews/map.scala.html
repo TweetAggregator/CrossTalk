@@ -6,10 +6,13 @@
       <div id="map" style="height:700px;float:left;width:85%;">
     	<script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
       	<script>
-      		init(@Html(viewCenter), @mapZoom, @Html(regionList))
+      	window.onload = function() {
+			document.getElementsByClassName("main_content")[0].style.margin =  (0 + "px");
+			init(@Html(viewCenter), @mapZoom, @Html(regionList));
+		}
       	</script>
       </div>
-      <div style="float:right;height:85%;width:14.5%;padding-left:5px;">
+      <div style="float:right;height:85%;width:14.5%;padding-left:5px;margin-top:20px;">
         <span>
           <p style="height:40px"><button onclick="drawRegion()">new region</button></p>
           <p style="height:40px"><button onclick="reset()">reset</button></p>

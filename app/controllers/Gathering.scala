@@ -207,7 +207,7 @@ trait GatheringController { this: Controller =>
           val opac2 = squareFromGeoMap(askGeos[Map[GeoSquare, Double]](geos2, Opacities))
           val interOpac = squareFromGeoMap(askGeos[Map[GeoSquare, Float]](geos3, Opacities))
 
-          Ok(views.html.mapresult(viewCenter, zoomLevel, interOpac.toList)(nbSet, sets, inters))
+          Ok(views.html.mapresult(viewCenter, zoomLevel, opac1.toList, opac2.toList, interOpac.toList)(nbSet, sets, inters))
 
         } catch {
           case e: TimeoutException =>
