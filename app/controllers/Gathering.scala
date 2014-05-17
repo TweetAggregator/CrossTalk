@@ -121,11 +121,11 @@ trait GatheringController { this: Controller =>
             Redirect(routes.Gathering.controlDisplay)
           } catch {
             case e: TimeoutException =>
-              Logger.error("Gathering:_Start_InternalServerError, due to timeout.")
+              Logger.error("Gathering: Start InternalServerError, due to timeout.")
               InternalServerError
           }
         case _ =>
-          Logger.error("Gathering:_Start_BadRequest")
+          Logger.error("Gathering: Start BadRequest")
           BadRequest
       }
     } else Redirect(routes.Application.index)
@@ -164,8 +164,10 @@ trait GatheringController { this: Controller =>
 
   /** Print the various actions doable on a research and the total number of tweet found */
   def controlDisplay = Action {
+    if(Cache.get("isStarted").isDefined) {
     val allGeos = geoParts.flatMap(v => v._2._1 :: v._2._2 :: v._2._3 :: Nil)
     Ok(views.html.gathering(askGeos[Long](allGeos, TotalTweets).sum))
+    } else Redirect(routes.Application.index)
   }
   
   /** Refresh the Venn diagram based on the new area selection */

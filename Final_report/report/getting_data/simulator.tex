@@ -1,5 +1,4 @@
 \section{Data Simulator}
-\subsection{Tweet Tester}
 In order to be sure our program would resist to an heavy load of data, a source of localy generated Tweets. In addition to the need of a lot of data generated, we need for the simulation to be the most complete as possible to take into account that some words are more popular than others, 
 and that the emission of tweets about one word is not uniformly distributed. \\
 The Tweet Tester will analyse the TweetQueries and their listeners and extract the list of desired words and their corresponding listeners. For each word, he will assign randomly a number N beetween 1 and the total number of queries, that will be the importance of the word. Then, for each listener of this word, he will assign a random number L beetween 1 and N that will be the interest of this zone for this word, in order to not have the tweets uniformly distributed.\\
