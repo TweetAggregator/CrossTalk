@@ -11,7 +11,9 @@ import models._
 
 object Keywords extends Controller {
 
-  val targetLanguages = List(("en", "Synonyms in English"), ("fra", "French"), ("deu", "German"), ("ru", "Russian"))
+  val targetLanguages = List(("en", "Synonyms in English"), ("fra", "French"), 
+    ("deu", "German"), ("ru", "Russian"), ("spa", "Spannish"), 
+    ("por", "Portuguese"), ("ita", "Italian"))
 
   /**
    * Contact Form definition.
