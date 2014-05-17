@@ -38,7 +38,7 @@ class ClustHC(leaves: List[LeafCluster], rows: Int, cols: Int) {
   private def clusterOnce(oldC: Set[Cluster], maxArea: Double, threshold: Double): Set[Cluster] = {
     var lst = oldC.toList.shuffle /* Let's shuffle (once more) the list for random start of clustering */
     val couples = (for(i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) <= maxArea)) yield(i,j)).toList.groupBy(_._1)
-    val map: Map[Int, List[Int]] = couples.map(e => (e._1, e._2.map(_._2)/*.sorted*/)).filter(_._2 != Nil)
+    val map: Map[Int, List[Int]] = couples.map(e => (e._1, e._2.map(_._2).shuffle /*.sorted*/)).filter(_._2 != Nil)
     val p: Set[Cluster] = map.map(entry => findSweetSpot(entry._1, entry._2, lst,threshold)).filter(_ != None).map(_.get).toSet
 
     /*val p = (for (i <- 0 until lst.size; j <- i + 1 until lst.size if (lst(i).computeArea(lst(j)) <= maxArea))

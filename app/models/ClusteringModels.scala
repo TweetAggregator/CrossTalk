@@ -44,7 +44,7 @@ case class Cluster(var subClusters: Set[LeafCluster]) {
     val tx = tops.map(_._1).min; val ty = tops.map(_._2).min
     val bx = bots.map(_._1).max; val by = bots.map(_._2).max
 
-    Math.abs(tx - bx) * Math.abs(ty - by)
+    (Math.abs(tx - bx) + 1) * (Math.abs(ty - by) + 1)
   }
 
   def computeAreaBounds(c2: Cluster): ((Int, Int), (Int, Int)) = {
