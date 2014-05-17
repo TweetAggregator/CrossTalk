@@ -26,6 +26,9 @@ import akka.actor.Cancellable
 import models._
 import utils.AkkaImplicits._
 import utils.Enrichments._
+import play.Logger
+import java.io.IOException 
+import scala.throws
 import java.util.concurrent.TimeUnit
 
 /**
@@ -53,16 +56,29 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
 
   def receive = {
     case Start => /* First execution */
-      setOfKeywords = parseRequest(query).map(currentString => currentString.split(","))
-      stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", locationParam)
-      readAll(stream)
-      if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
+      
+      try{
+        setOfKeywords = parseRequest(query).map(currentString => currentString.split(","))
+      
+        stream = askFor("https://stream.twitter.com/1.1/statuses/filter.json", locationParam)
+        Logger.info("Starting the TweetStreamer")
+        running = true
+        if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
+      }
+      catch{
+        case ioe: IOException => scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.SECONDS, Start))
+      }
 
     case Ping => /* Callback execution (query update) */
       if (stream == null) receive(Start)
       else {
-        readAll(stream)
-        if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
+        try{
+          readAll(stream)
+          if (running) scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.SECONDS, Ping)) /* Auto schedule once more */
+        }
+        catch{
+          case ioe: IOException => scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.SECONDS, Start))
+        }
       }
 
     case Stop =>
@@ -143,16 +159,6 @@ class TweetStreamer(query: List[(TweetQuery, ActorRef)]) extends Actor {
 
     case Nil => ""
   }
-
-  /**
-   * Execute the request in parameter, parse it and send the tweets to the listener.
-   * We have to send the tweets to the right listener
-   */
-  /* def sendToListener() = {
-    val ret = readAll(stream)
-    val values = parseJson(ret)
-    listener ! Tweet(values, query)
-  }*/
 
   def askFor(request: String, location: String) = {
     val postRequest = new HttpPost(request)
