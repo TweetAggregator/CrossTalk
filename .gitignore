@@ -28,3 +28,6 @@ project/plugins/project/
 *.aux
 *.toc
 *.pdf
+
+# Avoiding the screenshots
+sandbox/screenshots/*.jpg

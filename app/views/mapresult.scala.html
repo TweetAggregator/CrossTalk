@@ -1,7 +1,12 @@
 @(viewCenter: (Double, Double) , mapZoom: Double, regionDensityList1: List[((Double, Double, Double, Double), Double)], regionDensityList2: List[((Double, Double, Double, Double), Double)], regionDensityList3: List[((Double, Double, Double, Double), Float)])(nbSet:Int, sets:List[(Int, String, Int)], inters:List[((Int, Int), Int)])
 
+@import utils.Enrichments._
+
 @header("Crosstalk - Standard results and Venn")
 
+@if(getConfInt("recording.refreshRate", "Recording: no refresh rate specified.") != 0) {
+	<META HTTP-EQUIV="refresh" CONTENT="@getConfInt("recording.refreshRate", "Recording: no refresh rate specified.")">
+}
 	<div style="height:700px;">
       <div id="map" style="height:700px;float:left;width:85%;">
         <script type="text/javascript" src="@routes.Assets.at("javascripts/tweetagg.js")"></script>
@@ -30,9 +35,9 @@
       	<button>Refresh</button>
       }
         @venn(nbSet, sets, inters)
-        <input id="color1" type="checkbox" onchange="regionCheckbox(1, this)">@sets(0)._2<br>
-		<input id="color2" type="checkbox" onchange="regionCheckbox(2, this)">@sets(1)._2<br>
-		<input id="color3" type="checkbox" onchange="regionCheckbox(3, this)" checked="checked">combined
+        <input id="color1" type="checkbox" onchange="regionCheckbox(1, this)" checked="checked"><span style="color:#1f77b4;">@sets(0)._2: @sets(0)._3</span><br>
+		<input id="color2" type="checkbox" onchange="regionCheckbox(2, this)"><span style="color:#ff7f0e;">@sets(1)._2: @sets(1)._3</span><br>
+		<input id="color3" type="checkbox" onchange="regionCheckbox(3, this)"><span style="color:#C2AB93">Intersection: @inters(0)._2</span>
       </div>
    </div>
         
