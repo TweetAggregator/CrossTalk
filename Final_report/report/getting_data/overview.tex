@@ -1,0 +1,6 @@
+\section{Overview}
+
+Our system uses two data sources: the Tweet/Search API and the Streaming API.  \\
+During our development process we first thought of using the Streaming API only, as this one allow us to get the most recent Tweets posted. Unfortunately, the Streaming API doesn't allow to have complex requests and is subject to a limitation of 1\% of all the Tweets posted. The amount of Tweets received was therefore below our expectations. \\
+We then decided to use the Search API which provides better control, especially by allowing filtering on both keywords and localisation at the same time, and has a less aggressive limitation. \\
+As both sources are complementary, we kept them in two different Actors types, which are managed by a Tweet Manager, responsible for the whole interaction with Twitter and with the rest of our application.

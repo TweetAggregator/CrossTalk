@@ -1,0 +1,7 @@
+\section{Scaling the computation}
+
+The Tweet Tester which gives back a very large amount of tweets (about a million in a minute, around half a Gigabyte) was a good way to test the geographic partitioning, the display and the clustering at large scale.\\
+
+Following some tests we had to review our implementation of the clustering algorithm. The way the product of squares was handled has been changed to be faster, and the computation for the three keywords tracks (keyword 1, keyword 2 plus their intersection) needed to be parallelized. Fortunately asynchronous results are natively supported by the Play Framework. \\
+
+Even with a billion tweets the display is still responsive, as well as the clustering, which takes about a minute to complete in such extreme circumstances.

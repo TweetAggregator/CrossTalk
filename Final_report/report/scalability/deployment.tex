@@ -1,0 +1,7 @@
+\section{Scaling the data source}
+
+Akka is Actor-based and not thread-based, i.e. there is not shared resources, only message-passing. This allow large and scalable systems, and is the main reason why the Play Framework is so successful. Streamers and searchers could be split on different nodes (hence running on different JVM) to use various API keys and simulate a faster connection to Twitter.\\
+
+However since we work with recent data, we need to wait large time frames to let people post their tweets. The more we wait, the better will be our statistics. \\
+
+Hence scaling the searchers wasn't required to test our system, since a small amount of data still representative to do our statistics. Using the current repartition systems, we got up to 200'000 Tweets in about twelves hours. Since we are working on live data, twelve hours is a reasonable time frame to let people speak about the subjects of concern. The amount of data received could be multiplied by a large factor depending on time used to gather the data. In two and a half days our system would be able to do statistics on about a million tweets.
