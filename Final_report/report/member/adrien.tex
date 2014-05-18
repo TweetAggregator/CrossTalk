@@ -1,7 +1,9 @@
 \section{Adrien Ghosn}
 
-Text for Adrien
-
-
+During the first two weeks, I helped setting up the google group, the descriptive wiki on the github project, and helped establishing the different parts needed to be implemented. 
+Then, I spent some time finding different alternatives for the map. 
+After that I worked with Lewis on the GeoPartitionner responsible for splitting the research on different geoSquares. We actually designed two different versions before to chose the one that needed to be implemented.   
+I was then attributed the implementation of the clustering part of the project. With Lewis, we devised the metric formula for our "Home cooked" algorithm, based on a classic hierarchical clustering algorithm. Then, I was responsible for its implementation that Mathieu later integrated to the project. After that, Pierre took the time to check our algorithm, verified that it respected the theory and proposed the SLIC algorithm. Therefore, I implemented the SLIC clustering algorithm too as a backup for our "home cooked" algorithm, and to see if K-mean algorithm was better for us. Then we tested both implementations with real data once the interface with the application was ready and discovered that our algorithm yields more intuitive results. At that point a problem arise, once we increased the number of original squares in the application, the clustering algorithm became a bottleneck. As a conscequence I corrected the implementation in order to achieve better performance. I also rewrote it in a map-reduce way so that an eventual integration with Spark or Hadoop would be easy. Then, since the display team was busy finishing the views, I had to implement the view in order to display circles for the clusters (for the different levels of cluster). Thanks to Cedric, I was able to catch up quickly with the API and rapidly implement the display. He then helped me for the dynamic part and added a slide bar to select the level of clustering when we realized that the relation between the zoom level and the level of clustering was hard to find.
+Finally, on the very last week, I helped generating examples for the in-class presentation. 
 
 
