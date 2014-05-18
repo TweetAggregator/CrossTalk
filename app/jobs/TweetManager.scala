@@ -60,7 +60,7 @@ object TweetManager {
 
       case Start =>
         assert(actorRefs.isEmpty, "TweetManager: Cannot restart queries again without cancelling the ones running.")
-        assert(!queriesToStart.isEmpty, "TweetManager: Cannot start no query at all.")
+        assert(!queriesToStart.flatten.isEmpty, "TweetManager: Cannot start no query at all.")
 
         if (!asSimulator) {
           /* Calculate the number of searcher and the rate of research */
@@ -94,7 +94,8 @@ object TweetManager {
           }
         } else {
           /* The testing uses only one tweetTester for all the researches */
-          val testerRef = context.actorOf(Props(new TweetTester(queriesToStart.flatten)))
+          val flatQ = queriesToStart.flatten
+          val testerRef = context.actorOf(Props(new TweetTester(flatQ)))
           testerRef.scheduleOnce(period, TimeUnit.SECONDS, Start)
           actorRefs :+= testerRef
           

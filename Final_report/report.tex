@@ -1,17 +1,19 @@
 \documentclass[a4paper, 11pt]{report}
 
 
-\usepackage{subfigure}
-\usepackage{float}
-\usepackage{epsfig,fancyhdr}
-\usepackage{amsmath,amssymb}
+%\usepackage{subfigure}
+%\usepackage{float}
+%\usepackage{epsfig,fancyhdr}
+%\usepackage{amsmath,amssymb}
 \usepackage[british]{babel}
-%\usepackage{natbib}
-\usepackage{subfig}
+%%\usepackage{natbib}
+%\usepackage{subfig}
 \usepackage{colortbl}
-\usepackage{url,graphicx,tabularx,array,geometry}
-\usepackage{epstopdf}
+%\usepackage{url,graphicx,tabularx,array,geometry}
+%\usepackage{epstopdf}
 \usepackage{cite}
+
+\usepackage[colorlinks=false, urlcolor=red, breaklinks, citebordercolor={0 0 0}, filebordercolor={0 0 0}, linkbordercolor={0 0 0}, pagebordercolor={0 0 0}, runbordercolor={0 0 0}, urlbordercolor={0 0 0}, pdfborder={0 0 0}]{hyperref} 
 
 \usepackage{amssymb}
 
@@ -26,7 +28,6 @@
 \newcommand{\racc}[1]{report/#1}
 \newcommand{\raccb}[1]{report/introduction/#1}
 \newcommand{\raccc}[1]{report/getting_data/#1}
-\newcommand{\raccd}[1]{report/localisation/#1}
 \newcommand{\racce}[1]{report/map_display/#1}
 \newcommand{\raccf}[1]{report/intersection/#1}
 \newcommand{\raccg}[1]{report/clustering/#1}
@@ -53,6 +54,7 @@
 
 
 
+
 \begin{document}
 
 
@@ -72,7 +74,8 @@ Lewis Brown. \\
 {\color{white} a}\\
 \textbf{Supervisor}: Mohammed El Seidy\\
 {\color{white} a}\\
-\'{E}cole polytechnique F\'{e}d\'{e}rale de Lausanne\\
+EPFL\\
+(\'{E}cole Polytechnique F\'{e}d\'{e}rale de Lausanne)\\
 {\color{white} a}\\
 Big Data}
 \date{spring 2014}
@@ -136,9 +139,13 @@ here we acknowledge
 
 
 \begin{thebibliography}{1}
-\addcontentsline{toc}{chapter}{Bibliography}
- 
+\addcontentsline{toc}{chapter}{Bibliography \& useful links}
+
+\bibitem{play} Play Framework 2.2.2, \url{http://www.playframework.com}\\ Last visited: April 17th, 2014
+\bibitem{akka} Akka tookit, \url{http://akka.io/}\\ Last visited: April 17th, 2014 
 \bibitem{P1a} %1
+\bibitem{P1a} %1
+
 
 
 \end{thebibliography}

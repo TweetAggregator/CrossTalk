@@ -111,9 +111,9 @@ var densityRegionList = [];
 var regions1//TODO: set to []
 var regions2
 var regions3
-var regionsF1 = false;
+var regionsF1 = true;
 var regionsF2 = false;
-var regionsFCombined = true; //only show intersection by default
+var regionsFCombined = false; //only show intersection by default
 function mapResult() {
 	while (densityRegionList.length != 0)
 		map.remove(densityRegionList.pop())

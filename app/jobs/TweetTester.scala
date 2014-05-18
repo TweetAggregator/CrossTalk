@@ -31,15 +31,14 @@ import utils.AkkaImplicits._
 import utils.Enrichments._
 import java.util.concurrent.TimeUnit
 import scala.util.Random
+import play.Logger
 
 /**
  * Gets a stream of tweets from the Streaming API
  * https://dev.twitter.com/docs/api/1.1/post/statuses/filter
  * Max #request/15minutes: 450, Max #keywords=10
  */
-class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
-
-  
+class TweetTester(queries: List[(TweetQuery, ActorRef)]) extends Actor {
   
   var running = true
   var scheduled: Option[Cancellable] = None
@@ -56,7 +55,7 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
   /**
    * Number of maximum number of tweets 
    */
-  val maxValue = query.size
+  val maxValue = queries.size
   
   val fileTweetTesters = new File("tweets/tester.txt")
   fileTweetTesters.createNewFile
@@ -64,7 +63,8 @@ class TweetTester(query: List[(TweetQuery, ActorRef)]) extends Actor {
   
   def receive = {
     case Start => 
-      computeKeyWordRandomImportance(query)
+      Logger.info("TweetTester: starting the research")
+      computeKeyWordRandomImportance(queries)
       running = true
       scheduled = Some(self.scheduleOnce(waitToExplore, TimeUnit.MILLISECONDS, Ping)) /* Auto schedule once more */
       
