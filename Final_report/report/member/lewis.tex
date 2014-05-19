@@ -1,8 +1,14 @@
 \section{Lewis Brown}
 
-During the first phase, Lewis worked on the design and implementation of the
-map partitioning.  This part was done using Akka, as described in section
-\ref{sec:partitioning}.  He then helped design the custom clustering algorithm
-described in section \ref{sec:agg_clustering}.  During the final phase, he
-worked on the task controller which ties together the user interface and the
-Twitter API queries, as described in section \ref{sec:task_controller}.
+During the first phase, I worked on the design and implementation of the map
+partitioning with Adrien.  This part was done using Akka, as described in
+section \ref{sec:partitioning}, so I spent some time getting familiar with the
+Play Framework and Akka beforehand.  I then designed the custom clustering
+algorithm described in section \ref{sec:agg_clustering} with Adrien, and
+contributed to the start of its implementation.  During the final phase, I
+implemented the task controller which ties together the user interface and the
+Twitter API queries with Joris, as described in section
+\ref{sec:task_controller}.  This required careful consideration of the possible
+errors that could arise during the task, and some restructuring of the back end
+to ensure that the many different actors in the system would synchronize
+properly.

@@ -1,6 +1,37 @@
 \section{Partitioning the map}
 \label{sec:partitioning}
 
+Adrien and Lewis designed and implemented a scheme for partitioning queries to
+the Twitter API over the geographical area that the end-user selected. We could
+interact with the API by specifying individual squares in which to look for
+Tweets. The initial design attempted to perform this task dynamically, using
+feedback from the Tweets already received to increase the number of queries
+performed in certain areas. Thus, if there appeared to be many Tweets in some
+place, more queries would be spawned to increase the granularity of the
+sampling in that area.
+
+This scheme aimed to reduce the number of requests made to the Twitter API.
+However it created extra work for the server, which would need to deduplicate
+Tweets and those Tweets would take longer to collect. Instead, since the number
+of API requests didn't seem to be the limiting factor, we spawned requests
+at the maximum granularity right from the start.
+
+Since we were using the Play framework, the implementation was performed in
+Akka. We created a GeoPartitioner actor which would perform the appropriate
+splitting for each user-selected square and start the queries. We initially had
+a separate Counter actor which would count Tweets corresponding to a query.
+However Akka actors are actually very expensive and creating one counter for
+every query created a large amount of unnecessary overhead. In the final
+version these counters were moved into the GeoPartitioner itself.
+
+Finally we had to decide on an interface that would be used to retrieve results
+from the GeoPartitioner. The results would be displayed using squares of
+varying opacity to distinguish between areas with different amounts of Tweets,
+and it should be possible to get the counts of Tweets in each subarea, possibly
+filtering out those not contained in a specified place. We simply created a
+message for each of these tasks, to which the GeoPartitioner responds with the
+desired data.
+
 \section{Interaction between the front and back end}
 \label{sec:task_controller}
 
