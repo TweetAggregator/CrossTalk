@@ -2,6 +2,7 @@
 
 Text for Cl\'{e}ment 
 
-
-
-
+In the first weeks, I worked on getting tweets from the stream API of twitter. The first two weeks, I learned how to use the OAuth signpost and Apache HttpComponents API in order to authentificate to Twitter and implemented them in order to retrieve tweets from twitter and make it work with the TweetManager. 
+After this, the projet setted-up and changed the input paramters, so I had to take one week to change the Streamer to take into account this new architecture.
+I was then confronted to the problem of the limitation of the search parameters. Indeed, according to the Twitter Streaming API specification I couldn't search for words and for geolocalisations in the same time, so I took one week to make a new search architecture, I now search with the geolocalisation parameters and filter locally the keywords. During hollidays, I had to adapt my output to the new input/output parameters specifications, meaning that I had to give each tweet to the correct listener.
+The last three weeks, I implemented the Tweet Tester and did not modified it like the Streamer because the project specifications didn't change.
