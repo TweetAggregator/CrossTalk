@@ -1,0 +1,21 @@
+WHAT IS IT?
+   - Localization of tweet and intersection of subject.
+   - Result around cities, can see time pass, can play with it.
+EXAMPLES
+   - Vegan 
+   - Justin bieber on New York
+   - Can see the sun rise
+   - Votations (in Switzerland), about Gripen (military aircraft) and UDC (right-wing party)
+
+VIDEO
+    - DEF: Schulz = German politician, president of European Parliament, member of Party of Euopean Socialist. Candidate for the Presidency of the European Comission, election next Sunday.
+   - Comments : 
+      - Translator
+      - See the cities, in France they don't use Twitter that much, in Spain we can see the coast and Madrid.
+      - Apparently they associate more Schulz with Election in Paris. Updat of the Venn Diagram.
+      - Clustering: we can see the cities and the various places.
+
+DEMO (with Tester)
+   - Can scale: in a couple of minutes our tester generate about 20 mio tweets
+   - The display and the clustering still work
+   - There is 58 mio of tweet per day on Twitter; we could deal without problem with a half of it.
