@@ -5,7 +5,7 @@ Web platform name:
 ===============
 TweetAggregator project is a aggregator of Tweets for intersection of groups. It has recently been renamed to CrossTalk. This project is the result of the Big Data class and the resulting application offers the possibility to display for a specific area the correlation between Tweets according to two keywords.
 For more details see the [wiki](https://github.com/TweetAggregator/TweetAggregator/wiki/).
-See also the video: [wiki](https://github.com/TweetAggregator/TweetAggregator/wiki/).
+See also the video: [video](https://github.com/TweetAggregator/TweetAggregator/blob/master/sandbox/screenshots/elections.mp4)
 
 Preview:
 
