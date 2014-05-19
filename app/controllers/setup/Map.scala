@@ -29,7 +29,6 @@ object Map extends Controller {
 
   /**
    * Submission of the area selected. Set the area inside the Cache and return to the parameters view.
-   * TODO: rename, perhaps, one submit (which do more than just submit) is renamed.
    */
   def finalSubmission = Action { implicit request =>
     request.body.asFormUrlEncoded match {

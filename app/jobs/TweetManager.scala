@@ -94,7 +94,7 @@ object TweetManager {
           }
         } else {
           /* The testing uses only one tweetTester for all the researches */
-          val flatQ = queriesToStart.flatten
+          val flatQ = queriesToStart.flatten.shuffle
           val testerRef = context.actorOf(Props(new TweetTester(flatQ)))
           testerRef.scheduleOnce(period, TimeUnit.SECONDS, Start)
           actorRefs :+= testerRef
