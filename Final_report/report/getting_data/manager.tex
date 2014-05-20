@@ -1,8 +1,11 @@
 \section{Tweet Manager}
 
-The Tweet Manager was designed to be the only interface with the sources of data. Starting a research requires to send a list of queries to the Manager, which will buffer them until all have been received. \\
-The Manager will then split evenly the queries on multiple actors, both for the searchers and the streamers, select the proper update rate based on the number of keys available in the configuration. \\
-Following some discussion and after some tests, we decided to avoid having dynamic reallocation of searcher, which means that once a research on a list of queries has started, the list of queries cannot be changed without stopping the whole research. This is a design choice to avoid heavy load on the Akka Scheduler and to avoid as much as possible duplicated data.\\
-The manager is also in charge of coordinating the Searchers if the system is kicked by the twitter API. Such a situation could arise if two research were launched simultaneously with the same API keys or if we decide to have an aggressive research. \\
+The Tweet Manager was designed to be the only interface with the sources of data. Starting a research requires sending a list of queries to the Manager, which will buffer them until all have been received.
 
-Moreover the Tweet Manager launches a Duplicate Checker which keeps track of the latest tweets IDs. Due to the way the Search API is designed, we cannot research on squares, but only on circles. We had to increase the size of the circles of research, leading to some overlapping we then need to deal with internally, in order to be sure to cover the whole map.
+The Manager will then split evenly the queries on multiple actors, both for the searchers and the streamers and select the proper update rate based on the number of keys available in the configuration.
+
+Following some discussion and after some tests, we decided to avoid having dynamic reallocation of searchers, which means that once a research on a list of queries has started, the list of queries cannot be changed without stopping the whole search. This is a design choice to avoid heavy load on the Akka Scheduler and to avoid duplicated data as much as possible.
+
+The manager is also in charge of coordinating the Searchers if the system is kicked by the Twitter API. Such a situation could arise if two searches were launched simultaneously with the same API keys or if we decide to have an aggressive search.
+
+Moreover the Tweet Manager launches a Duplicate Checker which keeps track of the latest Tweet IDs. Due to the way the Search API is designed, we cannot research on squares, but only on circles. We had to increase the size of the circles of research, leading to some overlapping we then need to deal with internally, in order to be sure to cover the whole map.
