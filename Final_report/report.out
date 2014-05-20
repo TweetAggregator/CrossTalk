@@ -8,11 +8,11 @@
 \BOOKMARK [1][-]{section.2.3}{Tweet Streamer}{chapter*.3}% 8
 \BOOKMARK [1][-]{section.2.4}{Data Simulator}{chapter*.3}% 9
 \BOOKMARK [-1][-]{chapter*.4}{3 Map display}{}% 10
-\BOOKMARK [0][-]{section.3.1}{general introduction}{chapter*.4}% 11
-\BOOKMARK [1][-]{section.3.2}{region selection}{section.3.1}% 12
-\BOOKMARK [1][-]{section.3.3}{tweet density display}{section.3.1}% 13
-\BOOKMARK [1][-]{section.3.4}{clustering display}{section.3.1}% 14
-\BOOKMARK [1][-]{section.3.5}{conclusion}{section.3.1}% 15
+\BOOKMARK [0][-]{section.3.1}{General introduction}{chapter*.4}% 11
+\BOOKMARK [1][-]{section.3.2}{Region selection}{section.3.1}% 12
+\BOOKMARK [1][-]{section.3.3}{Tweet density display}{section.3.1}% 13
+\BOOKMARK [1][-]{section.3.4}{Clustering display}{section.3.1}% 14
+\BOOKMARK [1][-]{section.3.5}{Conclusion}{section.3.1}% 15
 \BOOKMARK [0][-]{chapter*.5}{4 Intersection algorithm}{chapter*.4}% 16
 \BOOKMARK [1][-]{section.4.1}{Partitioning the map}{chapter*.5}% 17
 \BOOKMARK [1][-]{section.4.2}{Interaction between the front and back end}{chapter*.5}% 18

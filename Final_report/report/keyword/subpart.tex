@@ -6,7 +6,7 @@ The goal was to be able to detect a higher number of relevant tweets by automati
 
 \subsubsection{Finding an API}
 
-Timo and Joris looked for an open and free API that enables us do to accomplish this task. After trying out some of the alternatives that finally did not meet our requirements, we found Glosbe. Timo contacted the developers of Glosbe in order to ensure that we will not be blocked by making too many requests on the API. In the meantime, Pierre looked for another synonym API because we were not entirely satisfied by the results, since sometimes Glosbe returns non-relevant results. Pierre found http://words.bighugelabs.com which returns a lot of synonyms for the English language. We finally decided to keep only Glosbe, as Pierre's library returned even more non-relevant results in the end, even though they were better classified and selectable.
+Timo and Joris looked for an open and free API that enables us to accomplish this task. After trying out some of the alternatives that finally did not meet our requirements, we found Glosbe. Timo contacted the developers of Glosbe in order to ensure that we will not be blocked by making too many requests on the API. In the meantime, Pierre looked for another synonym API because we were not entirely satisfied by the results, since sometimes Glosbe returns non-relevant results. Pierre found http://words.bighugelabs.com which returns a lot of synonyms for the English language. We finally decided to keep only Glosbe, as Pierre's library returned even more non-relevant results in the end, even though they were better classified and selectable.
 
 \subsubsection{Using Glosbe}
 
@@ -14,7 +14,7 @@ Timo and Joris tried a number of different ways in order to make the HTTP-reques
 
 \subsubsection{Integrating it into the project}
 
-Joris reformated the code and made it compatible with the rest of the project.
+Joris reformatted the code and made it compatible with the rest of the project.
 
 \subsection{Keyword entering interface}
 
@@ -22,11 +22,7 @@ Joris reformated the code and made it compatible with the rest of the project.
 Timo implemented an interface that enables the user to enter his keywords in English, to select the destination languages, to translate his keywords into the selected languages, and to remove inaccurate translations.
 
 \subsubsection{Details}
-Timo started from an existing form-template of the play-framework, and adapted it to get fields enabling the user to enter a keyword, and also to remove them. There were some issues with the display of the forms and the adaptation of the java-script of the template to our purposes. Then, he needed to define a second page displaying the translation results, and 2 different data structures needed to be designed for the input-form and the translation-result-form. Finally, the existing Translator had to be integrated into the display and call it in an appropriate way for the user experience.
+Timo started from an existing form-template of the Play framework, and adapted it to get fields enabling the user to enter a keyword, and also to remove them. There were some issues with the display of the forms and the adaptation of the JavaScript of the template to our purposes. Then, he needed to define a second page displaying the translation results, and 2 different data structures needed to be designed for the input-form and the translation-result-form. Finally, the existing Translator had to be integrated into the display and call it in an appropriate way for the user experience.
 
 \subsubsection{Integration into the project}
-The overall headers and footers of the project had a bad impact on the java-script-code of the interface. Therefore, it took quite some time to get the interface working within the project. Moreover, the css style-sheets of the project needed to be reconfigured to display the buttons and the forms in an elegant manner : what the template provided was not satisfactory.
-
-
-
-
+The overall headers and footers of the project had a bad impact on the JavaScript code of the interface. Therefore, it took quite some time to get the interface working within the project. Moreover, the CSS of the project needed to be reconfigured to display the buttons and the forms in an elegant manner: what the template provided was not satisfactory.
