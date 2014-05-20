@@ -17,7 +17,7 @@ The SLIC algoithm is basically an adaptation of K-means for superpixel generatio
 
 More information on the SLIC algorithm can be found in \cite{SLIC1} (original paper) and \cite{SLIC2} (State of the art of SuperPixel techniques).
 
-The algorithm takes as input the segmented map image and, in order to produce roughly equally sized homogeneous regions, distributes $K$ cluster centers $C_k, k \in \{1, \ldots, K \}$ uniformly over $I$. Let $S = \sqrt{K}$, It is done by over-sampling $I$, creating $S \times S$ ``superpixels'', placing $C_k$ at the center of superpixel (figure 2) and computing the average density of Tweets in the superpixel. 
+The algorithm takes as input the segmented map image and, in order to produce roughly equally sized homogeneous regions, distributes $K$ cluster centers $C_k, k \in \{1, \ldots, K \}$ uniformly over $I$. Let $S = \sqrt{K}$, It is done by over-sampling $I$, creating $S \times S$ ``superpixels'', placing $C_k$ at the center of superpixel (figure 2) and computing the average density of tweets in the superpixel. 
 
  \begin{figure}[H]
  \centering
@@ -29,10 +29,10 @@ The algorithm takes as input the segmented map image and, in order to produce ro
  
 $D_s(i,j) = \sqrt{(x_i - x_j)^2 +(y_i - y_j)^2 }$ where $x_i$ and $y_i$ refer to the spatial location of pixel $i$ and $j$ \\
 
-$D_t(i,j) = \vert (d_i - d_j) \vert $ where $d_i$ refer to the density of Tweets in pixel $i$ \\
+$D_t(i,j) = \vert (d_i - d_j) \vert $ where $d_i$ refer to the density of tweets in pixel $i$ \\
 
 $D(i,j) =\sqrt{D_t^2 + (\frac{D_s}{S})^2 \times \gamma}$\\
 
-The free parameters of the algorithm are $K$, $\gamma$ and $\textit{ Low threshold}$.  The parameter $K$ impacts the granularity of clustering, it should be $\geq 10$,  $\gamma$ is a parameter that allows a trade off between homogeneity in space and homogeneity in density of clusters of Tweets. Finally $\textit{Low threshold}$ sets the number of iterations that will be necessary for the algorithm to converge.
+The free parameters of the algorithm are $K$, $\gamma$ and $\textit{ Low threshold}$.  The parameter $K$ impacts the granularity of clustering, it should be $\geq 10$,  $\gamma$ is a parameter that allows a trade off between homogeneity in space and homogeneity in density of clusters of tweets. Finally $\textit{Low threshold}$ sets the number of iterations that will be necessary for the algorithm to converge.
 
 A more detailed and complete adaptation of SLIC to our project can be found in \href{https://documents.epfl.ch/users/g/go/gouedard/public/KmeanClustering.pdf}{\underline{here}}.
