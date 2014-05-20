@@ -5,7 +5,7 @@ In order to be able to extract as much information as we could from the gathered
 The challenging part was to find a good metric for clustering since, at that point, we had very little statistics about the data that we were able to gather. We tried to find some general relation that would adapt to any reasonable set of results. This algorithm is called "HomeCooked" clustering algorithm.
 
 The algorithm proceeds as follows: 
-The GeoSquares (which are the smallest geographical unit of Tweet collection) are abstracted away and replaced by ``leafClusters'', that is, a simple square on an n x m grid. A cluster is a rectangle formed by contiguous leafClusters which are ordered according to the position of their center on the grid. They do not interleave. 
+The GeoSquares (which are the smallest geographical unit of tweet collection) are abstracted away and replaced by ``leafClusters'', that is, a simple square on an n x m grid. A cluster is a rectangle formed by contiguous leafClusters which are ordered according to the position of their center on the grid. They do not interleave. 
 
 At the very first level, we have the raw data (unclustered results, the basic GeoSquares). The higher we get, the more clustered the data becomes. 
 
