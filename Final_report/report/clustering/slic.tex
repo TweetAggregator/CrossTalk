@@ -1,7 +1,7 @@
 \section{ SLIC algorithm}
 \label{sec:K-M_clustering}
 
-We implemented this algorithm, but did not integrated it to the final version of the project since the result was not really satisfactory. Adding it to the display shouldn't be hard though, since everything is already implemented for it. 
+We implemented this algorithm, but did not integrated it to the final version of the project since the result was not really satisfactory. Adding it to the display shouldn't be hard though, since all the needed interfaces are already existing. 
 
 The SLIC (Simple Linear Iterative Clustering)  algorithm \cite{SLIC1}, published in June 2010, introduce a novel algorithm that clusters "pixels" in the combined n-dimensional density and image plane space to efficiently generate compact, nearly uniform superpixels. Due to its simplicity and its efficiency the algorithm quickly became very popular and often use in object class recognition, medical image segmentation and many other.\\
 
@@ -19,7 +19,7 @@ More information on the SLIC algorithm can be found in \cite{SLIC1} (original pa
 
 The algorithm takes as input the segmented map image and, in order to produce roughly equally sized homogene region, distribute $K$ cluster centers $C_k, k \in \{1, \ldots, K \}$ uniformly over $I$. Let $S = \sqrt{K}$, It is done by over-sample $I$, create $S \times S$ "superpixel", place $C_k$ at the center of superpixel (figure 2) and compute the average density of tweet in the superpixel. 
 
-  \begin{figure}[H]
+ \begin{figure}[H]
  \centering
  \includegraphics[scale=0.4]{\raccg{fig2.png}} 
  \end{figure}
