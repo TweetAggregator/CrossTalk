@@ -1,5 +1,3 @@
-TweetAggregator
-===============
 ![Crosstalk](http://s27.postimg.org/k6bl7qg2b/crosstalk3.png)
 ===============
 The project TweetAggregator is an aggregator allowing intersections of populations of tweets speaking about various subject over geographic areas. It has been renamed to Crosstalk at the end of the phase#2 of its development. This project is the result of the course 'Big Data' 2014 given by Prof. C. Koch at EPFL (École Polytechnique Fédérale de Lausanne), Switzerland.
@@ -37,9 +35,9 @@ In Switzerland, during vote of the 18th May 2014, the population refused to buy 
 
 The question we tried to answer here was: 'Are downtown inhabitants more vegan?'
 
-Steak:
+- Steak:
 ![SFSteak](http://s4.postimg.org/q2t0aw0ul/SF_steak.png)
-Vegan:
+- Vegan:
 ![SFVegan](http://s29.postimg.org/u24cvcsjr/SF_vegan.jpg)
 
 Downtown inhabitants speak less about steak.
