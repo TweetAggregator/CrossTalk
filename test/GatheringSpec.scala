@@ -20,15 +20,20 @@ import controllers._
 import models._
 
 object GatheringControllerSpec extends Specification with Mockito with PlaySpecification {
- override implicit def defaultAwaitTimeout: Timeout = 20.seconds
+  override implicit def defaultAwaitTimeout: Timeout = 20.seconds
+
+  def getDataStore = {
+    val store = mock[DataStore]
+    store.containsId(any) returns false
+    store
+  }
 
   class TestController(store: DataStore) extends RESTfulGathering(store) with Controller
 
   "RESTful Gathering controller" should {
 
     "add query to database and notify TweetManager upon start" in new WithApplication {
-      val dataStore = mock[DataStore]
-      dataStore.containsId(any) returns false
+      val dataStore = getDataStore
       val gathering = new TestController(dataStore)
       val coordinates = List((-129.4, 20.0, -79.0, 50.6))
       val keywords = (List("Obama"), List("Beer", "biere", "pression"))
@@ -42,18 +47,42 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
     }
 
     "not add query to database if id is already present upon start" in new WithApplication {
-      val dataStore = mock[DataStore]
-      dataStore.containsId(any) returns false
+      val dataStore = getDataStore
       dataStore.containsId(1) returns true
 
       val gathering = new TestController(dataStore)
       val coordinates = List((-129.4, 20.0, -79.0, 50.6))
       val keywords = (List("Obama"), List("Beer", "biere", "pression"))
-      val request = FakeRequest().withSession(("id", "1"))
+      val request = FakeRequest().withSession("id" -> "1")
       val result = await(gathering.start(coordinates, keywords)(request))
 
       result.header.status must equalTo(OK)
       there was no(dataStore).addSession(any, any, any, any)
+    }
+
+    "set the session state upon update" in new WithApplication {
+      val dataStore = getDataStore
+      dataStore.containsId(1) returns true
+      val gathering = new TestController(dataStore)
+      val request = FakeRequest().withSession("id" -> "1")
+
+      val result1 = await(gathering.update(1, Paused)(request))
+      there was one(dataStore).setSessionState(1, Paused)
+      result1.header.status must equalTo(OK)
+
+      val result2 = await(gathering.update(1, Running)(request))
+      there was one(dataStore).setSessionState(1, Running)
+      result2.header.status must equalTo(OK)
+    }
+
+    "not set the session upon update to an invalid id" in new WithApplication {
+      val dataStore = getDataStore
+      val gathering = new TestController(dataStore)
+      val request = FakeRequest().withSession("id" -> "1")
+
+      val result = await(gathering.update(1, Paused)(request))
+      there was no(dataStore).setSessionState(any, any)
+      result.header.status must equalTo(OK)
     }
 
   }
