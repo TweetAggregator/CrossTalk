@@ -43,7 +43,7 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       result.header.status must equalTo(OK)
       val id = result.session.get("id")
       id.nonEmpty should beTrue
-      there was one(dataStore).addSession(id.get.toLong, coordinates, keywords, Running)
+      there was one(dataStore).addSession(id.get.toLong, coordinates, keywords, true)
     }
 
     "not add query to database if id is already present upon start" in new WithApplication {
@@ -60,18 +60,19 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       there was no(dataStore).addSession(any, any, any, any)
     }
 
+
     "set the session state upon update" in new WithApplication {
       val dataStore = getDataStore
       dataStore.containsId(1) returns true
       val gathering = new TestController(dataStore)
       val request = FakeRequest().withSession("id" -> "1")
 
-      val result1 = await(gathering.update(1, Paused)(request))
-      there was one(dataStore).setSessionState(1, Paused)
+      val result1 = await(gathering.update(1, false)(request))
+      there was one(dataStore).setSessionState(1, false)
       result1.header.status must equalTo(OK)
 
-      val result2 = await(gathering.update(1, Running)(request))
-      there was one(dataStore).setSessionState(1, Running)
+      val result2 = await(gathering.update(1, true)(request))
+      there was one(dataStore).setSessionState(1, true)
       result2.header.status must equalTo(OK)
     }
 
@@ -80,7 +81,7 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       val gathering = new TestController(dataStore)
       val request = FakeRequest().withSession("id" -> "1")
 
-      val result = await(gathering.update(1, Paused)(request))
+      val result = await(gathering.update(1, false)(request))
       there was no(dataStore).setSessionState(any, any)
       result.header.status must equalTo(OK)
     }
