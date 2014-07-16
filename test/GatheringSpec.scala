@@ -2,73 +2,59 @@ import org.specs2.mutable._
 import org.specs2.runner._
 import org.specs2.mock._
 import org.specs2.mock.Mockito
+import org.mockito.Matchers._
 
-import akka.actor.Props
-import akka.actor.Actor
-import controllers._
+import scala.concurrent.duration._
 import play.api._
+import play.api.http.Status
 import play.api.mvc._
 import play.api.mvc.Results._
 import play.api.test._
 import play.api.data._
 import play.api.data.Forms._
 import play.api.cache.Cache
+import play.api.test._
+import akka.util.Timeout
 
-import jobs._
+import controllers._
 import models._
-import utils.AkkaImplicits._
-import TweetManager._
 
-object GatheringControllerSpec extends Specification with Mockito {
+object GatheringControllerSpec extends Specification with Mockito with PlaySpecification {
+ override implicit def defaultAwaitTimeout: Timeout = 20.seconds
 
-  // Providing fake receive methods for the actors used avoids tests querying Twitter
-  class FakeGatheringActors(geoPartRecv: Actor => PartialFunction[Any,Unit], tweetManagerRecv: Actor => PartialFunction[Any,Unit]) extends GatheringActors {
-    def geoPartitioner(keywords: List[String], square: GeoSquare, row: Int, col: Int) = {
-      val spiedGeoPart = spy(new GeoPartitionner(keywords, square, row, col))
-      spiedGeoPart.receive returns (geoPartRecv(spiedGeoPart))
-      spiedGeoPart
+  class TestController(store: DataStore) extends RESTfulGathering(store) with Controller
+
+  "RESTful Gathering controller" should {
+
+    "add query to database and notify TweetManager upon start" in new WithApplication {
+      val dataStore = mock[DataStore]
+      dataStore.containsId(any) returns false
+      val gathering = new TestController(dataStore)
+      val coordinates = List((-129.4, 20.0, -79.0, 50.6))
+      val keywords = (List("Obama"), List("Beer", "biere", "pression"))
+      implicit val request = FakeRequest()
+      val result = await(gathering.start(coordinates, keywords)(request))
+      
+      result.header.status must equalTo(OK)
+      val id = result.session.get("id")
+      id.nonEmpty should beTrue
+      there was one(dataStore).addSession(id.get.toLong, coordinates, keywords, Running)
     }
-    def tweetManager = {
-      val spiedTweetManager = spy(new TweetManager())
-      spiedTweetManager.receive returns (tweetManagerRecv(spiedTweetManager))
-      spiedTweetManager
+
+    "not add query to database if id is already present upon start" in new WithApplication {
+      val dataStore = mock[DataStore]
+      dataStore.containsId(any) returns false
+      dataStore.containsId(1) returns true
+
+      val gathering = new TestController(dataStore)
+      val coordinates = List((-129.4, 20.0, -79.0, 50.6))
+      val keywords = (List("Obama"), List("Beer", "biere", "pression"))
+      val request = FakeRequest().withSession(("id", "1"))
+      val result = await(gathering.start(coordinates, keywords)(request))
+
+      result.header.status must equalTo(OK)
+      there was no(dataStore).addSession(any, any, any, any)
     }
-    def tweetManagerRef = toRef(Props(tweetManager))
+
   }
-
-  class TestController(geoPart: Actor => PartialFunction[Any,Unit], tweetManager: Actor => PartialFunction[Any,Unit]) extends Controller with GatheringController {
-    //val actors = new FakeGatheringActors(geoPart, tweetManager)
-    val actors =  new GatheringActorsImpl
-  }
-
-  "Gathering controller" should {
-    "return OK on well-formed data" in new WithApplication {
-      val geoPartRecv: Actor => PartialFunction[Any, Unit] = a => {
-        case StartGeo => a.sender ! Done
-        case TweetsFromSquare(_) => a.sender ! 14
-      }
-      val tweetManagerRecv: Actor => PartialFunction[Any, Unit] = a => {
-        case Start => ()
-      }
-      val controller = new TestController(geoPartRecv, tweetManagerRecv)
-
-      Cache.set("coordinates", List((-129.4, 20.0, -79.0, 50.6)))
-      Cache.set("keywords",
-                List(("Obama", List[String]()),
-                     ("Beer", List("biere", "pression"))))
-      Cache.set("focussed", (-109.4, 40.0, -79.0, 50.6))
-
-      controller.start() must be (controller.Ok)
-
-      Thread.sleep(20000)
-
-      controller.computeDisplayData must be (controller.Ok)
-
-      Thread.sleep(8000)
-    }
-  }
-
-  //TODO: test timeouts
-  //TODO: test with too many keywords
-  //TODO: test double start
 }
