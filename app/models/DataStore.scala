@@ -1,13 +1,15 @@
 package models
 
 import java.sql.Connection
+import scala.collection.immutable.Map
 import anorm._ 
 
 trait DataStore {
   def addSession(id: Long, coordinates: List[(Double, Double, Double, Double)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection)
   def getSessionInfo(id: Long)(implicit c: Connection): (List[(Double, Double, Double, Double)], (List[String], List[String]), Boolean)
   def setSessionState(id: Long, running: Boolean)(implicit c: Connection): Boolean
-  def getSessionTweets(id: Long)(implicit c: Connection): Unit//TODO
+  def getSessionTweets(id: Long)(implicit c: Connection): Map[(Int, Int, Int, Int), Int]
+  def increaseSessionTweets(id: Long, coord: Int, keywordGroup: Int, x: Int, y: Int, quantity: Int)(implicit c: Connection): Boolean
   def containsId(id: Long)(implicit c: Connection): Boolean
   def getNextId(implicit c: Connection): Long
 }
@@ -60,7 +62,39 @@ class SQLDataStore extends DataStore {
       update sessions set state = $running where id = $id
     """.executeUpdate() == 1
   }
-  def getSessionTweets(id: Long)(implicit c: Connection): Unit = ???//TODO
+  def getSessionTweets(id: Long)(implicit c: Connection): Map[(Int, Int, Int, Int), Int] = {
+    val quantityRows = SQL"""
+      select coord_id, keyword_id, x, y, quantity from tweets where session_id = $id
+    """()
+    for ((c, kxyq) <- quantityRows.groupBy(_[Int]("coord_id"));
+         (k, xyq) <- kxyq.groupBy(_[Int]("keyword_id"));
+         (x, yq) <- xyq.groupBy(_[Int]("x"));
+         (y, q) <- yq.groupBy(_[Int]("y"))) yield {
+      (c, k, x, y) -> q.head[Int]("quantity")
+    }
+  }
+  def increaseSessionTweets(id: Long, coord: Int, keywordGroup: Int, x: Int, y: Int, quantity: Int)(implicit c: Connection): Boolean = {
+    val oldQuantity = SQL"""
+      select quantity from tweets 
+      where session_id = $id and coord_id = $coord
+      and keyword_id = $keywordGroup and x = $x and y = $y
+    """().headOption
+    if (oldQuantity.nonEmpty) {
+      val newQuantity = oldQuantity.get[Int]("quantity") + quantity
+
+      SQL"""
+        update tweets set quantity = $newQuantity
+        where session_id = $id and coord_id = $coord
+        and keyword_id = $keywordGroup and x = $x and y = $y
+      """.executeUpdate() == 1
+    }
+    else {
+      SQL"""
+        insert into tweets(session_id, coord_id, keyword_id, x, y, quantity)
+        values ($id, $coord, $keywordGroup, $x, $y, $quantity)
+      """.executeInsert().nonEmpty
+    }
+  }
   def containsId(id: Long)(implicit c: Connection): Boolean = {
     SQL"""
       select 1 from sessions where id = $id
