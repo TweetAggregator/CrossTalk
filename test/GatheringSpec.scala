@@ -49,6 +49,7 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
     "not add query to database if id is already present upon start" in new WithApplication {
       val dataStore = getDataStore
       dataStore.containsId(M.eq(1L))(any) returns true
+      dataStore.getNextId(any) returns 1L
 
       val gathering = new TestController(dataStore)
       val coordinates = List((-129.4, 20.0, -79.0, 50.6))
@@ -64,6 +65,7 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
     "set the session state upon update" in new WithApplication {
       val dataStore = getDataStore
       dataStore.containsId(M.eq(1L))(any) returns true
+      dataStore.getNextId(any) returns 1L
       val gathering = new TestController(dataStore)
       val request = FakeRequest().withSession("id" -> "1")
 

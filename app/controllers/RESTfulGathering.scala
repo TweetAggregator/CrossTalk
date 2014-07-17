@@ -3,12 +3,13 @@ package controllers
 import play.api.mvc._
 import play.api.db.DB
 import play.api.Play.current
+import java.sql.Connection
 
 import models._
 
 
 class RESTfulGathering(store: DataStore) { this: Controller =>
-  def getId(request: Request[_]) = request.session.get("id").map(_.toLong).getOrElse(request.id)
+  def getId(request: Request[_])(implicit c: Connection) = request.session.get("id").map(_.toLong).getOrElse(store.getNextId)
 
   def start(coordinates: List[(Double, Double, Double, Double)], keywords: (List[String], List[String])) = Action { implicit request =>
     DB.withConnection { implicit c =>

@@ -9,6 +9,7 @@ trait DataStore {
   def setSessionState(id: Long, running: Boolean)(implicit c: Connection): Boolean
   def getSessionTweets(id: Long)(implicit c: Connection): Unit//TODO
   def containsId(id: Long)(implicit c: Connection): Boolean
+  def getNextId(implicit c: Connection): Long
 }
 
 class SQLDataStore extends DataStore {
@@ -65,6 +66,11 @@ class SQLDataStore extends DataStore {
     SQL"""
       select 1 from sessions where id = $id
     """().nonEmpty
+  }
+  def getNextId(implicit c: Connection) = {
+    SQL"""
+      select max(id) from sessions
+    """().headOption.map(_[Long]("max(id)")+1).getOrElse(0L)
   }
 }
 

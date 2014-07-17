@@ -50,7 +50,8 @@ object DataStoreSpec extends Specification with PlaySpecification {
         store.getSessionInfo(1) should be equalTo (coords1, keywords1, false)
         store.containsId(3) should beFalse
         store.containsId(2) should beTrue
-      } 
+        store.getNextId should be equalTo(3)
+      }
     }
   }
 }
