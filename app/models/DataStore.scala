@@ -13,7 +13,6 @@ trait DataStore {
 }
 
 class SQLDataStore extends DataStore {
-  //TODO: sort out id
   def addSession(id: Long, coordinates: List[(Double, Double, Double, Double)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection) = {
     val Some(sessionId) = SQL"""
       insert into sessions(state)
