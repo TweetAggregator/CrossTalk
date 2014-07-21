@@ -3,27 +3,39 @@ package models
 import java.sql.Connection
 import scala.collection.immutable.Map
 import anorm._ 
+import play.api.db.DB
+import play.api.Play.current
 
 trait DataStore {
-  def addSession(id: Long, coordinates: List[(Double, Double, Double, Double)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection)
+  def addSession(id: Long, coordinates: List[((Double, Double, Double, Double), Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection)
   def getSessionInfo(id: Long)(implicit c: Connection): (List[(Double, Double, Double, Double)], (List[String], List[String]), Boolean)
+  def getCoordsInfo(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double)(implicit c: Connection): (Int, Int)
   def setSessionState(id: Long, running: Boolean)(implicit c: Connection): Boolean
-  def getSessionTweets(id: Long)(implicit c: Connection): Map[(Int, Int, Int, Int), Int]
-  def increaseSessionTweets(id: Long, coord: Int, keywordGroup: Int, x: Int, y: Int, quantity: Int)(implicit c: Connection): Boolean
+  def getSessionTweets(id: Long)(implicit c: Connection): Map[(Double, Double, Double, Double), Int]
+  def increaseSessionTweets(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double, quantity: Int)(implicit c: Connection): Boolean
   def containsId(id: Long)(implicit c: Connection): Boolean
   def getNextId(implicit c: Connection): Long
 }
 
 class SQLDataStore extends DataStore {
-  def addSession(id: Long, coordinates: List[(Double, Double, Double, Double)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection) = {
+  DB.withConnection { implicit c =>
+    SQL"""
+        create table if not exists sessions(id int auto_increment primary key, state int);
+        create table if not exists coords(id int auto_increment primary key, session_id int, c1 double, c2 double, c3 double, c4 double, rows int, cols int);
+        create table if not exists keywords(id int auto_increment primary key, session_id int, keyword varchar, grp int);
+        create table if not exists tweets(id int auto_increment primary key, session_id int, long1 double, lat1 double, long2 double, lat2 double, quantity int);
+    """.execute()
+  }
+
+  def addSession(id: Long, coordinates: List[((Double, Double, Double, Double), Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection) = {
     val Some(sessionId) = SQL"""
       insert into sessions(state)
       values ($running)
     """.executeInsert()
-    for (coord <- coordinates) {
+    for ((coord, rows, cols) <- coordinates) {
       SQL"""
-        insert into coords(session_id, c1, c2, c3, c4)
-        values ($sessionId, ${coord._1}, ${coord._2}, ${coord._3}, ${coord._4})
+        insert into coords(session_id, c1, c2, c3, c4, rows, cols)
+        values ($sessionId, ${coord._1}, ${coord._2}, ${coord._3}, ${coord._4}, $rows, $cols)
       """.executeInsert()
     }
 
@@ -56,42 +68,50 @@ class SQLDataStore extends DataStore {
 
     (coords.toList, (keys1, keys2), state)
   }
+  def getCoordsInfo(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double)(implicit c: Connection): (Int, Int) = {
+    val infoRow = SQL"""
+      select rows, cols from coords
+      where session_id = $id and c1 = $long1 and c2 = $lat1
+      and c3 = $long2 and c4 = $lat2
+    """().head
+    (infoRow[Int]("rows"), infoRow[Int]("cols"))
+  }
   def setSessionState(id: Long, running: Boolean)(implicit c: Connection): Boolean = {
     val state = if (running) 1 else 0
     SQL"""
       update sessions set state = $running where id = $id
     """.executeUpdate() == 1
   }
-  def getSessionTweets(id: Long)(implicit c: Connection): Map[(Int, Int, Int, Int), Int] = {
+  def getSessionTweets(id: Long)(implicit c: Connection): Map[(Double, Double, Double, Double), Int] = {
     val quantityRows = SQL"""
-      select coord_id, keyword_id, x, y, quantity from tweets where session_id = $id
+      select long1, lat1, long2, lat2, quantity from tweets where session_id = $id
     """()
-    for ((c, kxyq) <- quantityRows.groupBy(_[Int]("coord_id"));
-         (k, xyq) <- kxyq.groupBy(_[Int]("keyword_id"));
-         (x, yq) <- xyq.groupBy(_[Int]("x"));
-         (y, q) <- yq.groupBy(_[Int]("y"))) yield {
+    for ((c, kxyq) <- quantityRows.groupBy(_[Double]("long1"));
+         (k, xyq) <- kxyq.groupBy(_[Double]("lat1"));
+         (x, yq) <- xyq.groupBy(_[Double]("long2"));
+         (y, q) <- yq.groupBy(_[Double]("lat2"))) yield {
       (c, k, x, y) -> q.head[Int]("quantity")
     }
   }
-  def increaseSessionTweets(id: Long, coord: Int, keywordGroup: Int, x: Int, y: Int, quantity: Int)(implicit c: Connection): Boolean = {
+  def increaseSessionTweets(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double, quantity: Int)(implicit c: Connection): Boolean = {
     val oldQuantity = SQL"""
       select quantity from tweets 
-      where session_id = $id and coord_id = $coord
-      and keyword_id = $keywordGroup and x = $x and y = $y
+      where session_id = $id and long1 = $long1
+      and lat1 = $lat1 and long2 = $long2 and lat2 = $lat2
     """().headOption
     if (oldQuantity.nonEmpty) {
       val newQuantity = oldQuantity.get[Int]("quantity") + quantity
 
       SQL"""
         update tweets set quantity = $newQuantity
-        where session_id = $id and coord_id = $coord
-        and keyword_id = $keywordGroup and x = $x and y = $y
+        where session_id = $id and long1 = $long1
+        and lat1 = $lat1 and long2 = $long2 and lat2 = $lat2
       """.executeUpdate() == 1
     }
     else {
       SQL"""
-        insert into tweets(session_id, coord_id, keyword_id, x, y, quantity)
-        values ($id, $coord, $keywordGroup, $x, $y, $quantity)
+        insert into tweets(session_id, long1, lat1, long2, lat2, quantity)
+        values ($id, $long1, $lat1, $long2, $lat2, $quantity)
       """.executeInsert().nonEmpty
     }
   }
@@ -103,7 +123,7 @@ class SQLDataStore extends DataStore {
   def getNextId(implicit c: Connection) = {
     SQL"""
       select max(id) from sessions
-    """().headOption.map(_[Long]("max(id)")+1).getOrElse(0L)
+    """().head[Option[Long]]("max(id)").map(_+1).getOrElse(1L)
   }
 }
 

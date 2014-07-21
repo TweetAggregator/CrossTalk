@@ -3,15 +3,48 @@ package controllers
 import play.api.mvc._
 import play.api.db.DB
 import play.api.Play.current
+import play.api.cache.Cache
 import java.sql.Connection
+import akka.actor.Props
 
+import utils.Enrichments._
+import utils.AkkaImplicits._
 import models._
+import jobs.TweetManager
 
 
 class RESTfulGathering(store: DataStore) { this: Controller =>
-  def getId(request: Request[_])(implicit c: Connection) = request.session.get("id").map(_.toLong).getOrElse(store.getNextId)
+  type Square = (Double, Double, Double, Double)
 
-  def start(coordinates: List[(Double, Double, Double, Double)], keywords: (List[String], List[String])) = Action { implicit request =>
+  /* General configurations */
+  val maxGranularity = getConfInt("gathering.maxGranularity", "Gathering: no granularity found in conf.")
+  val minSide = getConfDouble("gathering.minSideGeo", "Gathering: no minSide") // Minumum side in degree
+
+  /** Compute the number of rows / cols  for a research based on geocoordinates */
+  def granularity(top: Double, bottom: Double): Int = {
+    require(top > bottom)
+    val highest: Int = (Math.ceil(top - bottom) / minSide).toInt
+    if (highest > maxGranularity) maxGranularity
+    else highest
+  }
+
+  def getId(request: Request[_])(implicit conn: Connection) = request.session.get("id").map(_.toLong).getOrElse(store.getNextId)
+
+  def refreshVenn = Action { implicit request =>
+    Ok
+  }
+
+  def start() = Action { implicit request =>
+    val coordinates = Cache.getAs[List[Square]]("coordinates").get.map { c =>
+      val rows = granularity(c._4, c._2)
+      val cols = granularity(c._3, c._1)
+      (c, rows, cols)
+    }
+    val keywordsList = Cache.getAs[List[(String, List[String])]]("keywords").get
+    val keys1 = keywordsList(0)._1::keywordsList(0)._2
+    val keys2 = keywordsList(1)._1::keywordsList(1)._2
+    val keywords = (keys1, keys2)
+
     DB.withConnection { implicit c =>
       val id = getId(request)
       if (store.containsId(id)) {
@@ -37,6 +70,8 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
       }
     }
   }
+
+  def display(focussed: Square, viewCenter: (Double, Double), zoomLevel: Double) = ???
 
 }
 
