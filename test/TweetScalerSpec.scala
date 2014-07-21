@@ -53,7 +53,8 @@ class TweetScalerSpec extends Specification {
     }
   }
   
-  "Tweet Manager" should {
+  //TODO: write a new scaling test
+  /*"Tweet Manager" should {
     "start a lot of queries, check for duplicates, and never stop" in new WithApplication  {
       /* Requests are all over the US */
       val queries = List(
@@ -69,5 +70,5 @@ class TweetScalerSpec extends Specification {
       while(true) Thread.sleep(40000000)
 
     }
-  }
+  }*/
 }

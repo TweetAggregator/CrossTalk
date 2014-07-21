@@ -18,6 +18,7 @@ import akka.actor.ActorRef
 @RunWith(classOf[JUnitRunner])
 class TweetManagerSpec extends Specification {
   var nbReceived = 0
+  def appWithMemoryDatabase = FakeApplication(additionalConfiguration = inMemoryDatabase("test"))
 
   class Listener extends Actor {
     def receive = {
@@ -30,12 +31,13 @@ class TweetManagerSpec extends Specification {
   /* NB: Those test might fail depending of the network congestion */
   "Tweet Searcher Actor" should {
 
-    "return a list of tweets" in new WithApplication {
+    "return a list of tweets" in new WithApplication(appWithMemoryDatabase) {
       val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
+      val manager = Akka.system.actorOf(Props(new TweetManager(1, new SQLDataStore)))
       val listener = Akka.system.actorOf(Props(new Listener))
       val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords), 2)))
-      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 30, 0)))
+      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 30, 0, manager)))
 
       actor ! Ping
       Thread.sleep(30000) /* Just print tweets for 30 secs */
@@ -49,9 +51,10 @@ class TweetManagerSpec extends Specification {
       nbReceived = 0
       val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
+      val manager = Akka.system.actorOf(Props(new TweetManager(1, new SQLDataStore)))
       val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords), 2)))
       val listener = Akka.system.actorOf(Props(new Listener))
-      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 10, 0)))
+      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 10, 0, manager)))
 
       actor ! Ping
       Thread.sleep(30000) /* Just print tweets for 30 secs */
@@ -65,9 +68,10 @@ class TweetManagerSpec extends Specification {
       nbReceived = 0
       val query = TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
+      val manager = Akka.system.actorOf(Props(new TweetManager(1, new SQLDataStore)))
       val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords), 2)))
       val listener = Akka.system.actorOf(Props(new Listener))
-      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 20, 0)))
+      val actor = Akka.system.actorOf(Props(new TweetSearcher((query, listener) :: Nil, checker, 20, 0, manager)))
 
       actor ! Ping
       Thread.sleep(20000) /* Just print tweets for 20 secs */
@@ -183,14 +187,15 @@ class TweetManagerSpec extends Specification {
       val qurs5 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val listener = Akka.system.actorOf(Props(new Listener))
+      val manager = Akka.system.actorOf(Props(new TweetManager(1, new SQLDataStore())))
 
-      TweetManagerRef ! AddQueries((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: (qurs4, listener) :: (qurs5, listener) :: Nil)
-      TweetManagerRef ! Start
+      manager ! AddQueries((qurs1, listener) :: (qurs2, listener) :: (qurs3, listener) :: (qurs4, listener) :: (qurs5, listener) :: Nil)
+      manager ! Start
       Thread.sleep(40000) /* Just print tweets for 40 secs */
-      /*TweetManagerRef ! Pause
-      TweetManagerRef ! Resume*/
+      /*manager ! Pause
+      manager ! Resume*/
       Thread.sleep(20000)
-      TweetManagerRef ! Stop
+      manager ! Stop
       Thread.sleep(5000) /* Just wait for 20 secs, nothing more should be received. */
       println("> " + nbReceived)
       nbReceived should be greaterThan (0)

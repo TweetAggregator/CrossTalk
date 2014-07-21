@@ -52,7 +52,8 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
       }
       else {
         store.addSession(id, coordinates, keywords, true)
-        //TODO: spawn and start a tweet manager
+        val manager = toRef(Props(new TweetManager(id, store)))
+        manager ! StartQueriesFromDB
         Ok.withSession("id" -> id.toString)
       }
     }

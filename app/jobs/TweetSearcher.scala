@@ -44,7 +44,7 @@ import java.io.{PrintWriter, File}
  * 
  * @pre All the queries added are already subdivided.
  */
-class TweetSearcher(qList: List[(TweetQuery, ActorRef)], checker: ActorRef, searchRate: Int, twitterKey: Int) extends Actor {
+class TweetSearcher(qList: List[(TweetQuery, ActorRef)], checker: ActorRef, searchRate: Int, twitterKey: Int, manager: ActorRef) extends Actor {
 
   var running = true /* If true, the actor will be scheduled */
   var scheduled: Option[Cancellable] = None /* cancellable corresponding to the self-schedule of the thread */
@@ -93,7 +93,7 @@ class TweetSearcher(qList: List[(TweetQuery, ActorRef)], checker: ActorRef, sear
         case _: JsResultException => 
           Logger.info("TweetSearcher: error while parsing Json...(probably rejected by the Twitter API, should work again soon).")
           qurs += (next -> (query, listener, None)) /* Remove the callbacks. Since we were refused, the queries will start blank again. */
-          TweetManagerRef ! Refused
+          manager ! Refused
         case _: javax.net.ssl.SSLPeerUnverifiedException => 
           Logger.info("TweetSearcher: error while authenticating with Twitter (probably just a little network error, nothing to worry about).")
         case _: Exception =>

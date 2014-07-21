@@ -24,6 +24,7 @@ case object Done
 case object Start
 case object Ping
 case class AddQueries(queries: List[(TweetQuery, ActorRef)])
+case class StartQueriesFromDB(sessionId: Long)
 case object Stop
 case object Pause
 case object Resume

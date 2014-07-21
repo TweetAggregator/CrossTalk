@@ -56,15 +56,16 @@ class ClustHCRealTweetSpec extends Specification {
     "start new query over all the US and cluster them" in new WithApplication {
 
       geoParts ++= queries.map(q => toRef(Props(new GeoPartitionner(q.keywords, q.area, q.rows, q.cols))))
+      val manager = toRef(Props(new TweetManager(1, new SQLDataStore)))
 
       geoParts.foreach(geo => geo ! StartGeo)
 
       Thread.sleep(10000) /* Wait for all the message to be received */
 
-      TweetManagerRef ! Start
+      manager ! Start
       Thread.sleep(500 * 1000) /* Just sleep for 5 minutes */
 
-      TweetManagerRef ! Stop
+      manager ! Stop
 
       val geoIndices = queries.map(_.computeIndices) zip geoParts
 

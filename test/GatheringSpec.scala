@@ -35,10 +35,12 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
     "add query to database and notify TweetManager upon start" in new WithApplication {
       val dataStore = getDataStore
       val gathering = new TestController(dataStore)
-      val coordinates = List((-129.4, 20.0, -79.0, 50.6))
+      val coordinates = List(((-129.4, 20.0, -79.0, 50.6), 10, 10))
+      Cache.set("coordinates", coordinates)
       val keywords = (List("Obama"), List("Beer", "biere", "pression"))
+      Cache.set("keywords", keywords)
       implicit val request = FakeRequest()
-      val result = await(gathering.start(coordinates, keywords)(request))
+      val result = await(gathering.start()(request))
       
       result.header.status must equalTo(OK)
       val id = result.session.get("id")
@@ -53,9 +55,11 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
 
       val gathering = new TestController(dataStore)
       val coordinates = List((-129.4, 20.0, -79.0, 50.6))
+      Cache.set("coordinates", coordinates)
       val keywords = (List("Obama"), List("Beer", "biere", "pression"))
+      Cache.set("keywords", keywords)
       val request = FakeRequest().withSession("id" -> "1")
-      val result = await(gathering.start(coordinates, keywords)(request))
+      val result = await(gathering.start()(request))
 
       result.header.status must equalTo(OK)
       there was no(dataStore).addSession(any, any, any, any)(any)
