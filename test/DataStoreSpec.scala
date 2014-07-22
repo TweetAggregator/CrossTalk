@@ -22,7 +22,7 @@ object DataStoreSpec extends Specification with PlaySpecification {
         CREATE TABLE  IF NOT EXISTS SESSIONS(ID INT AUTO_INCREMENT PRIMARY KEY, STATE INT);
         CREATE TABLE  IF NOT EXISTS COORDS(ID INT AUTO_INCREMENT PRIMARY KEY, SESSION_ID INT, C1 DOUBLE, C2 DOUBLE, C3 DOUBLE, C4 DOUBLE, ROWS INT, COLS INT);
         CREATE TABLE  IF NOT EXISTS KEYWORDS(ID INT AUTO_INCREMENT PRIMARY KEY, SESSION_ID INT, KEYWORD VARCHAR, GRP INT);
-        CREATE TABLE  IF NOT EXISTS TWEETS(ID INT AUTO_INCREMENT PRIMARY KEY, SESSION_ID INT, LONG1 DOUBLE, LAT1 DOUBLE, LONG2 DOUBLE, LAT2 DOUBLE, QUANTITY INT);
+        CREATE TABLE  IF NOT EXISTS TWEETS(ID INT AUTO_INCREMENT PRIMARY KEY, SESSION_ID INT, LONG1 DOUBLE, LAT1 DOUBLE, LONG2 DOUBLE, LAT2 DOUBLE, GRP INT, QUANTITY INT);
       """.execute()
       block(c)
       SQL"""
@@ -69,15 +69,16 @@ object DataStoreSpec extends Specification with PlaySpecification {
     "keep track of tweet counts" in new WithApplication(appWithMemoryDatabase) {
       val store = new SQLDataStore()
       withTwoSessions(store) { implicit c =>
-        store.increaseSessionTweets(1, 1.0, 1.0, 1.0, 2.0, 5)
-        store.increaseSessionTweets(2, 1.3, 1.3, 3.1, 1.0, 2)
-        store.getSessionTweets(1)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 5
-        store.getSessionTweets(2)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 2
+        store.increaseSessionTweets(1, 1.0, 1.0, 1.0, 2.0, FirstGroup, 5)
+        store.increaseSessionTweets(2, 1.3, 1.3, 3.1, 1.0, SecondGroup, 2)
+        store.getSessionTweets(1, FirstGroup)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 5
+        store.getSessionTweets(1, SecondGroup)(c).keys should not contain ((1.0, 1.0, 1.0, 2.0))
+        store.getSessionTweets(2, SecondGroup)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 2
 
-        store.increaseSessionTweets(1, 1.0, 1.0, 1.0, 2.0, 4)
-        store.increaseSessionTweets(2, 1.3, 1.3, 3.1, 1.0, 3)
-        store.getSessionTweets(1)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 9
-        store.getSessionTweets(2)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 5
+        store.increaseSessionTweets(1, 1.0, 1.0, 1.0, 2.0, FirstGroup, 4)
+        store.increaseSessionTweets(2, 1.3, 1.3, 3.1, 1.0, SecondGroup, 3)
+        store.getSessionTweets(1, FirstGroup)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 9
+        store.getSessionTweets(2, SecondGroup)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 5
       }
     }
   }

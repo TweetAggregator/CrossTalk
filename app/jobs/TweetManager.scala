@@ -71,7 +71,7 @@ class TweetManager(sessionId: Long, store: DataStore) extends Actor {
     case Tweet(value, query) =>
       DB.withConnection { implicit c =>
         val area = query.area
-        store.increaseSessionTweets(sessionId, area.long1, area.lat1, area.long2, area.lat2, 1)
+        store.increaseSessionTweets(sessionId, area.long1, area.lat1, area.long2, area.lat2, FirstGroup, 1) //TODO: correct keyword group
       }
 
     case AddQueries(queries) =>
