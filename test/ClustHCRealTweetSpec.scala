@@ -55,7 +55,7 @@ class ClustHCRealTweetSpec extends Specification {
   "clustering, Manager, GeoPart" should {
     "start new query over all the US and cluster them" in new WithApplication {
 
-      geoParts ++= queries.map(q => toRef(Props(new GeoPartitionner(q.keywords, q.area, q.rows, q.cols))))
+      //geoParts ++= queries.map(q => toRef(Props(new GeoPartitionner(q.keywords, q.area, q.rows, q.cols)))) TODO
       val manager = toRef(Props(new TweetManager(1, new SQLDataStore)))
 
       geoParts.foreach(geo => geo ! StartGeo)
