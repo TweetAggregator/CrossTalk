@@ -59,9 +59,9 @@ class TweetManager(sessionId: Long, store: DataStore) extends Actor {
         val keys3 = for (key1 <- keys1; key2 <- keys2) yield (s"${key1} ${key2}") // Space means AND, concantenation means OR
         val queries = coords.flatMap(c => {
           val (rows, cols) = store.getCoordsInfo(sessionId, c._1, c._2, c._3, c._4)
-          val sq1 = TweetQuery(keys1, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
-          val sq2 = TweetQuery(keys2, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
-          val sq3 = TweetQuery(keys3, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
+          val sq1 = TweetQuery(FirstGroup, keys1, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
+          val sq2 = TweetQuery(SecondGroup, keys2, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
+          val sq3 = TweetQuery(IntersectionGroup, keys3, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
           sq1 ++ sq2 ++ sq3
         })
         queriesToStart :+= queries.map((_, self))
@@ -71,7 +71,7 @@ class TweetManager(sessionId: Long, store: DataStore) extends Actor {
     case Tweet(value, query) =>
       DB.withConnection { implicit c =>
         val area = query.area
-        store.increaseSessionTweets(sessionId, area.long1, area.lat1, area.long2, area.lat2, FirstGroup, 1) //TODO: correct keyword group
+        store.increaseSessionTweets(sessionId, area.long1, area.lat1, area.long2, area.lat2, query.keywordGroup, 1)
       }
 
     case AddQueries(queries) =>

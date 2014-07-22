@@ -31,7 +31,9 @@ POST   /initialKeywords              controllers.setup.Keywords.initialSubmissio
 #GET    /gatheringDisplayClustering   controllers.Gathering.computeDisplayClustering
 #POST   /gatheringDisplay             controllers.Gathering.refreshVenn
 
-GET     /gatheringStart               controllers.RESTfulGathering.start
-POST    /gatheringDisplay             controllers.RESTfulGathering.refreshVenn
+GET    /gatheringStart               controllers.RESTfulGathering.start
+GET    /gatheringDisplay             controllers.RESTfulGathering.display
+POST   /gatheringDisplay             controllers.RESTfulGathering.refreshVenn
+GET    /controlDisplay               controllers.RESTfulGathering.controlDisplay
 
 # RESTful Gathering

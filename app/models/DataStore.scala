@@ -55,7 +55,7 @@ class SQLDataStore extends DataStore {
     val stateInt = SQL"""
       select state from sessions where id = $id
     """().head[Int]("state")
-    val state = if (stateInt == 0) false else true
+    val running = if (stateInt == 0) false else true
 
     val coordRows = SQL"""
       select c1, c2, c3, c4 from coords where session_id = $id
@@ -71,7 +71,7 @@ class SQLDataStore extends DataStore {
     val keys1 = keyTs1.map(_[String]("keyword")).toList
     val keys2 = keyTs2.map(_[String]("keyword")).toList
 
-    (coords.toList, (keys1, keys2), state)
+    (coords.toList, (keys1, keys2), running)
   }
   def getCoordsInfo(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double)(implicit c: Connection): (Int, Int) = {
     val infoRow = SQL"""

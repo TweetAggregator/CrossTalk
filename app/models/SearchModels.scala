@@ -25,6 +25,8 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
     val v2 = 2 * Math.atan2(Math.sqrt(v1), Math.sqrt(1 - v1))
     Math.sqrt((Math.pow(earthRadius * v2, 2) / 2)) * 2 / 3
   }
+
+  def this(square: (Double, Double, Double, Double)) = this(square._1, square._2, square._3, square._4)
   
   def containsGeo(long: Double, lat: Double): Boolean = (long >= long1 && long <= long2 && lat >= lat1 && lat <= lat2)
 
@@ -47,7 +49,7 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
  * @param rows			The number of rows to use to split the query
  * @param cols			The number of columns to use to split the query
  */
-case class TweetQuery(keywords: List[String], area: GeoSquare, rows: Int, cols: Int) {
+case class TweetQuery(keywordGroup: KeywordGroup, keywords: List[String], area: GeoSquare, rows: Int, cols: Int) {
 
   /**
    * @return String with formatted keywords for logical ORs. Spaces into the
