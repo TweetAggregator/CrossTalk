@@ -74,7 +74,7 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
       case Some(id) =>
         DB.withConnection { implicit c =>
           val total = List(FirstGroup, SecondGroup, IntersectionGroup).flatMap(store.getSessionTweets(id.toLong, _)).map(_._2).sum
-          Ok(views.html.gathering(total.toLong))
+          Ok(views.html.gathering(total.toLong, store.getSessionInfo(id.toLong)._3))
         }
       case None => Redirect(routes.Application.index)
     }
