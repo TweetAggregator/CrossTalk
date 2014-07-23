@@ -4,6 +4,7 @@ import play.api.mvc._
 import play.api.db.DB
 import play.api.Play.current
 import play.api.cache.Cache
+import play.api.libs.json._
 import play.Logger
 import java.sql.Connection
 import akka.actor.Props
@@ -66,7 +67,17 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
 
 
   def refreshVenn = Action { implicit request =>
-    Ok //TODO
+    val map = request.body.asFormUrlEncoded.get
+    val bounds = Json.parse(map("focussed").head).as[Array[JsValue]]
+      .flatMap(coo => ((coo \ "lon").toString.toDouble) :: (coo \ "lat").toString.toDouble :: Nil)
+      .toList
+    Cache.set("focussed", (bounds(0), bounds(3), bounds(2), bounds(1)))
+    val zoomLevel = map("zoomLevel").head.toDouble
+    val viewCenter = Some(Json.parse(map("viewCenter").head)).map(x => ((x \ "lon").toString.toDouble, (x \ "lat").toString.toDouble)).head
+    Cache.set("zoomLevel", zoomLevel)
+    Cache.set("viewCenter", viewCenter)
+    
+    Redirect(routes.RESTfulGathering.display)
   }
 
   def controlDisplay = Action { implicit request =>
