@@ -25,6 +25,6 @@ POST   /initialKeywords              controllers.setup.Keywords.initialSubmissio
 POST   /gatheringDisplay             controllers.RESTfulGathering.refreshVenn
 GET    /gatheringStart               controllers.RESTfulGathering.GETstart
 POST   /gathering                    controllers.RESTfulGathering.start
-GET    /gathering/:id/display        controllers.RESTfulGathering.display(id: Long)
+GET    /gathering/:id/display        controllers.RESTfulGathering.display(id: Long, fLong1: Double ?= -180.0, fLat1: Double ?= -90.0, fLong2: Double ?= 180.0, fLat2: Double ?= 90.0, viewLong: Double ?= 5.0, viewLat: Double ?= 6.6, zoomCenter: Double ?= 56.4)
 PUT    /gathering/:id/pause          controllers.RESTfulGathering.pause(id: Long)
 PUT    /gathering/:id/resume         controllers.RESTfulGathering.resume(id: Long)
