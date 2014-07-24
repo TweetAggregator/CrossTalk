@@ -2,6 +2,8 @@ package models
 
 import play.api.libs.json.JsValue
 import akka.actor.ActorRef
+import play.api.libs.json._
+import play.api.mvc._
 
 /**
  * Model of a geographic position.
@@ -37,6 +39,11 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
   }
     
 }
+
+object GeoSquare {
+  implicit def geoSquareReads = Json.reads[GeoSquare]
+}
+
 
 /**
  * Model of a Tweet Query, based on some keywords filters and a localisation.

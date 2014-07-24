@@ -5,9 +5,11 @@ import play.api.db.DB
 import play.api.Play.current
 import play.api.cache.Cache
 import play.api.libs.json._
+import play.api.libs.ws._
 import play.Logger
 import java.sql.Connection
 import akka.actor.Props
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import utils.Enrichments._
 import utils.AkkaImplicits._
@@ -44,13 +46,12 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
     }
   }
 
-  def sumTweetsIn(tweetCounts: Map[Square, Int], surrounding: Square): Int = {
-    val geoSurrounding = new GeoSquare(surrounding)
-    tweetCounts.filterKeys(k => geoSurrounding.intersects(new GeoSquare(k))).values.sum
+  def sumTweetsIn(tweetCounts: Map[Square, Int], surrounding: GeoSquare): Int = {
+    tweetCounts.filterKeys(k => surrounding.intersects(new GeoSquare(k))).values.sum
   }
 
   /** Compute the Venn diagram based on a GeoSquare. Return the required format for the venn.scala.html view. */
-  def computeVenn(counts1: Map[Square, Int], counts2: Map[Square, Int], interCounts: Map[Square, Int], focussed: Square, key1: String, key2: String) = {
+  def computeVenn(counts1: Map[Square, Int], counts2: Map[Square, Int], interCounts: Map[Square, Int], focussed: GeoSquare, key1: String, key2: String) = {
     val sums1 = sumTweetsIn(counts1, focussed)
     val sums2 = sumTweetsIn(counts2, focussed)
     val interSums = sumTweetsIn(interCounts, focussed)
@@ -77,7 +78,7 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
     Cache.set("zoomLevel", zoomLevel)
     Cache.set("viewCenter", viewCenter)
     
-    Redirect(routes.RESTfulGathering.display)
+    Redirect(routes.RESTfulGathering.display(request.session.get("id").get.toLong))
   }
 
   def controlDisplay = Action { implicit request =>
@@ -91,52 +92,82 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
     }
   }
 
-  def start() = Action { implicit request =>
+  def start() = Action(parse.tolerantJson) { implicit request =>
+    DB.withConnection { implicit conn =>
+      val coordinates = (request.body \ "coordinates").validate[List[GeoSquare]].get
+      val keys1 = (request.body \ "keys1").validate[List[String]].get
+      val keys2 = (request.body \ "keys2").validate[List[String]].get
+      val id = getId(request)
+      val coordsWithSize = coordinates.map { c =>
+        val rows = granularity(c.lat2, c.lat1)
+        val cols = granularity(c.long2, c.long1)
+        (c, rows, cols)
+      }
+      if (store.containsId(id)) {
+        Logger.error("Gathering: Start BadRequest")
+        BadRequest
+      }
+      else {
+        store.addSession(id, coordsWithSize, (keys1, keys2), true)
+        val manager = toRef(Props(new TweetManager(id, store)))
+        manager ! StartQueriesFromDB
+        //Ok.withSession("id" -> id.toString)
+        Ok(Json.toJson(Map("id" -> id)))
+      }
+    }
+  }
+
+  // This should disappear eventually. For now it just gets data from the cache and
+  // calls the other start method
+  def GETstart() = Action.async { implicit request =>
     val coordinates = Cache.getAs[List[Square]]("coordinates").get.map { c =>
-      val rows = granularity(c._4, c._2)
-      val cols = granularity(c._3, c._1)
-      (c, rows, cols)
+      Json.toJson(Map(
+        "long1" -> c._1,
+        "lat1" -> c._2,
+        "long2" -> c._3,
+        "lat2" -> c._4
+      ))
     }
     val keywordsList = Cache.getAs[List[(String, List[String])]]("keywords").get
     val keys1 = keywordsList(0)._1::keywordsList(0)._2
     val keys2 = keywordsList(1)._1::keywordsList(1)._2
     val keywords = (keys1, keys2)
 
-    DB.withConnection { implicit c =>
-      val id = getId(request)
-      if (store.containsId(id)) {
-        Logger.error("Gathering: Start BadRequest")
+    val json = Json.toJson(Map(
+      "coordinates" -> coordinates,
+      "keys1" -> keys1.map(Json.toJson(_)),
+      "keys2" -> keys2.map(Json.toJson(_))
+    ))
+    WS.url(routes.RESTfulGathering.start.absoluteURL()).post(json).map { response =>
+      (response.json \ "id").asOpt[Long].map { id =>
+        Redirect(routes.RESTfulGathering.display(id)).withSession("id" -> id.toString)
+      } getOrElse {
         BadRequest
-      }
-      else {
-        store.addSession(id, coordinates, keywords, true)
-        val manager = toRef(Props(new TweetManager(id, store)))
-        manager ! StartQueriesFromDB
-        Redirect(routes.RESTfulGathering.controlDisplay).withSession("id" -> id.toString)
       }
     }
   }
+
+  def pause(id: Long) = update(id, false)
+  def resume(id: Long) = update(id, true)
 
   def update(id: Long, running: Boolean) = Action { implicit request =>
     DB.withConnection { implicit c =>
-      val id = getId(request)
       if (store.containsId(id)) {
         store.setSessionState(id, running)
-        Ok
+        Redirect(routes.RESTfulGathering.display(id))
       }
       else {
-        Ok //TODO: consider returning bad request or something
+        BadRequest
       }
     }
   }
 
-  def display() = Action { implicit request =>
-    val focussed = Cache.getAs[Square]("focussed").getOrElse((-180.0, -90.0, 180.0, 90.0))
-    val viewCenter = Cache.getAs[(Double, Double)]("viewCenter").get
+  def display(id: Long) = Action { implicit request =>
+    val focussed = new GeoSquare(Cache.getAs[Square]("focussed").getOrElse((-180.0, -90.0, 180.0, 90.0)))
     val zoomLevel = Cache.getAs[Double]("zoomLevel").get
+    val viewCenter = Cache.getAs[(Double, Double)]("viewCenter").get
 
     DB.withConnection { implicit c =>
-      val id = getId(request)
       val (_, (key1::_, key2::_), _) = store.getSessionInfo(id)
       val counts1 = store.getSessionTweets(id, FirstGroup)
       val counts2 = store.getSessionTweets(id, SecondGroup)

@@ -12,7 +12,7 @@ case object SecondGroup extends KeywordGroup { def toInt = 2 }
 case object IntersectionGroup extends KeywordGroup { def toInt = 3 }
 
 trait DataStore {
-  def addSession(id: Long, coordinates: List[((Double, Double, Double, Double), Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection)
+  def addSession(id: Long, coordinates: List[(GeoSquare, Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection)
   def getSessionInfo(id: Long)(implicit c: Connection): (List[(Double, Double, Double, Double)], (List[String], List[String]), Boolean)
   def getCoordsInfo(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double)(implicit c: Connection): (Int, Int)
   def setSessionState(id: Long, running: Boolean)(implicit c: Connection): Boolean
@@ -32,7 +32,7 @@ class SQLDataStore extends DataStore {
     """.execute()
   }
 
-  def addSession(id: Long, coordinates: List[((Double, Double, Double, Double), Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection) = {
+  def addSession(id: Long, coordinates: List[(GeoSquare, Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection) = {
     val Some(sessionId) = SQL"""
       insert into sessions(state)
       values ($running)
@@ -40,7 +40,7 @@ class SQLDataStore extends DataStore {
     for ((coord, rows, cols) <- coordinates) {
       SQL"""
         insert into coords(session_id, c1, c2, c3, c4, rows, cols)
-        values ($sessionId, ${coord._1}, ${coord._2}, ${coord._3}, ${coord._4}, $rows, $cols)
+        values ($sessionId, ${coord.long1}, ${coord.lat1}, ${coord.long2}, ${coord.lat2}, $rows, $cols)
       """.executeInsert()
     }
 
