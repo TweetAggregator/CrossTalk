@@ -28,12 +28,16 @@
 
       </div>
       <div style="float:right;height:85%;width:14.5%;padding-left:5px;margin-top:20px;">
-      @helper.form(action = routes.RESTfulGathering.refreshVenn){
-     	<input type="hidden" name="focussed" id="focussed" value="">
-      	<input type="hidden" name="viewCenter" id="viewCenter" value="">
+      <form method="get" action="#">
+        <input type="hidden" name="fLong1" id="fLong1" value="">
+        <input type="hidden" name="fLat1" id="fLat1" value="">
+        <input type="hidden" name="fLong2" id="fLong2" value="">
+        <input type="hidden" name="fLat2" id="fLat2" value="">
+      	<input type="hidden" name="viewLong" id="viewLong" value="">
+      	<input type="hidden" name="viewLat" id="viewLat" value="">
       	<input type="hidden" name="zoomLevel" id="zoomLevel" value="">
       	<button>Refresh</button>
-      }
+      </form>
         @venn(nbSet, sets, inters)
         <input id="color1" type="checkbox" onchange="regionCheckbox(1, this)" checked="checked"><span style="color:#1f77b4;">@sets(0)._2: @sets(0)._3</span><br>
 		<input id="color2" type="checkbox" onchange="regionCheckbox(2, this)"><span style="color:#ff7f0e;">@sets(1)._2: @sets(1)._3</span><br>

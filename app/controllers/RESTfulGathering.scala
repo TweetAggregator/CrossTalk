@@ -67,20 +67,6 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
   def getId(request: Request[_])(implicit conn: Connection) = request.session.get("id").map(_.toLong).getOrElse(store.getNextId)
 
 
-  def refreshVenn = Action { implicit request =>
-    val map = request.body.asFormUrlEncoded.get
-    val bounds = Json.parse(map("focussed").head).as[Array[JsValue]]
-      .flatMap(coo => ((coo \ "lon").toString.toDouble) :: (coo \ "lat").toString.toDouble :: Nil)
-      .toList
-    Cache.set("focussed", (bounds(0), bounds(3), bounds(2), bounds(1)))
-    val zoomLevel = map("zoomLevel").head.toDouble
-    val viewCenter = Some(Json.parse(map("viewCenter").head)).map(x => ((x \ "lon").toString.toDouble, (x \ "lat").toString.toDouble)).head
-    Cache.set("zoomLevel", zoomLevel)
-    Cache.set("viewCenter", viewCenter)
-    
-    Redirect(routes.RESTfulGathering.display(request.session.get("id").get.toLong))
-  }
-
   def controlDisplay = Action { implicit request =>
     request.session.get("id") match {
       case Some(id) =>
@@ -120,19 +106,11 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
   // This should disappear eventually. For now it just gets data from the cache and
   // calls the other start method
   def GETstart() = Action.async { implicit request =>
-    val coordinates = Cache.getAs[List[Square]]("coordinates").get.map { c =>
-      Json.toJson(Map(
-        "long1" -> c._1,
-        "lat1" -> c._2,
-        "long2" -> c._3,
-        "lat2" -> c._4
-      ))
-    }
-    val keywordsList = Cache.getAs[List[(String, List[String])]]("keywords").get
-    val keys1 = keywordsList(0)._1::keywordsList(0)._2
-    val keys2 = keywordsList(1)._1::keywordsList(1)._2
+    val formData = request.body.asFormUrlEncoded.get
+    val coordinates = Json.parse(formData("coordinates").head).as[Array[JsValue]]
+    val keys1 = formData("keys1").head.split(" ")
+    val keys2 = formData("keys2").head.split(" ")
     val keywords = (keys1, keys2)
-
     val json = Json.toJson(Map(
       "coordinates" -> coordinates,
       "keys1" -> keys1.map(Json.toJson(_)),
@@ -145,6 +123,7 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
         BadRequest
       }
     }
+    //TODO: error handling
   }
 
   def pause(id: Long) = update(id, false)

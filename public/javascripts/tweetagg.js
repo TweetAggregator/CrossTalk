@@ -156,6 +156,24 @@ function update() {
 	elem = document.getElementById("viewCenter")
 	if (elem)
 		elem.value = JSON.stringify(map.center())
+	elem = document.getElementById("fLong1")
+	if (elem)
+	  elem.value = JSON.stringify(topCorner.lon)
+	elem = document.getElementById("fLat1")
+	if (elem)
+	  elem.value = JSON.stringify(topCorner.lat)
+	elem = document.getElementById("fLong2")
+	if (elem)
+	  elem.value = JSON.stringify(bottomCorner.lon)
+	elem = document.getElementById("fLat2")
+	if (elem)
+	  elem.value = JSON.stringify(bottomCorner.lat)
+	elem = document.getElementById("viewLong")
+	if (elem)
+		elem.value = JSON.stringify(map.center().lon)
+	elem = document.getElementById("viewLat")
+	if (elem)
+		elem.value = JSON.stringify(map.center().lat)
 	elem = document.getElementById("zoomLevel")
 	if (elem)
 		elem.value = map.zoom()
@@ -232,7 +250,7 @@ div.addEventListener("mouseup", function(){
       end.y = start.y+parseInt(rect.getAttribute("height"));
       var topLeft = pxToGeo(JSON.parse('{"x":'+start.x+', "y": '+start.y+'}'))
       var bottomRight = pxToGeo(JSON.parse('{"x":'+end.x+', "y": '+end.y+'}'))
-      coordinates_array.push([topLeft,bottomRight]);
+      coordinates_array.push({ long1: topLeft.lon, lat1: topLeft.lat, long2: bottomRight.lon, lat2: bottomRight.lat });
       //coordinates.value = jCoordinates
       document.getElementById("coordinates").value = JSON.stringify(coordinates_array)
       //console.log(coordinates.value)

@@ -49,4 +49,8 @@ object Map extends Controller {
       case _ => Redirect(routes.Map.selectAreas)
     }
   }
+
+  def setupAll = Action { implicit request =>
+    Ok(views.html.setupAll())
+  }
 }
