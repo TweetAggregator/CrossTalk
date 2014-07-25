@@ -11,10 +11,10 @@ import play.api.mvc._
  * - For the Search API, the parameters need to be converted into a central
  * position + radius, hence the calculus in the inner fields.
  *
- * NB : requirements are long1 < long2, lat1 < lat2
+ * NB : requirements are long1 < long2, lat1 > lat2
  */
 case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
-  assert(long1 < long2 && lat1 < lat2, "Requirements for GeoSquare are long1 < long2, lat1 < lat2, not respected here")
+  require(long1 < long2 && lat1 > lat2, s"Requirements for GeoSquare are long1 < long2, lat1 > lat2, not respected here ($long1 < $long2, $lat1 > $lat2)")
 
   /** @return the center of the GeoSquare */
   val center: (Double, Double) = ((long2 + long1) / 2, (lat2 + lat1) / 2)

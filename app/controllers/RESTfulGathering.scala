@@ -99,7 +99,7 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
       val keys2 = (request.body \ "keys2").validate[List[String]].get
       val id = getId(request)
       val coordsWithSize = coordinates.map { c =>
-        val rows = granularity(c.lat2, c.lat1)
+        val rows = granularity(c.lat1, c.lat2)
         val cols = granularity(c.long2, c.long1)
         (c, rows, cols)
       }
