@@ -13,7 +13,7 @@ case object IntersectionGroup extends KeywordGroup { def toInt = 3 }
 
 trait DataStore {
   def addSession(id: Long, coordinates: List[(GeoSquare, Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection)
-  def getSessionInfo(id: Long)(implicit c: Connection): (List[(Double, Double, Double, Double)], (List[String], List[String]), Boolean)
+  def getSessionInfo(id: Long)(implicit c: Connection): (List[GeoSquare], (List[String], List[String]), Boolean)
   def getCoordsInfo(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double)(implicit c: Connection): (Int, Int)
   def setSessionState(id: Long, running: Boolean)(implicit c: Connection): Boolean
   def getSessionTweets(id: Long, keywordGroup: KeywordGroup)(implicit c: Connection): Map[(Double, Double, Double, Double), Int]
@@ -51,7 +51,7 @@ class SQLDataStore extends DataStore {
       """.executeInsert()
     }
   }
-  def getSessionInfo(id: Long)(implicit c: Connection): (List[(Double, Double, Double, Double)], (List[String], List[String]), Boolean) = {
+  def getSessionInfo(id: Long)(implicit c: Connection): (List[GeoSquare], (List[String], List[String]), Boolean) = {
     val stateInt = SQL"""
       select state from sessions where id = $id
     """().head[Int]("state")
@@ -61,7 +61,7 @@ class SQLDataStore extends DataStore {
       select c1, c2, c3, c4 from coords where session_id = $id
     """
     val coords = for (row <- coordRows()) yield {
-      (row[Double]("c1"), row[Double]("c2"), row[Double]("c3"), row[Double]("c4"))
+      GeoSquare(row[Double]("c1"), row[Double]("c2"), row[Double]("c3"), row[Double]("c4"))
     }
 
     val keywordRows = SQL"""

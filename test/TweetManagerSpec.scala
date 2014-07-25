@@ -32,7 +32,7 @@ class TweetManagerSpec extends Specification {
   "Tweet Searcher Actor" should {
 
     "return a list of tweets" in new WithApplication(appWithMemoryDatabase) {
-      val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val query = TweetQuery(FirstGroup, "Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val manager = Akka.system.actorOf(Props(new TweetManager(1, new SQLDataStore)))
       val listener = Akka.system.actorOf(Props(new Listener))
@@ -49,7 +49,7 @@ class TweetManagerSpec extends Specification {
 
     "return a list of tweets and do a callback" in new WithApplication {
       nbReceived = 0
-      val query = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val query = TweetQuery(FirstGroup, "Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val manager = Akka.system.actorOf(Props(new TweetManager(1, new SQLDataStore)))
       val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords), 2)))
@@ -66,7 +66,7 @@ class TweetManagerSpec extends Specification {
 
     "launch a query with multiple keywords" in new WithApplication {
       nbReceived = 0
-      val query = TweetQuery("Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val query = TweetQuery(FirstGroup, "Barak Obama" :: "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val manager = Akka.system.actorOf(Props(new TweetManager(1, new SQLDataStore)))
       val checker = Akka.system.actorOf(Props(new TweetDuplicateChecker(1, Set(query.keywords), 2)))
@@ -86,9 +86,9 @@ class TweetManagerSpec extends Specification {
   "Tweet Streamer" should {
     "get some tweets" in new WithApplication {
       nbReceived = 0
-      val qur = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
-      val qur2 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-      val qur3 = TweetQuery("hey" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qur = TweetQuery(FirstGroup, "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val qur2 = TweetQuery(FirstGroup, "Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qur3 = TweetQuery(FirstGroup, "hey" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       var listQuery: List[(TweetQuery, ActorRef)] = Nil
       val listener = Akka.system.actorOf(Props(new Listener))
 
@@ -108,8 +108,8 @@ class TweetManagerSpec extends Specification {
 
     "get some tweets from two requests" in new WithApplication {
       nbReceived = 0
-      val qur1 = TweetQuery("morning" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
-      val qur2 = TweetQuery("night" :: Nil, GeoSquare(-79, 20, 0, 50.6), 1, 1) /* There must be some tweets contaning "e" ! */
+      val qur1 = TweetQuery(FirstGroup, "morning" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val qur2 = TweetQuery(FirstGroup, "night" :: Nil, GeoSquare(-79, 20, 0, 50.6), 1, 1) /* There must be some tweets contaning "e" ! */
       val listener = Akka.system.actorOf(Props(new Listener))
 
       var listQuery2: List[(TweetQuery, ActorRef)] = Nil
@@ -133,9 +133,9 @@ class TweetManagerSpec extends Specification {
   "Tweet Tester" should {
     "get some tweets" in new WithApplication {
       nbReceived = 0
-      val qur = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
-      val qur2 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-      val qur3 = TweetQuery("hey" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qur = TweetQuery(FirstGroup, "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val qur2 = TweetQuery(FirstGroup, "Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qur3 = TweetQuery(FirstGroup, "hey" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
       var listQuery: List[(TweetQuery, ActorRef)] = Nil
       val listener = Akka.system.actorOf(Props(new Listener))
 
@@ -155,8 +155,8 @@ class TweetManagerSpec extends Specification {
 
     "get some tweets from two requests" in new WithApplication {
       nbReceived = 0
-      val qur1 = TweetQuery("morning" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
-      val qur2 = TweetQuery("night" :: Nil, GeoSquare(-79, 20, 0, 50.6), 1, 1) /* There must be some tweets contaning "e" ! */
+      val qur1 = TweetQuery(FirstGroup, "morning" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1) /* There must be some tweets contaning "a" ! */
+      val qur2 = TweetQuery(FirstGroup, "night" :: Nil, GeoSquare(-79, 20, 0, 50.6), 1, 1) /* There must be some tweets contaning "e" ! */
       val listener = Akka.system.actorOf(Props(new Listener))
 
       var listQuery2: List[(TweetQuery, ActorRef)] = Nil
@@ -180,11 +180,11 @@ class TweetManagerSpec extends Specification {
   "Tweet Manager" should {
     "start queries, and stop them" in new WithApplication {
       nbReceived = 0
-      val qurs1 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-      val qurs2 = TweetQuery("Ukraine" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-      val qurs3 = TweetQuery("Bloomberg" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-      val qurs4 = TweetQuery("Putin" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
-      val qurs5 = TweetQuery("NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs1 = TweetQuery(FirstGroup, "Obama" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs2 = TweetQuery(FirstGroup, "Ukraine" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs3 = TweetQuery(FirstGroup, "Bloomberg" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs4 = TweetQuery(FirstGroup, "Putin" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
+      val qurs5 = TweetQuery(FirstGroup, "NSA" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), 1, 1)
 
       val listener = Akka.system.actorOf(Props(new Listener))
       val manager = Akka.system.actorOf(Props(new TweetManager(1, new SQLDataStore())))

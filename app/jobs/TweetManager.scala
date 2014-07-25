@@ -58,10 +58,10 @@ class TweetManager(sessionId: Long, store: DataStore) extends Actor {
         val (coords, (keys1, keys2), state) = store.getSessionInfo(sessionId)
         val keys3 = for (key1 <- keys1; key2 <- keys2) yield (s"${key1} ${key2}") // Space means AND, concantenation means OR
         val queries = coords.flatMap(c => {
-          val (rows, cols) = store.getCoordsInfo(sessionId, c._1, c._2, c._3, c._4)
-          val sq1 = TweetQuery(FirstGroup, keys1, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
-          val sq2 = TweetQuery(SecondGroup, keys2, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
-          val sq3 = TweetQuery(IntersectionGroup, keys3, GeoSquare(c._1, c._2, c._3, c._4), rows, cols).subqueries
+          val (rows, cols) = store.getCoordsInfo(sessionId, c.long1, c.lat1, c.long2, c.lat2)
+          val sq1 = TweetQuery(FirstGroup, keys1, c, rows, cols).subqueries
+          val sq2 = TweetQuery(SecondGroup, keys2, c, rows, cols).subqueries
+          val sq3 = TweetQuery(IntersectionGroup, keys3, c, rows, cols).subqueries
           sq1 ++ sq2 ++ sq3
         })
         queriesToStart :+= queries.map((_, self))

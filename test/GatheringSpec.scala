@@ -12,8 +12,8 @@ import play.api.mvc.Results._
 import play.api.test._
 import play.api.data._
 import play.api.data.Forms._
-import play.api.cache.Cache
 import play.api.test._
+import play.api.libs.json._
 import akka.util.Timeout
 
 import controllers._
@@ -32,20 +32,26 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
 
   "RESTful Gathering controller" should {
 
+    //TODO: this test fails
     "add query to database and notify TweetManager upon start" in new WithApplication {
       val dataStore = getDataStore
       val gathering = new TestController(dataStore)
-      val coordinates = List(((-129.4, 20.0, -79.0, 50.6), 10, 10))
-      Cache.set("coordinates", coordinates)
+      val coordinates = List(GeoSquare(-129.4, 20.0, -79.0, 50.6))
       val keywords = (List("Obama"), List("Beer", "biere", "pression"))
-      Cache.set("keywords", keywords)
-      implicit val request = FakeRequest()
-      val result = await(gathering.start()(request))
+      val jsCoords = Json.toJson(coordinates)
+      val body = Json.toJson(Map(
+        "coordinates" -> jsCoords,
+        "keys1" -> Json.toJson(keywords._1),
+        "keys2" -> Json.toJson(keywords._2)
+      ))
+
+      implicit val request = FakeRequest("POST", "/gathering").withJsonBody(body)
+      val result = await(gathering.start()(request).run)
       
       result.header.status must equalTo(OK)
       val id = result.session.get("id")
       id.nonEmpty should beTrue
-      there was one(dataStore).addSession(M.eq(id.get.toLong), M.eq(coordinates), M.eq(keywords), M.eq(true))(any)
+      there was one(dataStore).addSession(M.eq(id.get.toLong), M.eq(coordinates.map((_, any, any))), M.eq(keywords), M.eq(true))(any)
     }
 
     "not add query to database if id is already present upon start" in new WithApplication {
@@ -54,14 +60,19 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       dataStore.getNextId(any) returns 1L
 
       val gathering = new TestController(dataStore)
-      val coordinates = List((-129.4, 20.0, -79.0, 50.6))
-      Cache.set("coordinates", coordinates)
+      val coordinates = List(GeoSquare(-129.4, 20.0, -79.0, 50.6))
       val keywords = (List("Obama"), List("Beer", "biere", "pression"))
-      Cache.set("keywords", keywords)
-      val request = FakeRequest().withSession("id" -> "1")
-      val result = await(gathering.start()(request))
+      val jsCoords = Json.toJson(coordinates)
+      val body = Json.toJson(Map(
+        "coordinates" -> jsCoords,
+        "keys1" -> Json.toJson(keywords._1),
+        "keys2" -> Json.toJson(keywords._2)
+      ))
 
-      result.header.status must equalTo(OK)
+      implicit val request = FakeRequest("POST", "/gathering").withJsonBody(body)
+      val result = await(gathering.start()(request).run)
+
+      result.header.status must equalTo(BAD_REQUEST)
       there was no(dataStore).addSession(any, any, any, any)(any)
     }
 
@@ -71,25 +82,25 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       dataStore.containsId(M.eq(1L))(any) returns true
       dataStore.getNextId(any) returns 1L
       val gathering = new TestController(dataStore)
-      val request = FakeRequest().withSession("id" -> "1")
+      val request = FakeRequest()
 
       val result1 = await(gathering.update(1, false)(request))
       there was one(dataStore).setSessionState(M.eq(1L), M.eq(false))(any)
-      result1.header.status must equalTo(OK)
+      result1.header.status must equalTo(303)
 
       val result2 = await(gathering.update(1, true)(request))
       there was one(dataStore).setSessionState(M.eq(1L), M.eq(true))(any)
-      result2.header.status must equalTo(OK)
+      result2.header.status must equalTo(303)
     }
 
     "not set the session upon update to an invalid id" in new WithApplication {
       val dataStore = getDataStore
       val gathering = new TestController(dataStore)
-      val request = FakeRequest().withSession("id" -> "1")
+      val request = FakeRequest()
 
       val result = await(gathering.update(1, false)(request))
       there was no(dataStore).setSessionState(any, any)(any)
-      result.header.status must equalTo(OK)
+      result.header.status must equalTo(BAD_REQUEST)
     }
 
   }

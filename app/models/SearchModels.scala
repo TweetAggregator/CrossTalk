@@ -42,6 +42,7 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
 
 object GeoSquare {
   implicit def geoSquareReads = Json.reads[GeoSquare]
+  implicit def geoSquareWrites = Json.writes[GeoSquare]
 }
 
 

@@ -3,14 +3,13 @@ import org.specs2.runner._
 import org.junit.runner._
 import play.api.test._
 import play.api.test.Helpers._
-import models.TweetQuery
-import models.GeoSquare
+import models._
 
 @RunWith(classOf[JUnitRunner])
 class TweetQuerySpec extends Specification {
   "A TweetQuery" should {
-    val query1 = TweetQuery("test" :: Nil, GeoSquare(-2,-3,2,3), 4,3)
-    val query2 = TweetQuery("Obama" :: Nil, GeoSquare(-129.4, 20.0, -79, 50.6), 2, 2)
+    val query1 = TweetQuery(FirstGroup, "test" :: Nil, GeoSquare(-2,-3,2,3), 4,3)
+    val query2 = TweetQuery(SecondGroup, "Obama" :: Nil, GeoSquare(-129.4, 20.0, -79, 50.6), 2, 2)
     
     "have proper geographic subsquares (T1)" in new WithApplication {
       val subqueries = query1.subqueries

@@ -11,9 +11,9 @@ import models._
 object DataStoreSpec extends Specification with PlaySpecification {
   def appWithMemoryDatabase = FakeApplication(additionalConfiguration = inMemoryDatabase("test"))
 
-  val coords1 = List(((0.0, 1.1, 2.2, 3.3), 10, 20), ((0.0, 0.0, 1.0, 1.0), 25, 25))
+  val coords1 = List((GeoSquare(0.0, 1.1, 2.2, 3.3), 10, 20), (GeoSquare(0.0, 0.0, 1.0, 1.0), 25, 25))
   val keywords1 = (List("hello", "bonjour"), List("paper", "papier"))
-  val coords2 = List(((5.1, 5.2, 5.3, 5.4), 5, 5), ((0.0, 0.0, 1.0, 1.0), 5, 5))
+  val coords2 = List((GeoSquare(5.1, 5.2, 5.3, 5.4), 5, 5), (GeoSquare(0.0, 0.0, 1.0, 1.0), 5, 5))
   val keywords2 = (List("#tag", "#hashtag"), List("@user"))
 
   def withCleanDatabase[A](block: Connection => A)(implicit app: Application) = {

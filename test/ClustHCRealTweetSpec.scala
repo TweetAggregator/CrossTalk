@@ -46,9 +46,9 @@ class ClustHCRealTweetSpec extends Specification {
 
   /* Requests are all over the US */
   val queries = List(
-    TweetQuery("#GoT" :: "Game of Thrones" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), nbRow, nbCol),
-    TweetQuery("Coachella" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), nbRow, nbCol),
-    TweetQuery("Spider-man" :: "Amazing" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), nbRow, nbCol))
+    TweetQuery(FirstGroup, "#GoT" :: "Game of Thrones" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), nbRow, nbCol),
+    TweetQuery(FirstGroup, "Coachella" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), nbRow, nbCol),
+    TweetQuery(FirstGroup, "Spider-man" :: "Amazing" :: Nil, GeoSquare(-129.4, 20, -79, 50.6), nbRow, nbCol))
 
   var geoParts = List[ActorRef]()
 
