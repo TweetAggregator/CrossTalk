@@ -30,11 +30,11 @@ case class GeoSquare(long1: Double, lat1: Double, long2: Double, lat2: Double) {
 
   def this(square: (Double, Double, Double, Double)) = this(square._1, square._2, square._3, square._4)
   
-  def containsGeo(long: Double, lat: Double): Boolean = (long >= long1 && long <= long2 && lat >= lat1 && lat <= lat2)
+  def containsGeo(long: Double, lat: Double): Boolean = (long >= long1 && long <= long2 && lat >= lat2 && lat <= lat1)
 
   def intersects(that: GeoSquare): Boolean = {
-    val coo1 = List((this.long1, this.lat1), (this.long2, this.lat1), (this.long1, this.lat2), (this.long2,this.lat2))
-    val coo2 = List((that.long1, that.lat1), (that.long2, that.lat1), (that.long1, that.lat2), (that.long2,that.lat2))
+    val coo1 = List((this.long1, this.lat2), (this.long2, this.lat2), (this.long1, this.lat1), (this.long2,this.lat1))
+    val coo2 = List((that.long1, that.lat2), (that.long2, that.lat2), (that.long1, that.lat1), (that.long2,that.lat1))
     !(coo1.forall(c => !that.containsGeo(c._1, c._2)) && coo2.forall(c => !this.containsGeo(c._1, c._2)))
   }
     
