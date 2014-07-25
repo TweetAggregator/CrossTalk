@@ -162,10 +162,9 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
     }
   }
 
-  def display(id: Long, fLong1: Double, fLat1: Double, fLong2: Double, fLat2: Double, viewLong: Double, viewLat: Double, zoomCenter: Double) = Action { implicit request =>
+  def display(id: Long, fLong1: Double, fLat1: Double, fLong2: Double, fLat2: Double, viewLong: Double, viewLat: Double, zoomLevel: Double) = Action { implicit request =>
     val focussed = new GeoSquare(fLong1, fLat1, fLong2, fLat2)
-    val zoomLevel = 5.0
-    val viewCenter = (6.6, 46.5)
+    val viewCenter = (viewLong, viewLat)
 
     DB.withConnection { implicit c =>
       val (_, (key1::_, key2::_), _) = store.getSessionInfo(id)
