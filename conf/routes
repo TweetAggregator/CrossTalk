@@ -5,21 +5,8 @@
 # Home page
 GET    /                             controllers.Application.index 
 
-# Map selection
-GET    /selectAreas                  controllers.setup.Map.selectAreas
-POST   /finalAreas                   controllers.setup.Map.finalSubmission
-
-# General setup 
-GET    /viewParams                   controllers.setup.General.viewParams
-GET    /resetParams                  controllers.setup.General.resetParams 
-
 # Map static resources from the /public folder to the /assets URL path
 GET    /assets/*file                 controllers.Assets.at(path="/public", file)
-
-# Keywords selection
-GET    /enterKeywords                controllers.setup.Keywords.form
-POST   /finalKeywords                controllers.setup.Keywords.finalSubmission
-POST   /initialKeywords              controllers.setup.Keywords.initialSubmission
 
 # Gathering
 POST    /gatheringStart               controllers.RESTfulGathering.GETstart

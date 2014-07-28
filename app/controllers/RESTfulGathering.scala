@@ -3,7 +3,6 @@ package controllers
 import play.api.mvc._
 import play.api.db.DB
 import play.api.Play.current
-import play.api.cache.Cache
 import play.api.libs.json._
 import play.api.libs.ws._
 import play.Logger
@@ -103,8 +102,8 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
     }
   }
 
-  // This should disappear eventually. For now it just gets data from the cache and
-  // calls the other start method
+  // This should disappear eventually.
+  // For now it just reformats the keywords and calls the normal start
   def GETstart() = Action.async { implicit request =>
     val formData = request.body.asFormUrlEncoded.get
     val coordinates = Json.parse(formData("coordinates").head).as[Array[JsValue]]
