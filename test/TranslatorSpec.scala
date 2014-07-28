@@ -30,6 +30,8 @@ import java.io.InputStream
 import play.api.libs.json.JsString
 import play.api.libs.json.JsUndefined
 
+import jobs.Translator
+
 @RunWith(classOf[JUnitRunner])
 class TranslatorSpec extends Specification {
   
@@ -41,62 +43,11 @@ class TranslatorSpec extends Specification {
       val dest2 = "eng"
       val keyword = "Bier"
 
-      val ret = translateAndSynonyms(from, List(dest, dest2), keyword)
-      println("Result TRANSLATION: " + ret._1)
-      println("Result SYNONYMS   : " + ret._2)
+      val (translations, synonyms) = Translator(from, List(dest, dest2), keyword)()
+
+      translations(1) should contain ("beer")
+      translations(1) should contain ("ale")
+      synonyms should contain ("Gerstensaft")
     }
   }
-  
-  def askFor(request: String) = {
-    val httpRequest = new HttpGet(request)
-    httpRequest.addHeader("Content-Type", "application/x-www-form-urlencoded")
-    val client = new DefaultHttpClient()
-    // println(httpRequest)
-    val twitterResponse = client.execute(httpRequest) /* Send the request and get the response */
-    twitterResponse.getEntity().getContent()
-  }
-
-  /** Read all the data present in the InputStream in and return it as a String */
-  def readAll(in: InputStream): String = {
-    val inr = new BufferedReader(new InputStreamReader(in))
-    val bf = new StringBuilder
-    var rd = inr.readLine
-    while (rd != null) { bf.append(rd); rd = inr.readLine }
-    bf.toString
-  }
-
-  /** Parse a string into a list of JsValue  containing translation */
-  def parseJson(str: String): List[JsValue] = {
-    val json = Json.parse(str.toString)
-    (json \ "tuc").as[JsArray].value.map(x => (x \ "phrase" \ "text") ).filter(json => !json.isInstanceOf[JsUndefined]).toList
-  }
-
-  def translate(from: String, dest: String, keyword: String): List[JsValue] = {
-      val serverAddr = "http://glosbe.com/gapi/translate?from=" + from + "&dest=" + dest + "&format=json&phrase=" + keyword + "&pretty=true&tm=false"
-      
-      val stream = askFor(serverAddr)
-      val ret = readAll(stream)
-      stream.close
-      parseJson(ret)
-  }
-
-  def translate(from: String, destL: List[String], keyword: String): List[List[JsValue]] = {
-    destL.map(e => translate(from, e, keyword))
-  }
-
-  /* "tries" to get synonyms of the keyword in the user language */
-  def synonyms(lang: String, keyword: String): List[JsValue] = {
-      val serverAddr = "http://glosbe.com/gapi/translate?from=" + lang + "&dest=" + lang + "&format=json&phrase=" + keyword + "&pretty=true&tm=false"
-      
-      val stream = askFor(serverAddr)
-      val ret = readAll(stream)
-      stream.close
-      parseJson(ret)
-  }
-
-  def translateAndSynonyms(from: String, destL: List[String], keyword: String): (List[List[JsValue]], List[JsValue]) = {
-    (translate(from, destL, keyword), synonyms(from, keyword))
-  }
-
-
 }
