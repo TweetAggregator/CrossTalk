@@ -18,7 +18,7 @@ import models._
 import jobs.TweetManager
 
 
-class RESTfulGathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef) { this: Controller =>
+class Gathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef) { this: Controller =>
   type Square = (Double, Double, Double, Double)
 
   /* General configurations */
@@ -140,10 +140,10 @@ class RESTfulGathering(store: DataStore, newManager: (Long, DataStore) => ScalaA
       "keys1" -> keys1.map(Json.toJson(_)),
       "keys2" -> keys2.map(Json.toJson(_))
     ))
-    WS.url(routes.RESTfulGathering.start.absoluteURL()).post(json).map { response =>
+    WS.url(routes.Gathering.start.absoluteURL()).post(json).map { response =>
     //TODO: if get a badrequest ?
       val id = (response.json \ "id").as[Long]
-      Redirect(routes.RESTfulGathering.display(id)).withSession("id" -> id.toString)
+      Redirect(routes.Gathering.display(id)).withSession("id" -> id.toString)
     }
   }
 
@@ -163,7 +163,7 @@ class RESTfulGathering(store: DataStore, newManager: (Long, DataStore) => ScalaA
   def update(id: Long, running: Boolean) = IfIdExists(id, Action { implicit request =>
     DB.withConnection { implicit c =>
       store.setSessionState(id, running)
-      Redirect(routes.RESTfulGathering.display(id))
+      Redirect(routes.Gathering.display(id))
     }
   })
 
@@ -188,4 +188,4 @@ class RESTfulGathering(store: DataStore, newManager: (Long, DataStore) => ScalaA
   })
 }
 
-object RESTfulGathering extends RESTfulGathering(new SQLDataStore, (id, store) => toRef(Props(new TweetManager(id, store)))) with Controller
+object Gathering extends Gathering(new SQLDataStore, (id, store) => toRef(Props(new TweetManager(id, store)))) with Controller

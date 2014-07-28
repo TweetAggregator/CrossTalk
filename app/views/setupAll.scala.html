@@ -16,7 +16,7 @@
     <span><button onclick="drawRegion()">New area</button></span>
     <span><button onclick="reset()">Reset areas</button></span>
 
-    @helper.form(action = routes.RESTfulGathering.GETstart) {
+    @helper.form(action = routes.Gathering.GETstart) {
       <input type="text" name="keys1" placeholder="First keyword group" />
       <input type="text" name="keys2" placeholder="Second keyword group" />
       <!-- Coordintes value is updated in tweetagg.js each time a region is drawn -->

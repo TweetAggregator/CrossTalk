@@ -45,9 +45,9 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
     )
   }
 
-  class TestController(store: DataStore) extends RESTfulGathering(store, (_, _) => mock[ScalaActorRef]) with Controller
+  class TestController(store: DataStore) extends Gathering(store, (_, _) => mock[ScalaActorRef]) with Controller
 
-  "RESTful Gathering controller" should {
+  "Gathering controller" should {
 
     "add query to database and notify TweetManager upon start" in new WithApplication {
       val dataStore = getDataStore
