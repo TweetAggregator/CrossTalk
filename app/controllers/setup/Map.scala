@@ -15,6 +15,10 @@ import play.api.Play.current
  */
 object Map extends Controller {
   def setupAll = Action { implicit request =>
-    Ok(views.html.setupAll())
+    val startLat = getConfDouble("map.startLat", "Map: no beginning Lat in Conf.")
+    val startLong = getConfDouble("map.startLong", "Map: no beginning Long in Conf.")
+    val startZoom = getConfInt("map.startZoom", "Map: no beginning Zoom in Conf.")
+
+    Ok(views.html.setupAll(s"{lat: ${startLat}, lon: ${startLong}}", startZoom))
   }
 }
