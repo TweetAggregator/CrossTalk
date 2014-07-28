@@ -15,7 +15,7 @@ import java.io.File
 object Application extends Controller {
   
   /* Just the static index page */
-  def index = Action {
+  def index = Action { implicit request =>
 
   	/* Just creating the requird folder to store the data if required */
   	val folder = new File("tweets")

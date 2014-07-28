@@ -15,7 +15,7 @@ object Global extends GlobalSettings {
 
   override def onError(request: RequestHeader, ex: Throwable) = {
     Future.successful(InternalServerError(
-      views.html.errorPage("Error", ex.toString)))
+      views.html.errorPage("Error", ex.toString)(request.session)))
   }
 
   override def onBadRequest(request: RequestHeader, error: String) = {
@@ -24,7 +24,7 @@ object Global extends GlobalSettings {
   
     override def onHandlerNotFound(request: RequestHeader) = {
     Future.successful(NotFound(
-      views.html.errorPage("404 Not Found", request.path)
+      views.html.errorPage("404 Not Found", request.path)(request.session)
     ))
   }
 

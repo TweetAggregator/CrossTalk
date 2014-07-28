@@ -1,4 +1,4 @@
-@(title: String)
+@(title: String)(implicit session: play.api.mvc.Session)
 
 @import play.api.Play.current
 @import play.api.cache.Cache
@@ -57,13 +57,9 @@
 					<img src="@routes.Assets.at("images/logo.png")" class="logo">
 						<ul>
 							<li><a href="/">Home</a></li>
-							@if(!Cache.get("coordinates").isDefined){ <li><a href="/selectAreas">Select areas</a></li> }
-							@if(!Cache.get("keywords").isDefined){ <li><a href="/enterKeywords">Select keywords</a></li>  }
-							@if(!Cache.get("isStarted").isDefined){ <li><a href="/viewParams">View parameters</a></li> }
-							@if(!Cache.get("isStarted").isDefined && Cache.get("keywords").isDefined && Cache.get("coordinates").isDefined){ <li><a href="/gatheringStart">Start</a></li> }
-							@if(Cache.get("isStarted").isDefined){ <li><a href="/controlDisplay">Controls</a></li> }
-							@if(Cache.get("isStarted").isDefined){ <li><a href="/gatheringDisplay">Results</a></li> }
-							@if(Cache.get("isStarted").isDefined){ <li><a href="/gatheringDisplayClustering">Clustered results</a></li> }
+							<li><a href="/setup">New query</a></li>
+							@if(session.data.contains("id")){<li><a href="/gathering/@{session("id")}/display">View results</a></li>}
+							
 							<!--<li><a class="show-5 templatemo_page5" href="#">Contact Us</a></li>-->
 						</ul>
 					</div> <!-- /.col-md-12 -->
