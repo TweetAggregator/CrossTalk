@@ -34,11 +34,11 @@ object DataStoreSpec extends Specification with PlaySpecification {
     }
   }
 
-  def withTwoSessions[A](store: DataStore)(block: Connection => A)(implicit app: Application) = {
+  def withTwoSessions[A](store: DataStore)(block: (Connection, Long, Long) => A)(implicit app: Application) = {
     withCleanDatabase { implicit c =>
-      store.addSession(1, coords1, keywords1, true)
-      store.addSession(2, coords2, keywords2, false)
-      block(c)
+      val i = store.addSession(coords1, keywords1, true)
+      val j = store.addSession(coords2, keywords2, false)
+      block(c, i, j)
     }
   }
 
@@ -47,38 +47,40 @@ object DataStoreSpec extends Specification with PlaySpecification {
       val store = new SQLDataStore()
       withCleanDatabase { implicit c =>
         store.getNextId should be equalTo 1
-        store.addSession(1, coords1, keywords1, true)
+        store.addSession(coords1, keywords1, true)
         store.getNextId should be equalTo 2
       }
     }
 
     "keep track of added sessions" in new WithApplication(appWithMemoryDatabase) {
       val store = new SQLDataStore()
-      withTwoSessions(store) { implicit c =>
-        store.getSessionInfo(2) should be equalTo (coords2.map(_._1), keywords2, false)
-        store.setSessionState(1, false)
-        store.getSessionInfo(1) should be equalTo (coords1.map(_._1), keywords1, false)
+      withTwoSessions(store) { case (c, i, j) =>
+        implicit val conn = c
+        store.getSessionInfo(j) should be equalTo (coords2.map(_._1), keywords2, false)
+        store.setSessionState(i, false)
+        store.getSessionInfo(i) should be equalTo (coords1.map(_._1), keywords1, false)
         store.containsId(3) should beFalse
         store.containsId(2) should beTrue
         store.getNextId should be equalTo(3)
-        store.getCoordsInfo(1, 0.0, 1.1, 2.2, 3.3) should be equalTo (10, 20)
-        store.getCoordsInfo(2, 0.0, 0.0, 1.0, 1.0) should be equalTo (5, 5)
+        store.getCoordsInfo(i, 0.0, 1.1, 2.2, 3.3) should be equalTo (10, 20)
+        store.getCoordsInfo(j, 0.0, 0.0, 1.0, 1.0) should be equalTo (5, 5)
       }
     }
 
     "keep track of tweet counts" in new WithApplication(appWithMemoryDatabase) {
       val store = new SQLDataStore()
-      withTwoSessions(store) { implicit c =>
-        store.increaseSessionTweets(1, 1.0, 1.0, 1.0, 2.0, FirstGroup, 5)
-        store.increaseSessionTweets(2, 1.3, 1.3, 3.1, 1.0, SecondGroup, 2)
-        store.getSessionTweets(1, FirstGroup)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 5
-        store.getSessionTweets(1, SecondGroup)(c).keys should not contain ((1.0, 1.0, 1.0, 2.0))
-        store.getSessionTweets(2, SecondGroup)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 2
+      withTwoSessions(store) { case (c, i, j) =>
+        implicit val conn = c 
+        store.increaseSessionTweets(i, 1.0, 1.0, 1.0, 2.0, FirstGroup, 5)
+        store.increaseSessionTweets(j, 1.3, 1.3, 3.1, 1.0, SecondGroup, 2)
+        store.getSessionTweets(i, FirstGroup)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 5
+        store.getSessionTweets(i, SecondGroup)(c).keys should not contain ((1.0, 1.0, 1.0, 2.0))
+        store.getSessionTweets(j, SecondGroup)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 2
 
-        store.increaseSessionTweets(1, 1.0, 1.0, 1.0, 2.0, FirstGroup, 4)
-        store.increaseSessionTweets(2, 1.3, 1.3, 3.1, 1.0, SecondGroup, 3)
-        store.getSessionTweets(1, FirstGroup)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 9
-        store.getSessionTweets(2, SecondGroup)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 5
+        store.increaseSessionTweets(i, 1.0, 1.0, 1.0, 2.0, FirstGroup, 4)
+        store.increaseSessionTweets(j, 1.3, 1.3, 3.1, 1.0, SecondGroup, 3)
+        store.getSessionTweets(i, FirstGroup)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 9
+        store.getSessionTweets(j, SecondGroup)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 5
       }
     }
   }

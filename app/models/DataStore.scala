@@ -12,7 +12,7 @@ case object SecondGroup extends KeywordGroup { def toInt = 2 }
 case object IntersectionGroup extends KeywordGroup { def toInt = 3 }
 
 trait DataStore {
-  def addSession(id: Long, coordinates: List[(GeoSquare, Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection)
+  def addSession(coordinates: List[(GeoSquare, Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection): Long
   def getSessionInfo(id: Long)(implicit c: Connection): (List[GeoSquare], (List[String], List[String]), Boolean)
   def getCoordsInfo(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double)(implicit c: Connection): (Int, Int)
   def setSessionState(id: Long, running: Boolean)(implicit c: Connection): Boolean
@@ -32,7 +32,7 @@ class SQLDataStore extends DataStore {
     """.execute()
   }
 
-  def addSession(id: Long, coordinates: List[(GeoSquare, Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection) = {
+  def addSession(coordinates: List[(GeoSquare, Int, Int)], keywords: (List[String], List[String]), running: Boolean)(implicit c: Connection): Long = {
     val Some(sessionId) = SQL"""
       insert into sessions(state)
       values ($running)
@@ -50,6 +50,7 @@ class SQLDataStore extends DataStore {
         values ($sessionId, $k, $g)
       """.executeInsert()
     }
+    sessionId
   }
   def getSessionInfo(id: Long)(implicit c: Connection): (List[GeoSquare], (List[String], List[String]), Boolean) = {
     val stateInt = SQL"""

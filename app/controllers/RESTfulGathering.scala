@@ -9,6 +9,7 @@ import play.Logger
 import java.sql.Connection
 import akka.actor.Props
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 import utils.Enrichments._
 import utils.AkkaImplicits._
@@ -82,23 +83,15 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
       val coordinates = (request.body \ "coordinates").validate[List[GeoSquare]].get
       val keys1 = (request.body \ "keys1").validate[List[String]].get
       val keys2 = (request.body \ "keys2").validate[List[String]].get
-      val id = getId(request)
       val coordsWithSize = coordinates.map { c =>
         val rows = granularity(c.lat1, c.lat2)
         val cols = granularity(c.long2, c.long1)
         (c, rows, cols)
       }
-      if (store.containsId(id)) {
-        Logger.error("Gathering: Start BadRequest")
-        BadRequest
-      }
-      else {
-        store.addSession(id, coordsWithSize, (keys1, keys2), true)
-        val manager = toRef(Props(new TweetManager(id, store)))
-        manager ! StartQueriesFromDB
-        //Ok.withSession("id" -> id.toString)
-        Ok(Json.toJson(Map("id" -> id)))
-      }
+      val id = store.addSession(coordsWithSize, (keys1, keys2), true)
+      val manager = toRef(Props(new TweetManager(id, store)))
+      manager ! StartQueriesFromDB
+      Ok(Json.toJson(Map("id" -> id))).withSession("id" -> id.toString)
     }
   }
 
@@ -116,31 +109,32 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
       "keys2" -> keys2.map(Json.toJson(_))
     ))
     WS.url(routes.RESTfulGathering.start.absoluteURL()).post(json).map { response =>
-      (response.json \ "id").asOpt[Long].map { id =>
-        Redirect(routes.RESTfulGathering.display(id)).withSession("id" -> id.toString)
-      } getOrElse {
-        BadRequest
-      }
+      val id = (response.json \ "id").as[Long]
+      Redirect(routes.RESTfulGathering.display(id)).withSession("id" -> id.toString)
     }
-    //TODO: error handling
+  }
+
+  def IfIdExists[T](id: Long, action: Action[T]) = Action.async(action.parser) { request =>
+    val idInDb = DB.withConnection(implicit c => store.containsId(id))
+    if (idInDb) {
+      action(request)
+    }
+    else {
+      Future.successful(BadRequest(s"Query number $id was not found"))
+    }
   }
 
   def pause(id: Long) = update(id, false)
   def resume(id: Long) = update(id, true)
 
-  def update(id: Long, running: Boolean) = Action { implicit request =>
+  def update(id: Long, running: Boolean) = IfIdExists(id, Action { implicit request =>
     DB.withConnection { implicit c =>
-      if (store.containsId(id)) {
-        store.setSessionState(id, running)
-        Redirect(routes.RESTfulGathering.display(id))
-      }
-      else {
-        BadRequest
-      }
+      store.setSessionState(id, running)
+      Redirect(routes.RESTfulGathering.display(id))
     }
-  }
+  })
 
-  def display(id: Long, fLong1: Double, fLat1: Double, fLong2: Double, fLat2: Double, viewLong: Double, viewLat: Double, zoomLevel: Double) = Action { implicit request =>
+  def display(id: Long, fLong1: Double, fLat1: Double, fLong2: Double, fLat2: Double, viewLong: Double, viewLat: Double, zoomLevel: Double) = IfIdExists(id, Action { implicit request =>
     val focussed = new GeoSquare(fLong1, fLat1, fLong2, fLat2)
     val viewCenter = (viewLong, viewLat)
 
@@ -158,7 +152,7 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
 
       Ok(views.html.mapresult(viewCenter, zoomLevel, opacities1.toList, opacities2.toList, interOpacities.toList)(nbSet, sets, inters))
     }
-  }
+  })
 }
 
 object RESTfulGathering extends RESTfulGathering(new SQLDataStore) with Controller

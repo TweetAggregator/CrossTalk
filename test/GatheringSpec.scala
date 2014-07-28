@@ -36,7 +36,7 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
     "add query to database and notify TweetManager upon start" in new WithApplication {
       val dataStore = getDataStore
       val gathering = new TestController(dataStore)
-      val coordinates = List(GeoSquare(-129.4, 20.0, -79.0, 50.6))
+      val coordinates = List(GeoSquare(-129.4, 50.6, -79.0, 20.0))
       val keywords = (List("Obama"), List("Beer", "biere", "pression"))
       val jsCoords = Json.toJson(coordinates)
       val body = Json.toJson(Map(
@@ -51,7 +51,7 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       result.header.status must equalTo(OK)
       val id = result.session.get("id")
       id.nonEmpty should beTrue
-      there was one(dataStore).addSession(M.eq(id.get.toLong), M.eq(coordinates.map((_, any, any))), M.eq(keywords), M.eq(true))(any)
+      there was one(dataStore).addSession(M.eq(coordinates.map((_, any, any))), M.eq(keywords), M.eq(true))(any)
     }
 
     "not add query to database if id is already present upon start" in new WithApplication {
@@ -60,7 +60,7 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       dataStore.getNextId(any) returns 1L
 
       val gathering = new TestController(dataStore)
-      val coordinates = List(GeoSquare(-129.4, 20.0, -79.0, 50.6))
+      val coordinates = List(GeoSquare(-129.4, 50.6, -79.0, 20.0))
       val keywords = (List("Obama"), List("Beer", "biere", "pression"))
       val jsCoords = Json.toJson(coordinates)
       val body = Json.toJson(Map(
@@ -73,7 +73,7 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       val result = await(gathering.start()(request).run)
 
       result.header.status must equalTo(BAD_REQUEST)
-      there was no(dataStore).addSession(any, any, any, any)(any)
+      there was no(dataStore).addSession(any, any, any)(any)
     }
 
 
