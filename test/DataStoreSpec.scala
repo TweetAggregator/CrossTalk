@@ -9,11 +9,11 @@ import play.api.db.DB
 import models._
 
 object DataStoreSpec extends Specification with PlaySpecification {
-  def appWithMemoryDatabase = FakeApplication(additionalConfiguration = inMemoryDatabase("test"))
+  def appWithMemoryDatabase = FakeApplication(additionalConfiguration = inMemoryDatabase("test") + ("db.default.url" -> "jdbc:h2:mem:play"))
 
-  val coords1 = List((GeoSquare(0.0, 1.1, 2.2, 3.3), 10, 20), (GeoSquare(0.0, 0.0, 1.0, 1.0), 25, 25))
+  val coords1 = List((GeoSquare(0.0, 1.1, 2.2, 0.3), 10, 20), (GeoSquare(0.0, 1.0, 1.0, 0.0), 25, 25))
   val keywords1 = (List("hello", "bonjour"), List("paper", "papier"))
-  val coords2 = List((GeoSquare(5.1, 5.2, 5.3, 5.4), 5, 5), (GeoSquare(0.0, 0.0, 1.0, 1.0), 5, 5))
+  val coords2 = List((GeoSquare(5.1, 5.4, 5.3, 5.2), 5, 5), (GeoSquare(0.0, 1.0, 1.0, 0.0), 5, 5))
   val keywords2 = (List("#tag", "#hashtag"), List("@user"))
 
   def withCleanDatabase[A](block: Connection => A)(implicit app: Application) = {
@@ -62,8 +62,8 @@ object DataStoreSpec extends Specification with PlaySpecification {
         store.containsId(3) should beFalse
         store.containsId(2) should beTrue
         store.getNextId should be equalTo(3)
-        store.getCoordsInfo(i, 0.0, 1.1, 2.2, 3.3) should be equalTo (10, 20)
-        store.getCoordsInfo(j, 0.0, 0.0, 1.0, 1.0) should be equalTo (5, 5)
+        store.getCoordsInfo(i, 0.0, 1.1, 2.2, 0.3) should be equalTo (10, 20)
+        store.getCoordsInfo(j, 0.0, 1.0, 1.0, 0.0) should be equalTo (5, 5)
       }
     }
 
