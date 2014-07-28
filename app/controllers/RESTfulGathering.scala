@@ -8,6 +8,7 @@ import play.api.libs.ws._
 import play.Logger
 import java.sql.Connection
 import akka.actor.Props
+import akka.actor.ScalaActorRef
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -17,7 +18,7 @@ import models._
 import jobs.TweetManager
 
 
-class RESTfulGathering(store: DataStore) { this: Controller =>
+class RESTfulGathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef) { this: Controller =>
   type Square = (Double, Double, Double, Double)
 
   /* General configurations */
@@ -83,15 +84,46 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
       val coordinates = (request.body \ "coordinates").validate[List[GeoSquare]].get
       val keys1 = (request.body \ "keys1").validate[List[String]].get
       val keys2 = (request.body \ "keys2").validate[List[String]].get
-      val coordsWithSize = coordinates.map { c =>
-        val rows = granularity(c.lat1, c.lat2)
-        val cols = granularity(c.long2, c.long1)
-        (c, rows, cols)
+      
+      val coordinatesIntersect =
+        coordinates.foldLeft(false)((s, c1) => coordinates.exists(c2 => {
+          s || (c1 != c2 && (c1 intersects c2))
+        }))
+      val keywordsIntersect = keys1.exists(keys2.contains(_))
+
+      if (coordinatesIntersect) {
+        BadRequest(views.html.errorPage("Bad Request", "The chosen areas are not disjoint."))
       }
-      val id = store.addSession(coordsWithSize, (keys1, keys2), true)
-      val manager = toRef(Props(new TweetManager(id, store)))
-      manager ! StartQueriesFromDB
-      Ok(Json.toJson(Map("id" -> id))).withSession("id" -> id.toString)
+      else if (keywordsIntersect) {
+        val duplicate = keys1.find(keys2.contains(_)).get
+        BadRequest(views.html.errorPage("Bad Request", "The keyword $duplicate appears in both keyword groups"))
+      }
+      else if (keys1.distinct.size != keys1.size) {
+        BadRequest(views.html.errorPage("Bad Request", "The first group of keywords contained duplicates"))
+      }
+      else if (keys2.distinct.size != keys2.size) {
+        BadRequest(views.html.errorPage("Bad Request", "The second group of keywords contained duplicates"))
+      }
+      else if (keys1.isEmpty) {
+        BadRequest(views.html.errorPage("Bad Request", "The first group of keywords was empty"))
+      }
+      else if (keys2.isEmpty) {
+        BadRequest(views.html.errorPage("Bad Request", "The second group of keywords was empty"))
+      }
+      else if (coordinates.isEmpty) {
+        BadRequest(views.html.errorPage("Bad Request", "No areas were chosen for the query"))
+      }
+      else {
+        val coordsWithSize = coordinates.map { c =>
+          val rows = granularity(c.lat1, c.lat2)
+          val cols = granularity(c.long2, c.long1)
+          (c, rows, cols)
+        }
+        val id = store.addSession(coordsWithSize, (keys1, keys2), true)
+        val manager = newManager(id, store)
+        manager ! StartQueriesFromDB
+        Ok(Json.toJson(Map("id" -> id))).withSession("id" -> id.toString)
+      }
     }
   }
 
@@ -109,18 +141,19 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
       "keys2" -> keys2.map(Json.toJson(_))
     ))
     WS.url(routes.RESTfulGathering.start.absoluteURL()).post(json).map { response =>
+    //TODO: if get a badrequest ?
       val id = (response.json \ "id").as[Long]
       Redirect(routes.RESTfulGathering.display(id)).withSession("id" -> id.toString)
     }
   }
 
-  def IfIdExists[T](id: Long, action: Action[T]) = Action.async(action.parser) { request =>
+  def IfIdExists[T](id: Long, action: Action[T]) = Action.async(action.parser) { implicit request =>
     val idInDb = DB.withConnection(implicit c => store.containsId(id))
     if (idInDb) {
       action(request)
     }
     else {
-      Future.successful(BadRequest(s"Query number $id was not found"))
+      Future.successful(BadRequest(views.html.errorPage("Bad Request", s"Query number $id was not found")))
     }
   }
 
@@ -155,4 +188,4 @@ class RESTfulGathering(store: DataStore) { this: Controller =>
   })
 }
 
-object RESTfulGathering extends RESTfulGathering(new SQLDataStore) with Controller
+object RESTfulGathering extends RESTfulGathering(new SQLDataStore, (id, store) => toRef(Props(new TweetManager(id, store)))) with Controller

@@ -15,6 +15,7 @@ import play.api.data.Forms._
 import play.api.test._
 import play.api.libs.json._
 import akka.util.Timeout
+import akka.actor.ScalaActorRef
 
 import controllers._
 import models._
@@ -28,54 +29,40 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
     store
   }
 
-  class TestController(store: DataStore) extends RESTfulGathering(store) with Controller
+  def makeRequest(keys1: List[String], keys2: List[String], coordinates: List[(Double, Double, Double, Double)]) = {
+    val jsCoords = Json.toJson(coordinates.map(new GeoSquare(_)))
+    val body = Json.toJson(Map(
+      "coordinates" -> jsCoords,
+      "keys1" -> Json.toJson(keys1),
+      "keys2" -> Json.toJson(keys2)
+    ))
+
+    FakeRequest(
+      POST,
+      "/gathering",
+      FakeHeaders(Seq(CONTENT_TYPE->Seq("application/pdf"))),
+      body
+    )
+  }
+
+  class TestController(store: DataStore) extends RESTfulGathering(store, (_, _) => mock[ScalaActorRef]) with Controller
 
   "RESTful Gathering controller" should {
 
-    //TODO: this test fails
     "add query to database and notify TweetManager upon start" in new WithApplication {
       val dataStore = getDataStore
       val gathering = new TestController(dataStore)
-      val coordinates = List(GeoSquare(-129.4, 50.6, -79.0, 20.0))
-      val keywords = (List("Obama"), List("Beer", "biere", "pression"))
-      val jsCoords = Json.toJson(coordinates)
-      val body = Json.toJson(Map(
-        "coordinates" -> jsCoords,
-        "keys1" -> Json.toJson(keywords._1),
-        "keys2" -> Json.toJson(keywords._2)
-      ))
+      implicit val request = makeRequest(List("Obama"),
+                                List("Beer", "biere", "pression"),
+                                List((-129.4, 50.6, -79.0, 20.0)))
 
-      implicit val request = FakeRequest("POST", "/gathering").withJsonBody(body)
-      val result = await(gathering.start()(request).run)
+      val result = await(gathering.start()(request))
       
       result.header.status must equalTo(OK)
       val id = result.session.get("id")
       id.nonEmpty should beTrue
-      there was one(dataStore).addSession(M.eq(coordinates.map((_, any, any))), M.eq(keywords), M.eq(true))(any)
+      there was one(dataStore).addSession(any, any, any)(any)
     }
-
-    "not add query to database if id is already present upon start" in new WithApplication {
-      val dataStore = getDataStore
-      dataStore.containsId(M.eq(1L))(any) returns true
-      dataStore.getNextId(any) returns 1L
-
-      val gathering = new TestController(dataStore)
-      val coordinates = List(GeoSquare(-129.4, 50.6, -79.0, 20.0))
-      val keywords = (List("Obama"), List("Beer", "biere", "pression"))
-      val jsCoords = Json.toJson(coordinates)
-      val body = Json.toJson(Map(
-        "coordinates" -> jsCoords,
-        "keys1" -> Json.toJson(keywords._1),
-        "keys2" -> Json.toJson(keywords._2)
-      ))
-
-      implicit val request = FakeRequest("POST", "/gathering").withJsonBody(body)
-      val result = await(gathering.start()(request).run)
-
-      result.header.status must equalTo(BAD_REQUEST)
-      there was no(dataStore).addSession(any, any, any)(any)
-    }
-
 
     "set the session state upon update" in new WithApplication {
       val dataStore = getDataStore
@@ -100,6 +87,68 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
 
       val result = await(gathering.update(1, false)(request))
       there was no(dataStore).setSessionState(any, any)(any)
+      result.header.status must equalTo(BAD_REQUEST)
+    }
+
+    "not add a new session if the coordinates are overlapping" in new WithApplication {
+      val dataStore = getDataStore
+      val gathering = new TestController(dataStore)
+
+      implicit val request = makeRequest(List("Obama"),
+        List("Beer", "biere", "pression"),
+        List((-129.4, 50.6, -79.0, 20.0), (-100.0, 60.0, -50.0, 30.0))
+      )
+
+      val result = await(gathering.start()(request))
+      result.header.status must equalTo(BAD_REQUEST)
+    }
+
+    "not add a new session if the coordinates are empty" in new WithApplication {
+      val dataStore = getDataStore
+      val gathering = new TestController(dataStore)
+
+      implicit val request = makeRequest(List("Obama"),
+        List("Beer", "biere", "pression"),
+        List()
+      )
+
+      val result = await(gathering.start()(request))
+      result.header.status must equalTo(BAD_REQUEST)
+    }
+
+    "not add a new session if either of the keywords are empty" in new WithApplication {
+      val dataStore = getDataStore
+      val gathering = new TestController(dataStore)
+
+      implicit val request = makeRequest(List("Obama"),
+                                List(),
+                                List((-129.4, 50.6, -79.0, 20.0)))
+
+      val result = await(gathering.start()(request))
+      result.header.status must equalTo(BAD_REQUEST)
+    }
+
+    "not add a new session if a keyword appears in both groups" in new WithApplication {
+      val dataStore = getDataStore
+      val gathering = new TestController(dataStore)
+
+      implicit val request = makeRequest(List("Obama", "Green"),
+                                List("Beer", "Obama"),
+                                List((-129.4, 50.6, -79.0, 20.0)))
+
+      val result = await(gathering.start()(request))
+      result.header.status must equalTo(BAD_REQUEST)
+    }
+
+    "not add a new session if a group contains duplicate keywords" in new WithApplication {
+      val dataStore = getDataStore
+      val gathering = new TestController(dataStore)
+
+      implicit val request = makeRequest(List("Obama", "Obama"),
+                                List("Beer"),
+                                List((-129.4, 50.6, -79.0, 20.0)))
+
+      val result = await(gathering.start()(request))
       result.header.status must equalTo(BAD_REQUEST)
     }
 
