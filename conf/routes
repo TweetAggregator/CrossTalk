@@ -5,6 +5,12 @@
 # Home page
 GET    /                             controllers.Application.index 
 
+# Setup
+GET    /setup                        controllers.setup.Map.setupAll
+
+#Translation
+GET    /translate                    controllers.Translation.translate(source, dests: List[String], keyword)
+
 # Map static resources from the /public folder to the /assets URL path
 GET    /assets/*file                 controllers.Assets.at(path="/public", file)
 
@@ -14,6 +20,3 @@ POST   /gathering                    controllers.Gathering.start
 GET    /gathering/:id/display        controllers.Gathering.display(id: Long, fLong1: Double ?= -180.0, fLat1: Double ?= 90.0, fLong2: Double ?= 180.0, fLat2: Double ?= -90.0, viewLong: Double ?= 6.6, viewLat: Double ?= 46.5, zoomCenter: Double ?= 5.0)
 PUT    /gathering/:id/pause          controllers.Gathering.pause(id: Long)
 PUT    /gathering/:id/resume         controllers.Gathering.resume(id: Long)
-
-
-GET    /setup                        controllers.setup.Map.setupAll

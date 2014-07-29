@@ -1,21 +1,25 @@
-package jobs
+package controllers
 
 import utils.Http._
-import play.api.libs.json.Json
-import play.api.libs.json.JsResultException
-import play.api.libs.json.Reads
-import play.api.libs.json.JsValue
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsPath
-import play.api.libs.json.JsArray
-import play.api.libs.json.JsString
-import play.api.libs.json.JsUndefined
+import play.api.mvc._
+import play.api.libs.json._
 
-// class Translator(from: String, destL: List[String], keyword: String => (List[List[JsValue]], List[JsValue]) ) {
+object Translation extends Controller {
+  def translate(source: String, dests: List[String], keyword: String) = Action {
+    val translator = Translator(source, dests, keyword)
+    val (translations, synonyms) = translator()
+
+    val jsonResponse = Json.obj(
+      "translations" -> translations,
+      "synonyms" -> synonyms
+    )
+    Ok(jsonResponse)
+  }
+}
+
 case class Translator(from: String, destL: List[String], keyword: String){
 	def apply(): (List[List[String]], List[String]) = {
-		( translate(from, destL, keyword), synonyms(from, keyword) )
-		// translate(from, destL, keyword)
+    (translate(from, destL, keyword), synonyms(from, keyword))
 	}
 
 	/** Parse a string into a list of JsValue  containing translation */
