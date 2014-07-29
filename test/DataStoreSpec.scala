@@ -56,9 +56,9 @@ object DataStoreSpec extends Specification with PlaySpecification {
       val store = new SQLDataStore()
       withTwoSessions(store) { case (c, i, j) =>
         implicit val conn = c
-        store.getSessionInfo(j) should be equalTo SessionInfo(1, coords2.map(_._1), keywords2._1, keywords2._2, false)
+        store.getSessionInfo(j) should be equalTo SessionInfo(2, 1, coords2.map(_._1), keywords2._1, keywords2._2, false)
         store.setSessionState(i, false)
-        store.getSessionInfo(i) should be equalTo SessionInfo(1, coords1.map(_._1), keywords1._1, keywords1._2, false)
+        store.getSessionInfo(i) should be equalTo SessionInfo(1, 1, coords1.map(_._1), keywords1._1, keywords1._2, false)
         store.containsId(3) should beFalse
         store.containsId(2) should beTrue
         store.getCoordsInfo(i, 0.0, 1.1, 2.2, 0.3) should be equalTo (10, 20)

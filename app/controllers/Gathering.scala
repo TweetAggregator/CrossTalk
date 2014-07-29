@@ -162,7 +162,8 @@ class Gathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef
   def update(id: Long, running: Boolean) = IfIdExists(id, Action { implicit request =>
     DB.withConnection { implicit c =>
       store.setSessionState(id, running)
-      Redirect(routes.Gathering.display(id))
+      //Redirect(routes.Gathering.display(id))
+      Ok
     }
   })
 
@@ -187,6 +188,14 @@ class Gathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef
       Ok(views.html.mapresult(viewCenter, zoomLevel, opacities1.toList, opacities2.toList, interOpacities.toList)(nbSet, sets, inters))
     }
   })
+
+  def sessions = Action { implicit request =>
+    DB.withConnection { implicit c =>
+      val sessionIds = store.getUserInfo("lewis").sessions//TODO: get the username from the session 
+      val sessions = sessionIds.map(store.getSessionInfo(_))
+      Ok(views.html.sessions(sessions)).withSession("userId" -> "1")
+    }
+  }
 }
 
 object Gathering extends Gathering(new SQLDataStore, (id, store) => toRef(Props(new TweetManager(id, store)))) with Controller

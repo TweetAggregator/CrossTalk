@@ -1,0 +1,36 @@
+@(sessions: List[models.SessionInfo])(implicit session: play.api.mvc.Session)
+
+@header("Crosstalk")
+
+<table>
+  @for(s <- sessions) {
+    <tr id="session@s.id">
+      <td>@s.keys1.head</td>
+      <td>@s.keys2.head</td>
+      <td>
+        @if(s.state == true){<a class="pause@s.id">Pause</a>} else{<a class="resume@s.id">Resume</a>}
+      </td>
+      <td><a href="/gathering/@s.id/display">View<a><td>
+    </tr>
+  }
+</table>
+
+<script>
+  function putState(action) {
+    $("a[class^=" + action + "]").click(function () {
+      var id = $(this).attr("class").slice(action.length);
+      $.ajax({
+        "url": "/gathering/" + id + "/" + action,
+        "type": "PUT"
+      }).done(function () {
+        window.location.href="/sessions";
+      });
+    });
+  };
+  
+  putState("pause");
+  putState("resume");
+
+</script>
+
+@footer()

@@ -11,7 +11,7 @@ case object FirstGroup extends KeywordGroup { def toInt = 1 }
 case object SecondGroup extends KeywordGroup { def toInt = 2 }
 case object IntersectionGroup extends KeywordGroup { def toInt = 3 }
 
-case class SessionInfo(userId: Long, coordinates: List[GeoSquare], keys1: List[String], keys2: List[String], state: Boolean)
+case class SessionInfo(id: Long, userId: Long, coordinates: List[GeoSquare], keys1: List[String], keys2: List[String], state: Boolean)
 case class UserInfo(id: Long, name: String, sessions: List[Long])
 
 trait DataStore {
@@ -99,7 +99,7 @@ class SQLDataStore extends DataStore {
     val keys1 = keyTs1.map(_[String]("keyword")).toList
     val keys2 = keyTs2.map(_[String]("keyword")).toList
 
-    SessionInfo(sessionRow[Long]("user_id"), coords.toList, keys1, keys2, running)
+    SessionInfo(id, sessionRow[Long]("user_id"), coords.toList, keys1, keys2, running)
   }
   def getCoordsInfo(id: Long, long1: Double, lat1: Double, long2: Double, lat2: Double)(implicit c: Connection): (Int, Int) = {
     val infoRow = SQL"""
