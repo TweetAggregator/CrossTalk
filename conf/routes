@@ -18,8 +18,8 @@ GET    /assets/*file                 controllers.Assets.at(path="/public", file)
 POST   /gatheringStart               controllers.Gathering.GETstart
 POST   /gathering                    controllers.Gathering.start
 GET    /gathering/:id/display        controllers.Gathering.display(id: Long, fLong1: Double ?= -180.0, fLat1: Double ?= 90.0, fLong2: Double ?= 180.0, fLat2: Double ?= -90.0, viewLong: Double ?= 6.6, viewLat: Double ?= 46.5, zoomCenter: Double ?= 5.0)
-PUT    /gathering/:id/pause          controllers.Gathering.pause(id: Long)
-PUT    /gathering/:id/resume         controllers.Gathering.resume(id: Long)
+GET    /gathering/:id/pause          controllers.Gathering.pause(id: Long)
+GET    /gathering/:id/resume         controllers.Gathering.resume(id: Long)
 
 # Session management
 GET    /sessions                     controllers.Gathering.sessions

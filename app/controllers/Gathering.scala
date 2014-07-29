@@ -162,8 +162,7 @@ class Gathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef
   def update(id: Long, running: Boolean) = IfIdExists(id, Action { implicit request =>
     DB.withConnection { implicit c =>
       store.setSessionState(id, running)
-      //Redirect(routes.Gathering.display(id))
-      Ok
+      Redirect(routes.Gathering.sessions)
     }
   })
 
