@@ -19,25 +19,27 @@ object DataStoreSpec extends Specification with PlaySpecification {
   def withCleanDatabase[A](block: Connection => A)(implicit app: Application) = {
     DB.withConnection { implicit c =>
       SQL"""
-        CREATE TABLE  IF NOT EXISTS SESSIONS(ID INT AUTO_INCREMENT PRIMARY KEY, STATE INT);
-        CREATE TABLE  IF NOT EXISTS COORDS(ID INT AUTO_INCREMENT PRIMARY KEY, SESSION_ID INT, C1 DOUBLE, C2 DOUBLE, C3 DOUBLE, C4 DOUBLE, ROWS INT, COLS INT);
-        CREATE TABLE  IF NOT EXISTS KEYWORDS(ID INT AUTO_INCREMENT PRIMARY KEY, SESSION_ID INT, KEYWORD VARCHAR, GRP INT);
-        CREATE TABLE  IF NOT EXISTS TWEETS(ID INT AUTO_INCREMENT PRIMARY KEY, SESSION_ID INT, LONG1 DOUBLE, LAT1 DOUBLE, LONG2 DOUBLE, LAT2 DOUBLE, GRP INT, QUANTITY INT);
+        create table if not exists users(id int auto_increment, name varchar);
+        create table if not exists sessions(id int auto_increment primary key, user_id int, state int);
+        create table if not exists coords(id int auto_increment primary key, session_id int, c1 double, c2 double, c3 double, c4 double, rows int, cols int);
+        create table if not exists keywords(id int auto_increment primary key, session_id int, keyword varchar, grp int);
+        create table if not exists tweets(id int auto_increment primary key, session_id int, long1 double, lat1 double, long2 double, lat2 double, grp int, quantity int);
       """.execute()
       block(c)
       SQL"""
-        DROP TABLE SESSIONS;
-        DROP TABLE COORDS;
-        DROP TABLE KEYWORDS;
-        DROP TABLE TWEETS;
+        drop table users;
+        drop table sessions;
+        drop table coords;
+        drop table keywords;
+        drop table tweets;
       """.execute()
     }
   }
 
   def withTwoSessions[A](store: DataStore)(block: (Connection, Long, Long) => A)(implicit app: Application) = {
     withCleanDatabase { implicit c =>
-      val i = store.addSession(coords1, keywords1, true)
-      val j = store.addSession(coords2, keywords2, false)
+      val i = store.addSession(1, coords1, keywords1, true)
+      val j = store.addSession(1, coords2, keywords2, false)
       block(c, i, j)
     }
   }
@@ -46,9 +48,7 @@ object DataStoreSpec extends Specification with PlaySpecification {
     "get the next id without errors" in new WithApplication(appWithMemoryDatabase) {
       val store = new SQLDataStore()
       withCleanDatabase { implicit c =>
-        store.getNextId should be equalTo 1
-        store.addSession(coords1, keywords1, true)
-        store.getNextId should be equalTo 2
+        store.addSession(1, coords1, keywords1, true)
       }
     }
 
@@ -56,12 +56,11 @@ object DataStoreSpec extends Specification with PlaySpecification {
       val store = new SQLDataStore()
       withTwoSessions(store) { case (c, i, j) =>
         implicit val conn = c
-        store.getSessionInfo(j) should be equalTo (coords2.map(_._1), keywords2, false)
+        store.getSessionInfo(j) should be equalTo SessionInfo(1, coords2.map(_._1), keywords2._1, keywords2._2, false)
         store.setSessionState(i, false)
-        store.getSessionInfo(i) should be equalTo (coords1.map(_._1), keywords1, false)
+        store.getSessionInfo(i) should be equalTo SessionInfo(1, coords1.map(_._1), keywords1._1, keywords1._2, false)
         store.containsId(3) should beFalse
         store.containsId(2) should beTrue
-        store.getNextId should be equalTo(3)
         store.getCoordsInfo(i, 0.0, 1.1, 2.2, 0.3) should be equalTo (10, 20)
         store.getCoordsInfo(j, 0.0, 1.0, 1.0, 0.0) should be equalTo (5, 5)
       }
@@ -81,6 +80,27 @@ object DataStoreSpec extends Specification with PlaySpecification {
         store.increaseSessionTweets(j, 1.3, 1.3, 3.1, 1.0, SecondGroup, 3)
         store.getSessionTweets(i, FirstGroup)(c)(1.0, 1.0, 1.0, 2.0) should be equalTo 9
         store.getSessionTweets(j, SecondGroup)(c)(1.3, 1.3, 3.1, 1.0) should be equalTo 5
+      }
+    }
+
+    "keep track of users and their sessions" in new WithApplication(appWithMemoryDatabase) {
+      val store = new SQLDataStore()
+      DB.withConnection { implicit c =>
+        val userId1 = store.addUser("test1")
+        val userId2 = store.addUser("test2")
+        val session1 = store.addSession(userId1, coords1, keywords1, true)
+        val session2 = store.addSession(userId2, coords2, keywords2, true)
+        val session3 = store.addSession(userId1, coords2, keywords2, true)
+
+        val userInfo1 = store.getUserInfo("test1")
+        val userInfo2 = store.getUserInfo("test2")
+
+        userInfo1.sessions should be equalTo List(session1, session3)
+        userInfo2.sessions should be equalTo List(session2)
+
+        val sessionInfo2 = store.getSessionInfo(session2)
+
+        sessionInfo2.coordinates should be equalTo (coords2.map(_._1))
       }
     }
   }

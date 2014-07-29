@@ -65,15 +65,13 @@ class Gathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef
     (nbSet, sets, inters)
   }
 
-  def getId(request: Request[_])(implicit conn: Connection) = request.session.get("id").map(_.toLong).getOrElse(store.getNextId)
-
 
   def controlDisplay = Action { implicit request =>
     request.session.get("id") match {
       case Some(id) =>
         DB.withConnection { implicit c =>
           val total = List(FirstGroup, SecondGroup, IntersectionGroup).flatMap(store.getSessionTweets(id.toLong, _)).map(_._2).sum
-          Ok(views.html.gathering(total.toLong, store.getSessionInfo(id.toLong)._3))
+          Ok(views.html.gathering(total.toLong, store.getSessionInfo(id.toLong).state))
         }
       case None => Redirect(routes.Application.index)
     }
@@ -119,7 +117,8 @@ class Gathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef
           val cols = granularity(c.long2, c.long1)
           (c, rows, cols)
         }
-        val id = store.addSession(coordsWithSize, (keys1, keys2), true)
+        //TODO: check user is logged in, and get the id
+        val id = store.addSession(1, coordsWithSize, (keys1, keys2), true)
         val manager = newManager(id, store)
         manager ! StartQueriesFromDB
         Ok(Json.toJson(Map("id" -> id))).withSession("id" -> id.toString)
@@ -172,7 +171,9 @@ class Gathering(store: DataStore, newManager: (Long, DataStore) => ScalaActorRef
     val viewCenter = (viewLong, viewLat)
 
     DB.withConnection { implicit c =>
-      val (_, (key1::_, key2::_), _) = store.getSessionInfo(id)
+      val sessionInfo = store.getSessionInfo(id)
+      val key1::_ = sessionInfo.keys1
+      val key2::_ = sessionInfo.keys2
       val counts1 = store.getSessionTweets(id, FirstGroup)
       val counts2 = store.getSessionTweets(id, SecondGroup)
       val interCounts = store.getSessionTweets(id, IntersectionGroup)

@@ -61,13 +61,12 @@ object GatheringControllerSpec extends Specification with Mockito with PlaySpeci
       result.header.status must equalTo(OK)
       val id = result.session.get("id")
       id.nonEmpty should beTrue
-      there was one(dataStore).addSession(any, any, any)(any)
+      there was one(dataStore).addSession(any, any, any, any)(any)
     }
 
     "set the session state upon update" in new WithApplication {
       val dataStore = getDataStore
       dataStore.containsId(M.eq(1L))(any) returns true
-      dataStore.getNextId(any) returns 1L
       val gathering = new TestController(dataStore)
       val request = FakeRequest()
 
