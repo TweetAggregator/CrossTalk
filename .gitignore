@@ -2,6 +2,7 @@
 *.log
 tweets/searcher*
 tweets/tester*
+.settings/
 
 # sbt specific
 dist/*
